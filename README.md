@@ -4,15 +4,23 @@ BashBox is purely written in bash unlike other utilities out there.
 
 Meaning you don't need heavy stuff like python. As long you can run a bash script, this also runs.
 
-It allows you to easily do syntax-checking, beautification and optimization in tradional bash way.
+It allows you to easily do syntax-checking, beautification and optimization in tradional bash way in one shot!
 
-# Usage
+# Installation & Usage
+
+To install clone this repository into your local machine and you should be good to go.
+
+```bash
+git clone https://github.com/AXIM0S/bashbox && cd bashbox
+```
 
 You can pass as many bash scripts you want and the output will be written in a new file with `.bb` suffix.
 
 ```bash
 ./bashbox bash-script.sh
 ```
+
+[![asciicast](https://asciinema.org/a/pZO2PAWupVaTSBuVH2qmWxS24.svg)](https://asciinema.org/a/pZO2PAWupVaTSBuVH2qmWxS24)
 
 Protip: Place `bashbox` in _PATH_  to access from anywhere.
 
@@ -26,4 +34,4 @@ Protip: Place `bashbox` in _PATH_  to access from anywhere.
 
 ## You can find me at https://supreme-gamers.com/members/axon.1
 
-Thanks for using `bashbox`!
+Thanks for using **bashbox**!
