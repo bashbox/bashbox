@@ -34,4 +34,4 @@ Protip: Place `bashbox` in _PATH_  to access from anywhere.
 
 ## You can find me at https://supreme-gamers.com/members/axon.1
 
-Thanks for using **bashbox**!
+I hope **bashbox** was helpful to you :)
