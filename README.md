@@ -26,12 +26,11 @@ Protip: Place `bashbox` in _PATH_  to access from anywhere.
 
 # Future Plans
 
-* Minification feature
 * Obfuscation feature
 * More command line parameters to change how bashbox works
 
 # Get in touch
 
-## You can find me at https://supreme-gamers.com/members/axon.1
+## You can find me at https://supreme-gamers.com/m/axon.1
 
 I hope **bashbox** was helpful to you :)
