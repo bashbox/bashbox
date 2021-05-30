@@ -146,37 +146,37 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 
 	Resolve::UseSymbols() {
 
-		local _dir
-		local _file
-		local _use_symbols
-		local _use_symbol_name
+		local _dir;
+		local _file;
+		local _use_symbols;
+		local _symbol;
+		local _symbol_name;
 
 		_dir="$(dirname "$(readlink -f "$1")")";
-		echo "$_dir"
 		_file="$(sed "s|$_dir/||" <<<"$1").sh";
-		echo "$_file"
-		read
+		_symbol_name="${file%.sh}";
 
-# 		_use_symbols;
-# 		_use_symbol_name;
-# 		"$_file" && read
-
+		echo "$_symbol_name" >> "$_used_symbols_statfile" || exit
 		cd "$_dir"; # Change PWD for `Resolve::SymbolPath()`
-# 		echo $PWD
+
+		echo "PWD: $PWD"; # DEBUG
+		echo "File: $_file"; # DEBUG
 
 		mapfile -t _use_symbols < <(grep -E '^use.*;$' "$_file");
-		echo $PWD 168
 
 		# Cycle through main.sh symbols
 		for _symbol in "${_use_symbols[@]}"; do
-			hmm="$(Resolve::Colons "$_symbol")"
-			Resolve::UseSymbols "$hmm"
+			hmm="$(Resolve::SymbolPath "$_symbol")";
+			echo "Symbol :$hmm"; # DEBUG
+			Resolve::UseSymbols "$hmm";
 		done
 
+		echo "$_file";
+
+<< ///
 		# Cycle through the current symbol
 		for _symbol in "${_use_symbols[@]}"; do
 			# If the input symbol is a dir then source all files
-			echo $PWD 179
 			if test -d "$_file"; then
 				for f in "$_file"/*; do
 					echo -e '\n' >> "$_target_dir/dump"
@@ -189,11 +189,11 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 				echo -e '\n' >> "$_target_dir/dump"
 			fi
 
-			sed -i -e "/$(sed 's|/|\\\/|g' <<<"$_symbol")/{r $_target_dir/dump" -e 'd}' "$_file" \
+			sed -i -e "/$(sed 's|/|\\\/|g' <<<"$_symbol")/{r $_target_dir/dump" -e 'd}' "$_target_dir/dump" \
 				|| println::error "Failed to insert into $_file"
 
-			rm -f "$_target_dir/dump"
 		done
+///
 
 
 	}
@@ -207,12 +207,13 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	_arg_path="$(readlink -f "$_arg_path")" # Pull full path
 	_src_dir="$_arg_path/src"
 	_target_dir="$_arg_path/target"
+	_used_symbols_statfile="$_target_dir/.used_symbols"
+
 	mkdir -p "$_target_dir" || exit
+	rm -f "$_used_symbols_statfile" || exit
 
 	if test ! -d "$_src_dir"; then
 		println::error "$_arg_path is not a valid bashbox project" 1
-	else
-		cd "$_src_dir" # Change PWD to src dir
 	fi
 
 # 	set -x
@@ -221,5 +222,8 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 # 		Resolve::UseSymbols "$(Resolve::SymbolPath "$_symbol")"
 # 		echo lol
 # 	done
-	Resolve::UseSymbols "$_src_dir/main"
+
+	rsync -a --delete "$_src_dir/" "$_target_dir"
+
+	Resolve::UseSymbols "$_target_dir/main"
 }

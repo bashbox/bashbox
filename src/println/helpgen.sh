@@ -150,7 +150,7 @@ println::helpgen() {
 					done
 				)"
 				echo -e "    $line${gapVar}${_endString[$i]}"
-				((i++))
+				i=$((i+1))
 			done
 			echo
 		fi

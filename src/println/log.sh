@@ -7,8 +7,11 @@ println::warn() {
 }
 
 println::error() {
-	local _ret="${2:-$?}"
+	local _return_code=${2:-$?};
+	local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
+	local _command="$1";
 	test "${_PRINT_HELP:-no}" == yes && print_help >&2
-	echo -e "[!!!] ${BRED}error${RC}[$_ret]: $1" >&2
-	exit "${_ret}"
+
+	echo -e "[!!!] ${BRED}ERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
+	exit $_return_code;
 }
