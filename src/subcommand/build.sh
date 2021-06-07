@@ -58,7 +58,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 			_key="$1"
 			case "$_key" in
 				--output-directory|-d)
-					test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
 					_arg_output_directory="$2"
 					shift
 					;;
@@ -66,7 +66,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 					_arg_output_directory="${_key##--output-directory=}"
 					;;
 				--compress-level)
-					test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
 					_arg_compress_level="$2"
 					shift
 					;;
@@ -74,7 +74,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 					_arg_compress_level="${_key##--compress-level=}"
 					;;
 				--compress-method|-m)
-					test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
 					_arg_compress_method="$2"
 					shift
 					;;
@@ -107,8 +107,8 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	handle_passed_args_count()
 	{
 		local _required_args_string="'path'"
-		test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
-		test "${_positionals_count}" -le 1 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+		test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+		test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
 	}
 
 
@@ -121,7 +121,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 		for _positional_name in ${_positional_names}
 		do
 			test $# -gt 0 || break
-			eval "$_positional_name=\${1}" || die "Error during argument parsing." 1
+			eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1
 			shift
 		done
 	}
