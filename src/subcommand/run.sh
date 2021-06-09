@@ -1,4 +1,6 @@
 function subcommand::run() {
-	use run::clap 
-	# use run::handler;
+	use run::clap;
+	echo "$@" 
+	exit
+	use run::handler;
 }
