@@ -1,7 +1,8 @@
 set -o pipefail; # To grab the last return code from a pipe.
 set -o errtrace; # To detect ERR on some bash builtin commands.
+set -o nounset; # To avoid unexpected missing variables.
 shopt -s expand_aliases; # To enable alias bash-builtin usage without interactive mode.
-alias use='BB_SOURCE="${BASH_SOURCE[0]}" BB_USE_ARGS=$(printf '%q ' "$@") __use_func'; 
+alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func'; 
 trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR; 
 _main_src_dir="$(dirname "$(readlink -f "$0")")";
 _use_calls_statfile="/tmp/.bashbox.use.calls";
@@ -35,7 +36,7 @@ function __use_func() {
 			local _modname="${_input##*::}";
 
 			function source_call() {
-				builtin source "${_mod}.sh" "$BB_USE_ARGS" || {
+				builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || {
 					println::error "Syntax/internal errors were detected in $_mod";
 				}
 			
@@ -65,13 +66,13 @@ function __use_func() {
 			local _found_dir_mods=();
 
 			mapfile -t _paths < <(sed 's|:|\n|g' <<<"$BASHBOX_LIB_PATH");
-			for _path in "${_paths[@]}"; do
+			for _path in "${_paths[@]}"; do {
 				if test -e "$_path/$_mod"; then {
 					_found_mods+=("$_path/$_mod");
 				} elif test -d "$_path/$_mod"; then {
 					_found_mods+=("$_path/$_mod");
 				} fi
-			done
+			} done
 
 			if test -n "${_found_file_mods[*]}" || test -n "${_found_dir_mods[*]}"; then {
 				for _mod in "${_found_file_mods[@]}"; do {
@@ -118,5 +119,6 @@ function __use_func() {
 		} fi
 
 	} done
+	unset BB_USE_ARGS;
 }
 

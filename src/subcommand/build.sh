@@ -209,8 +209,8 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	_target_dir="$_arg_path/target"
 	_used_symbols_statfile="$_target_dir/.used_symbols"
 
-	mkdir -p "$_target_dir" || exit
-	rm -f "$_used_symbols_statfile" || exit
+	mkdir -p "$_target_dir";
+	rm -f "$_used_symbols_statfile";
 
 	if test ! -d "$_src_dir"; then
 		println::error "$_arg_path is not a valid bashbox project" 1
