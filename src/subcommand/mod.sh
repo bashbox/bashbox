@@ -1,4 +1,4 @@
-# use build;
+use build;
 # use clean;
 # use metadata;
 use run;

@@ -154,15 +154,16 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 
 		_dir="$(dirname "$(readlink -f "$1")")";
 		_file="$(sed "s|$_dir/||" <<<"$1").sh";
-		_symbol_name="${file%.sh}";
+		_symbol_name="${_file%.sh}";
 
-		echo "$_symbol_name" >> "$_used_symbols_statfile" || exit
+		echo "$_symbol_name" >> "$_used_symbols_statfile"
 		cd "$_dir"; # Change PWD for `Resolve::SymbolPath()`
 
 		echo "PWD: $PWD"; # DEBUG
 		echo "File: $_file"; # DEBUG
 
-		mapfile -t _use_symbols < <(grep -E '^use.*;$' "$_file");
+		mapfile -t _use_symbols < <(grep -E 'use.*;$' "$_file" | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
+																								# to avoid unexpedted input from the streamline.
 
 		# Cycle through main.sh symbols
 		for _symbol in "${_use_symbols[@]}"; do
@@ -172,29 +173,6 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 		done
 
 		echo "$_file";
-
-<< ///
-		# Cycle through the current symbol
-		for _symbol in "${_use_symbols[@]}"; do
-			# If the input symbol is a dir then source all files
-			if test -d "$_file"; then
-				for f in "$_file"/*; do
-					echo -e '\n' >> "$_target_dir/dump"
-					cat "$f" >> "$_target_dir/dump"
-					echo -e '\n' >> "$_target_dir/dump"
-				done
-			else
-				echo -e '\n' >> "$_target_dir/dump"
-				cat "$_file" >> "$_target_dir/dump"
-				echo -e '\n' >> "$_target_dir/dump"
-			fi
-
-			sed -i -e "/$(sed 's|/|\\\/|g' <<<"$_symbol")/{r $_target_dir/dump" -e 'd}' "$_target_dir/dump" \
-				|| println::error "Failed to insert into $_file"
-
-		done
-///
-
 
 	}
 
@@ -223,7 +201,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 # 		echo lol
 # 	done
 
-	rsync -a --delete "$_src_dir/" "$_target_dir"
+	rsync -a "$_src_dir/" "$_target_dir"
 
 	Resolve::UseSymbols "$_target_dir/main"
 }

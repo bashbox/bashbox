@@ -139,9 +139,8 @@ println::helpgen() {
 			mapfile -t _endString < <(echo "$_endString")
 
 			local i=0
-			test -z "$firstChild" && echo -e "OPTIONS:" ||
-				echo -e 'SUBCOMMANDS:'
-			firstChild=true
+			local firstChild=false;
+			! "$firstChild" && echo -e "OPTIONS:" || echo -e 'SUBCOMMANDS:' && firstChild=true;
 
 			for line in "${_startString[@]}"; do
 				gapVar="$(
