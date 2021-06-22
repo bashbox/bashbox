@@ -128,7 +128,8 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 
 
 	Resolve::Colons() {
-		sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||" <<<"$1"; # Swap `::` with `/` and remove [`use `, `/*` `;`] keywords.
+		 awk '{$1=$1;print}' <<<"$1" \
+		 	| sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"; # Swap `::` with `/` and remove [`use `, `/*` `;`] keywords
 	}
 
 	Resolve::SymbolPath() {
@@ -136,7 +137,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 		local _parent;
 		_parent="$(
 			if grep "^use box::" <<<"$_input" 1>/dev/null; then
-				echo "$_src_dir";
+				echo "$_input_src_dir";
 			else
 				echo "$PWD";
 			fi
@@ -145,34 +146,67 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	}
 
 	Resolve::UseSymbols() {
+		local _input="$1";
+		local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
+		local _parsed_input_name="${_parsed_input##*/}" && {
+			_parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
+			_parsed_input="$(readlink -f "$_parsed_input")";
+			unset _parsed_input_name;
+		}
+		local _src && {
+			if grep "use box::.*" <<<"$_input" 1>/dev/null; then {
+				_src="$_input_src_dir";
+			} else {
+				_src="$(readlink -f "${_parsed_input}")" && {
+					# Don't strip end if is a module dir
+					test ! -d "$_parsed_input" && {
+						_src="${_src%/*}";
+					}
+				} 
+			} fi
+		}
 
-		local _dir;
-		local _file;
-		local _use_symbols;
-		local _symbol;
-		local _symbol_name;
+		# Handle module directory if required
+		if test -d "$_parsed_input"; then {
+			_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
+		} fi
 
-		_dir="$(dirname "$(readlink -f "$1")")";
-		_file="$(sed "s|$_dir/||" <<<"$1").sh";
-		_symbol_name="${_file%.sh}";
+		# _dir="$(dirname "$(readlink -f "$1")")";
+		# _file="$(sed "s|$_dir/||" <<<"$1").sh";
+		# _last_file="$(tail -n1 "$_used_symbols_statfile" 2>/dev/null || echo "$_src/main.sh")";
+		# echo "$_last_file";
+		local _modname="${_parsed_input##*/}";
+		echo "${_parsed_input}.sh" >> "$_used_symbols_statfile"
+		cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
 
-		echo "$_symbol_name" >> "$_used_symbols_statfile"
-		cd "$_dir"; # Change PWD for `Resolve::SymbolPath()`
+		geco "${RED}PWD${RC}: $PWD"; # DEBUG
+		geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
 
-		echo "PWD: $PWD"; # DEBUG
-		echo "File: $_file"; # DEBUG
+		mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
 
-		mapfile -t _use_symbols < <(grep -E 'use.*;$' "$_file" | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
-																								# to avoid unexpedted input from the streamline.
+		# Cycle through main.sh symbols and so on.
+		# _used_symbols_arr+=("${_parsed_input}.sh");
+		: ${_last_parsed_input:="${_parsed_input}"};
+		geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
 
-		# Cycle through main.sh symbols
-		for _symbol in "${_use_symbols[@]}"; do
-			hmm="$(Resolve::SymbolPath "$_symbol")";
-			echo "Symbol :$hmm"; # DEBUG
-			Resolve::UseSymbols "$hmm";
-		done
+		(
+			for _symbol in "${_use_symbols[@]}"; do
+				# hmm="$(Resolve::SymbolPath "$_symbol")";
+				# echo "Symbol :$hmm"; # DEBUG
+				_last_parsed_input="${_parsed_input}";
+				Resolve::UseSymbols "$_symbol";
+				
+			done
+		)
+		# Start merging process
+		# File names come in reversed order
 
-		echo "$_file";
+		test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && {
+			sed -i -e "/${_input}/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
+			#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
+			# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
+		}
+		echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
 
 	}
 
@@ -183,14 +217,16 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	# Define Vars
 	: "${_arg_path:="$PWD"}"
 	_arg_path="$(readlink -f "$_arg_path")" # Pull full path
-	_src_dir="$_arg_path/src"
-	_target_dir="$_arg_path/target"
+	_input_src_dir="$_arg_path/src"
+	_target_dir="$_arg_path/target/debug"
 	_used_symbols_statfile="$_target_dir/.used_symbols"
+	
 
+	#rm -r "$_target_dir";
 	mkdir -p "$_target_dir";
 	rm -f "$_used_symbols_statfile";
 
-	if test ! -d "$_src_dir"; then
+	if test ! -d "$_input_src_dir"; then
 		println::error "$_arg_path is not a valid bashbox project" 1
 	fi
 
@@ -201,7 +237,29 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 # 		echo lol
 # 	done
 
-	rsync -a "$_src_dir/" "$_target_dir"
+	rsync -a "$_input_src_dir/" "$_target_dir"
+	_used_symbols_arr=();
+	_used_symbols_times=0;
+	Resolve::UseSymbols "$_target_dir/main";
 
-	Resolve::UseSymbols "$_target_dir/main"
+	# set -x
+	# geco '\n------'
+	# _used_symbols_arr_length="${#_used_symbols_arr[@]}";
+	# # _used_symbols_times=0;
+	# for _arr in "${_used_symbols_arr[@]}"; do {
+
+	# 	while test $_used_symbols_arr_length -ne 0; do {
+	# 		_used_symbols_arr_length=$((_used_symbols_arr_length - 1));
+	# 		_used_symbols_times=$((_used_symbols_times + 1));
+	# 		_used_symbols_times_next=$((_used_symbols_times + 1));
+
+	# 		echo "Last: ${_used_symbols_arr[-${_used_symbols_times_next}]}"
+
+	# 		# cat "${_used_symbols_arr[-1 -${_used_symbols_times}]}" "${_used_symbols_arr[-1]}";
+
+	# 		break;
+	# 	} done
+
+	# } done
+
 }
