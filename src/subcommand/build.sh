@@ -172,48 +172,45 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 		local _modname="${_parsed_input##*/}";
 
 		if ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
-			return 1;
-		} else {
-			echo "${_parsed_input}.sh" >> "$_used_symbols_statfile"
+			(
+				cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
+
+				# Handle wildcard symbol loading
+				if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
+					cat "$_src/"* > "$_src/mod.sh";
+				} fi
+				# Handle module directory if required
+				if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then {
+					_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
+				} fi
+
+				geco "${RED}PWD${RC}: $PWD"; # DEBUG
+				geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
+
+				mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
+
+				# Cycle through main.sh symbols and so on.
+				: ${_last_parsed_input:="${_parsed_input}"};
+				geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
+
+				(
+					for _symbol in "${_use_symbols[@]}"; do
+						_last_parsed_input="${_parsed_input}";
+						Resolve::UseSymbols "$_symbol";
+						
+					done
+				)
+
+				# Start merging process
+				# File names come in reversed order
+				test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && {
+					sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
+					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
+					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
+				}
+				echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
+			)
 		} fi
-
-		cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
-
-		# Handle wildcard symbol loading
-		if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
-			cat "$_src/"* > "$_src/mod.sh";
-		} fi
-		# Handle module directory if required
-		if test -d "$_parsed_input"; then {
-			_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
-		} fi
-
-		geco "${RED}PWD${RC}: $PWD"; # DEBUG
-		geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
-
-		mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
-
-		# Cycle through main.sh symbols and so on.
-		: ${_last_parsed_input:="${_parsed_input}"};
-		geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
-
-		(
-			for _symbol in "${_use_symbols[@]}"; do
-				_last_parsed_input="${_parsed_input}";
-				Resolve::UseSymbols "$_symbol";
-				
-			done
-		)
-
-		# Start merging process
-		# File names come in reversed order
-		test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && {
-			sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
-			#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
-			# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
-		}
-		echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
-
 	}
 
 	parse_commandline "$@"
@@ -230,7 +227,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 
 	rm -r "$_target_dir";
 	mkdir -p "$_target_dir";
-	rm -f "$_used_symbols_statfile";
+	echo > "$_used_symbols_statfile";
 
 	if test ! -d "$_input_src_dir"; then
 		println::error "$_arg_path is not a valid bashbox project" 1
