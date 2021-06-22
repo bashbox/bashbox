@@ -146,6 +146,10 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	}
 
 	Resolve::UseSymbols() {
+		# TODO: Implement `_symbol` foce-load
+		# TODO: Implement ignoring already loaded symbol
+		# TODO: Implement `mod::` module level symbol resolving
+		# TODO: Implement BASHBOX_LIB_PATH
 		local _input="$1";
 		local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
 		local _parsed_input_name="${_parsed_input##*/}" && {
@@ -165,19 +169,24 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 				} 
 			} fi
 		}
+		local _modname="${_parsed_input##*/}";
 
+		if ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
+			return 1;
+		} else {
+			echo "${_parsed_input}.sh" >> "$_used_symbols_statfile"
+		} fi
+
+		cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
+
+		# Handle wildcard symbol loading
+		if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
+			cat "$_src/"* > "$_src/mod.sh";
+		} fi
 		# Handle module directory if required
 		if test -d "$_parsed_input"; then {
 			_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
 		} fi
-
-		# _dir="$(dirname "$(readlink -f "$1")")";
-		# _file="$(sed "s|$_dir/||" <<<"$1").sh";
-		# _last_file="$(tail -n1 "$_used_symbols_statfile" 2>/dev/null || echo "$_src/main.sh")";
-		# echo "$_last_file";
-		local _modname="${_parsed_input##*/}";
-		echo "${_parsed_input}.sh" >> "$_used_symbols_statfile"
-		cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
 
 		geco "${RED}PWD${RC}: $PWD"; # DEBUG
 		geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
@@ -185,24 +194,21 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 		mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
 
 		# Cycle through main.sh symbols and so on.
-		# _used_symbols_arr+=("${_parsed_input}.sh");
 		: ${_last_parsed_input:="${_parsed_input}"};
 		geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
 
 		(
 			for _symbol in "${_use_symbols[@]}"; do
-				# hmm="$(Resolve::SymbolPath "$_symbol")";
-				# echo "Symbol :$hmm"; # DEBUG
 				_last_parsed_input="${_parsed_input}";
 				Resolve::UseSymbols "$_symbol";
 				
 			done
 		)
+
 		# Start merging process
 		# File names come in reversed order
-
 		test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && {
-			sed -i -e "/${_input}/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
+			sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
 			#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
 			# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
 		}
@@ -222,7 +228,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	_used_symbols_statfile="$_target_dir/.used_symbols"
 	
 
-	#rm -r "$_target_dir";
+	rm -r "$_target_dir";
 	mkdir -p "$_target_dir";
 	rm -f "$_used_symbols_statfile";
 
