@@ -225,7 +225,7 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	_used_symbols_statfile="$_target_dir/.used_symbols"
 	
 
-	rm -r "$_target_dir";
+	rm -rf "$_target_dir";
 	mkdir -p "$_target_dir";
 	echo > "$_used_symbols_statfile";
 
@@ -244,6 +244,19 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	_used_symbols_arr=();
 	_used_symbols_times=0;
 	Resolve::UseSymbols "$_target_dir/main";
+
+	# Concatinate bootstrap header to main.sh
+	local _bb_bootstrap;
+	_bb_bootstrap=$(declare -f bb_bootstrap_header) && {
+		_bb_bootstrap="${_bb_bootstrap#*{}";
+		_bb_bootstrap="${_bb_bootstrap%\}}";
+	}
+	local _ran="$RANDOM";
+	local _tmp_bbb_path="$_target_dir/.bb_bootstrap.$_ran";
+	echo '#!'"$(command -v bash)" > "$_tmp_bbb_path";
+	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path";
+	cat "$_tmp_bbb_path" "$_target_dir/main.sh" > "$_target_dir/executable";
+	rm "$_tmp_bbb_path";
 
 	# set -x
 	# geco '\n------'

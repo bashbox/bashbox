@@ -1,5 +1,11 @@
-#!/usr/bin/env bash
-source "${0%/*}/init.sh" || exit
+shopt -u expand_aliases;
+source "${0%/*}/header.sh" || exit;
+_bb_bootstrap=$(declare -f bb_bootstrap_header) && {
+	_bb_bootstrap="${_bb_bootstrap#*{}";
+	_bb_bootstrap="${_bb_bootstrap%\}}";
+	_linebreak=$'\n';
+	eval "${_bb_bootstrap} ${_linebreak}";
+} || exit;
 
 #####################
 ### Public functions
