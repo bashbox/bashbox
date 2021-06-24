@@ -175,6 +175,11 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 			(
 				cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
 
+				# Handle missing symbols
+				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
+					println::error "$_input is missing" 1;
+				} fi
+
 				# Handle wildcard symbol loading
 				if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
 					cat "$_src/"* > "$_src/mod.sh";
@@ -225,11 +230,10 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	_used_symbols_statfile="$_target_dir/.used_symbols"
 	
 
-	rm -rf "$_target_dir";
+	# rm -rf "$_target_dir";
 	mkdir -p "$_target_dir";
-	echo > "$_used_symbols_statfile";
 
-	if test ! -d "$_input_src_dir"; then
+	if test ! -d "$_input_src_dir" || test ! -e "$_arg_path/Bashbox.meta"; then
 		println::error "$_arg_path is not a valid bashbox project" 1
 	fi
 
@@ -240,9 +244,9 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 # 		echo lol
 # 	done
 
-	rsync -a "$_input_src_dir/" "$_target_dir"
-	_used_symbols_arr=();
-	_used_symbols_times=0;
+	rsync -a --delete "$_input_src_dir/" "$_target_dir"
+	echo > "$_used_symbols_statfile";
+
 	Resolve::UseSymbols "$_target_dir/main";
 
 	# Concatinate bootstrap header to main.sh
@@ -256,6 +260,12 @@ ${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directo
 	echo '#!'"$(command -v bash)" > "$_tmp_bbb_path";
 	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path";
 	cat "$_tmp_bbb_path" "$_target_dir/main.sh" > "$_target_dir/executable";
+
+	cat << 'EOF' >> "$_target_dir/executable"
+
+main "$@";
+
+EOF
 	rm "$_tmp_bbb_path";
 
 	# set -x
