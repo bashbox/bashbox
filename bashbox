@@ -1,5 +1,6 @@
 #!/usr/bin/bash
- 
+main@bashbox%332 () 
+{ 
     set -o pipefail;
     set -o errexit;
     set -o errtrace;
@@ -11,928 +12,908 @@
     _use_calls_statfile="/tmp/.bashbox.use.calls";
     rm -f "$_use_calls_statfile" && touch "$_use_calls_statfile" || { 
         println::error "Failed to create $_use_calls_statfile"
-    }
-
-# Bootstrap
-function bb_bootstrap_header() {
-
-	set -o pipefail; # To grab the last return code from a pipe.
-	set -o errexit; # To exit immadiately after trapping ERR.
-	set -o errtrace; # To detect ERR on some bash builtin commands.
-	set -o nounset; # To avoid unexpected missing variables.
-	shopt -s expand_aliases; # To enable alias bash-builtin usage without interactive mode.
-	alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func'; 
-	trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR; 
-	_main_src_dir="$(dirname "$(readlink -f "$0")")"; # TODO: Needs review
-	_use_calls_statfile="/tmp/.bashbox.use.calls";
-	rm -f "$_use_calls_statfile" && touch "$_use_calls_statfile" || {
-		println::error "Failed to create $_use_calls_statfile";
-	}
-
-}
-
-#####################
-### Public functions
-#####################
-println::helpgen() {
-	# THE DEFAULTS INITIALIZATION - POSITIONALS
-	_positionals=()
-	_arg_helpname=
-	# THE DEFAULTS INITIALIZATION - OPTIONALS
-	_arg_short_desc=
-	_arg_usage=
-	_arg_options_desc=
-	_arg_subcommands=
-	_arg_examples=
-	_arg_footer_msg=
-
-	print_help() {
-		printf '%s\n' "<The general help message of my script>"
-		printf 'Usage: %s [--short-desc <arg>] [--usage <arg>] [--options-desc <arg>] [--subcommands <arg>] [--examples <arg>] [--footer-msg <arg>] [-h|--help] <helpname>\n' "$0"
-		printf '\t%s\n' "-h, --help: Prints help"
-	}
-
-	parse_commandline() {
-		_positionals_count=0
-		while test $# -gt 0; do
-			_key="$1"
-			case "$_key" in
-			--short-desc)
-				test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-				_arg_short_desc="$2"
-				shift
-				;;
-			--short-desc=*)
-				_arg_short_desc="${_key##--short-desc=}"
-				;;
-			--usage)
-				test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-				_arg_usage="$2"
-				shift
-				;;
-			--usage=*)
-				_arg_usage="${_key##--usage=}"
-				;;
-			--options-desc)
-				test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-				_arg_options_desc="$2"
-				shift
-				;;
-			--options-desc=*)
-				_arg_options_desc="${_key##--options-desc=}"
-				;;
-			--subcommands)
-				test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-				_arg_subcommands="$2"
-				shift
-				;;
-			--subcommands=*)
-				_arg_subcommands="${_key##--subcommands=}"
-				;;
-			--examples)
-				test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-				_arg_examples="$2"
-				shift
-				;;
-			--examples=*)
-				_arg_examples="${_key##--examples=}"
-				;;
-			--footer-msg)
-				test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-				_arg_footer_msg="$2"
-				shift
-				;;
-			--footer-msg=*)
-				_arg_footer_msg="${_key##--footer-msg=}"
-				;;
-			-h | --help)
-				print_help
-				exit 0
-				;;
-			-h*)
-				print_help
-				exit 0
-				;;
-			*)
-				_last_positional="$1"
-				_positionals+=("$_last_positional")
-				_positionals_count=$((_positionals_count + 1))
-				;;
-			esac
-			shift
-		done
-	}
-
-	handle_passed_args_count() {
-		local _required_args_string="'helpname'"
-		test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
-		test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-	}
-
-	assign_positional_args() {
-		local _positional_name _shift_for=$1
-		_positional_names="_arg_helpname "
-
-		shift "$_shift_for"
-		for _positional_name in ${_positional_names}; do
-			test $# -gt 0 || break
-			eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1
-			shift
-		done
-	}
-
-	parse_commandline "$@"
-	handle_passed_args_count
-	assign_positional_args 1 "${_positionals[@]}"
-
-	# Title block
-	## TEXT child
-	echo -e "${_arg_helpname}\c"
-	if test -n "$_arg_short_desc"; then
-		echo -e " - $_arg_short_desc\n"
-	else
-		echo # Newline space
-	fi
-
-	# Body block
-	## USAGE child
-	if test -n "$_arg_usage"; then
-		echo -e "USAGE:"
-		while read -r line; do
-			echo -e "    $line"
-		done < <(echo "$_arg_usage")
-		echo # Newline space
-	fi
-
-	## OPTIONS+SUBCOMMANDS child
-	### Column implementaion in bash without coreutils-column
-	for child in "$_arg_options_desc" "$_arg_subcommands"; do
-		if test -n "$child"; then
-			local _startString _endString gapVar
-			_startString="$(sed 's|<^>.*||g' <<<"${child}")"
-			_endString="$(sed 's|.*<^>||g' <<<"${child}")"
-			mapfile -t _startString < <(echo "$_startString")
-			mapfile -t _endString < <(echo "$_endString")
-
-			local i=0
-			local firstChild=false;
-			! "$firstChild" && echo -e "OPTIONS:" || echo -e 'SUBCOMMANDS:' && firstChild=true;
-
-			for line in "${_startString[@]}"; do
-				gapVar="$(
+    };
+    function bb_bootstrap_header () 
+    { 
+        set -o pipefail;
+        set -o errexit;
+        set -o errtrace;
+        set -o nounset;
+        shopt -s expand_aliases;
+        alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
+        trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR;
+        _main_src_dir="$(dirname "$(readlink -f "$0")")";
+        _use_calls_statfile="/tmp/.bashbox.use.calls";
+        rm -f "$_use_calls_statfile" && touch "$_use_calls_statfile" || { 
+            println::error "Failed to create $_use_calls_statfile"
+        }
+    };
+    function println::helpgen () 
+    { 
+        _positionals=();
+        _arg_helpname=;
+        _arg_short_desc=;
+        _arg_usage=;
+        _arg_options_desc=;
+        _arg_subcommands=;
+        _arg_examples=;
+        _arg_footer_msg=;
+        function print_help () 
+        { 
+            printf '%s\n' "<The general help message of my script>";
+            printf 'Usage: %s [--short-desc <arg>] [--usage <arg>] [--options-desc <arg>] [--subcommands <arg>] [--examples <arg>] [--footer-msg <arg>] [-h|--help] <helpname>\n' "$0";
+            printf '\t%s\n' "-h, --help: Prints help"
+        };
+        function parse_commandline () 
+        { 
+            _positionals_count=0;
+            while test $# -gt 0; do
+                _key="$1";
+                case "$_key" in 
+                    --short-desc)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_short_desc="$2";
+                        shift
+                    ;;
+                    --short-desc=*)
+                        _arg_short_desc="${_key##--short-desc=}"
+                    ;;
+                    --usage)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_usage="$2";
+                        shift
+                    ;;
+                    --usage=*)
+                        _arg_usage="${_key##--usage=}"
+                    ;;
+                    --options-desc)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_options_desc="$2";
+                        shift
+                    ;;
+                    --options-desc=*)
+                        _arg_options_desc="${_key##--options-desc=}"
+                    ;;
+                    --subcommands)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_subcommands="$2";
+                        shift
+                    ;;
+                    --subcommands=*)
+                        _arg_subcommands="${_key##--subcommands=}"
+                    ;;
+                    --examples)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_examples="$2";
+                        shift
+                    ;;
+                    --examples=*)
+                        _arg_examples="${_key##--examples=}"
+                    ;;
+                    --footer-msg)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_footer_msg="$2";
+                        shift
+                    ;;
+                    --footer-msg=*)
+                        _arg_footer_msg="${_key##--footer-msg=}"
+                    ;;
+                    -h | --help)
+                        print_help;
+                        exit 0
+                    ;;
+                    -h*)
+                        print_help;
+                        exit 0
+                    ;;
+                    *)
+                        _last_positional="$1";
+                        _positionals+=("$_last_positional");
+                        _positionals_count=$((_positionals_count + 1))
+                    ;;
+                esac;
+                shift;
+            done
+        };
+        function handle_passed_args_count () 
+        { 
+            local _required_args_string="'helpname'";
+            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+        };
+        function assign_positional_args () 
+        { 
+            local _positional_name _shift_for=$1;
+            _positional_names="_arg_helpname ";
+            shift "$_shift_for";
+            for _positional_name in ${_positional_names};
+            do
+                test $# -gt 0 || break;
+                eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1;
+                shift;
+            done
+        };
+        parse_commandline "$@";
+        handle_passed_args_count;
+        assign_positional_args 1 "${_positionals[@]}";
+        echo -e "${_arg_helpname}\c";
+        if test -n "$_arg_short_desc"; then
+            echo -e " - $_arg_short_desc\n";
+        else
+            echo;
+        fi;
+        if test -n "$_arg_usage"; then
+            echo -e "USAGE:";
+            while read -r line; do
+                echo -e "    $line";
+            done < <(echo "$_arg_usage");
+            echo;
+        fi;
+        for child in "$_arg_options_desc" "$_arg_subcommands";
+        do
+            if test -n "$child"; then
+                local _startString _endString gapVar;
+                _startString="$(sed 's|<^>.*||g' <<<"${child}")";
+                _endString="$(sed 's|.*<^>||g' <<<"${child}")";
+                mapfile -t _startString < <(echo "$_startString");
+                mapfile -t _endString < <(echo "$_endString");
+                local i=0;
+                local firstChild=false;
+                ! "$firstChild" && echo -e "OPTIONS:" || echo -e 'SUBCOMMANDS:' && firstChild=true;
+                for line in "${_startString[@]}";
+                do
+                    gapVar="$(
 					for t in $(seq $((30 - ${#line}))); do
 						echo -n " "
 					done
-				)"
-				echo -e "    $line${gapVar}${_endString[$i]}"
-				i=$((i+1))
-			done
-			echo
-		fi
-	done
-
-	## EXAMPLES child
-	if test -n "$_arg_examples"; then
-		echo -e "EXAMPLES:"
-		while read -r line; do
-			echo -e "    $line"
-		done < <(echo "$_arg_examples")
-		echo # Newline space
-	fi
-
-	# Footer block
-	## TEXT child
-	if test -n "$_arg_footer_msg"; then
-		echo -e "$_arg_footer_msg\n"
-	fi
-
-}
-println::info() {
-	test "$_arg_quiet" == "off" && echo -e "[%%%] ${WHITE}info${RC}: $@"
-}
-
-println::warn() {
-	test "$_arg_quiet" == "off" && echo -e "[***] ${YELLOW}warn${RC}: $@"
-}
-
-println::error() {
-	local _return_code=${2:-$?};
-	local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
-	local _command="$1";
-	test "${_PRINT_HELP:-no}" == yes && print_help >&2
-
-	echo -e "[!!!] ${BRED}ERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
-	exit $_return_code;
-}
-coming_soon() {
-	println::error "In progress, coming in one of the future updates, try again later"
-	echo "nah"
-}
-
-geco() {
-	echo -e "$@"
-}
-
-begins_with_short_option() {
-	local first_option all_short_options='h'
-	first_option="${1:0:1}"
-	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-}
-readonly RC='\033[0m' RED='\033[0;31m' BRED='\033[1;31m' GRAY='\033[1;30m';
-readonly BLUE='\033[0;34m' BBLUE='\033[1;34m' CYAN='\033[0;34m' BCYAN='\033[1;34m';
-readonly WHITE='\033[1;37m' GREEN='\033[0;32m' BGREEN='\033[1;32m' YELLOW='\033[1;33m';
-readonly PURPLE='\033[0;35m' BPURPLE='\033[1;35m' ORANGE='\033[0;33m';# use install::garca;
-# use ensure::garca;
-# use metadata::fetch_value;
-# use metadata::set_value;
-
-#####################
-### Private functions
-#####################
-function subcommand::build()
-{
-# 	ensure::garca
-	
-	# THE DEFAULTS INITIALIZATION - POSITIONALS
-	_positionals=()
-	_arg_path=
-	# THE DEFAULTS INITIALIZATION - OPTIONALS
-	_arg_output_directory=
-	_arg_compress_level=
-	_arg_compress_method=
-	_arg_wizard="off"
-
-
-	print_help()
-	{
-		println::helpgen ${_self^^}-${_subcommand_argv^^} \
-			--short-desc "\
-${SUBCOMMANDS_DESC[2]}\
-" \
-	\
-			--usage "\
-${_self} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>\
-" \
-	\
-			--options-desc "\
--d, --output-directory<^>Custom build directory
--l, --compress-level<^>Custom compression level
--m, --compress-method<^>Custom compression method
--w, --wizard<^>Wizard for metadata re--initialization
--h, --help<^>Prints this help information\
-" \
-	\
-			--examples "\
-### The basic way:
-${YELLOW}${_self} ${_subcommand_argv}${RC} # Builds the project in your current directory
-
-### Build project from a specified directory:
-${YELLOW}${_self} ${_subcommand_argv} /home/me/awesome_project${RC}
-
-### Use wizard mode for metadata re--initialization
-${YELLOW}${_self} ${_subcommand_argv} -w${RC}
-
-### Random usage EXAMPLES just for referrence:
-${YELLOW}${_self} ${_subcommand_argv} --wizard --compress-level=15
-${_self} ${_subcommand_argv} -d \"$HOME/Downloads\" --wizard /projects/awesome_project
-${_self} ${_subcommand_argv} /projects/awesome_project --wizard --output-directory \"$HOME/Downloads\" --compress-method=lzma2 -l 13${RC}\
-"
-
-	}
-
-
-	parse_commandline()
-	{
-		_positionals_count=0
-		while test $# -gt 0
-		do
-			_key="$1"
-			case "$_key" in
-				--output-directory|-d)
-					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-					_arg_output_directory="$2"
-					shift
-					;;
-				--output-directory=*)
-					_arg_output_directory="${_key##--output-directory=}"
-					;;
-				--compress-level)
-					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-					_arg_compress_level="$2"
-					shift
-					;;
-				--compress-level=*)
-					_arg_compress_level="${_key##--compress-level=}"
-					;;
-				--compress-method|-m)
-					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-					_arg_compress_method="$2"
-					shift
-					;;
-				--compress-method=*)
-					_arg_compress_method="${_key##--compress-method=}"
-					;;
-				--no-wizard|--wizard|-w)
-					_arg_wizard="on"
-					test "${1:0:5}" = "--no-" && _arg_wizard="off"
-					;;
-				-h|--help)
-					print_help
-					exit 0
-					;;
-				-h*)
-					print_help
-					exit 0
-					;;
-				*)
-					_last_positional="$1"
-					_positionals+=("$_last_positional")
-					_positionals_count=$((_positionals_count + 1))
-					;;
-			esac
-			shift
-		done
-	}
-
-
-	handle_passed_args_count()
-	{
-		local _required_args_string="'path'"
-		test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
-		test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-	}
-
-
-	assign_positional_args()
-	{
-		local _positional_name _shift_for=$1
-		_positional_names="_arg_path "
-
-		shift "$_shift_for"
-		for _positional_name in ${_positional_names}
-		do
-			test $# -gt 0 || break
-			eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1
-			shift
-		done
-	}
-
-
-	Resolve::Colons() {
-		 awk '{$1=$1;print}' <<<"$1" \
-		 	| sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"; # Swap `::` with `/` and remove [`use `, `/*` `;`] keywords
-	}
-
-	Resolve::SymbolPath() {
-		local _input="$1";
-		local _parent;
-		_parent="$(
+				)";
+                    echo -e "    $line${gapVar}${_endString[$i]}";
+                    i=$((i+1));
+                done;
+                echo;
+            fi;
+        done;
+        if test -n "$_arg_examples"; then
+            echo -e "EXAMPLES:";
+            while read -r line; do
+                echo -e "    $line";
+            done < <(echo "$_arg_examples");
+            echo;
+        fi;
+        if test -n "$_arg_footer_msg"; then
+            echo -e "$_arg_footer_msg\n";
+        fi
+    };
+    function println::info () 
+    { 
+        test "$_arg_quiet" == "off" && echo -e "[%%%] ${WHITE}info${RC}: $@"
+    };
+    function println::warn () 
+    { 
+        test "$_arg_quiet" == "off" && echo -e "[***] ${YELLOW}warn${RC}: $@"
+    };
+    function println::error () 
+    { 
+        local _return_code=${2:-$?};
+        local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
+        local _command="$1";
+        test "${_PRINT_HELP:-no}" == yes && print_help 1>&2;
+        echo -e "[!!!] ${BRED}ERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
+        exit $_return_code
+    };
+    function coming_soon () 
+    { 
+        println::error "In progress, coming in one of the future updates, try again later";
+        echo "nah"
+    };
+    function geco () 
+    { 
+        echo -e "$@"
+    };
+    function begins_with_short_option () 
+    { 
+        local first_option all_short_options='h';
+        first_option="${1:0:1}";
+        test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+    };
+    readonly RC='\033[0m' RED='\033[0;31m' BRED='\033[1;31m' GRAY='\033[1;30m';
+    readonly BLUE='\033[0;34m' BBLUE='\033[1;34m' CYAN='\033[0;34m' BCYAN='\033[1;34m';
+    readonly WHITE='\033[1;37m' GREEN='\033[0;32m' BGREEN='\033[1;32m' YELLOW='\033[1;33m';
+    readonly PURPLE='\033[0;35m' BPURPLE='\033[1;35m' ORANGE='\033[0;33m';
+    function subcommand::build () 
+    { 
+        function gettop () 
+        { 
+            local TOPFILE="Bashbox.meta";
+            local TOPDIR="src";
+            local TOP=;
+            if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then
+                { 
+                    ( cd "$TOP";
+                    echo "$PWD" )
+                };
+            else
+                { 
+                    if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
+                        { 
+                            echo "$PWD"
+                        };
+                    else
+                        { 
+                            local HERE="$PWD";
+                            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
+                                { 
+                                    \cd ..;
+                                    T="$(readlink -f "$PWD")"
+                                };
+                            done;
+                            \cd "$HERE";
+                            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
+                                { 
+                                    echo "$T"
+                                };
+                            fi
+                        };
+                    fi
+                };
+            fi
+        };
+        function begins_with_short_option () 
+        { 
+            local first_option all_short_options='h';
+            first_option="${1:0:1}";
+            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+        };
+        _positionals=();
+        _arg_path=;
+        _arg_debug="off";
+        _arg_release="off";
+        function print_help () 
+        { 
+            printf '%s\n' "<The general help message of my script>";
+            printf 'Usage: %s [--(no-)debug] [--(no-)release] [-h|--help] <path>\n' "$0";
+            printf '\t%s\n' "-h, --help: Prints help"
+        };
+        function parse_commandline () 
+        { 
+            _positionals_count=0;
+            while test $# -gt 0; do
+                _key="$1";
+                case "$_key" in 
+                    --no-debug | --debug)
+                        _arg_debug="on";
+                        test "${1:0:5}" = "--no-" && _arg_debug="off"
+                    ;;
+                    --no-release | --release)
+                        _arg_release="on";
+                        test "${1:0:5}" = "--no-" && _arg_release="off"
+                    ;;
+                    --help)
+                        print_help && exit 0
+                    ;;
+                    --)
+                        return 0
+                    ;;
+                    *)
+                        _last_positional="$1";
+                        _positionals+=("$_last_positional");
+                        _positionals_count=$((_positionals_count + 1))
+                    ;;
+                esac;
+                shift;
+            done
+        };
+        function handle_passed_args_count () 
+        { 
+            local _required_args_string="'path'";
+            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+        };
+        function assign_positional_args () 
+        { 
+            local _positional_name _shift_for=$1;
+            _positional_names="_arg_path ";
+            shift "$_shift_for";
+            for _positional_name in ${_positional_names};
+            do
+                test $# -gt 0 || break;
+                eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+                shift;
+            done
+        };
+        function parse_runargs () 
+        { 
+            for _arg in "${@}";
+            do
+                { 
+                    if test "$_arg" != '--'; then
+                        { 
+                            shift
+                        };
+                    else
+                        { 
+                            shift;
+                            _run_target_args=("$@");
+                            readonly _run_target_args;
+                            break
+                        };
+                    fi
+                };
+            done
+        };
+        parse_commandline "$@";
+        parse_runargs "$@";
+        assign_positional_args 1 "${_positionals[@]}";
+        : "${_arg_path:="$PWD"}";
+        _arg_path="$(readlink -f "$_arg_path")";
+        if test ! -d "$_arg_path/src" || test ! -e "$_arg_path/Bashbox.meta"; then
+            { 
+                _top="$(gettop)";
+                if test -n "$_top"; then
+                    { 
+                        _arg_path="$_top";
+                        unset _top
+                    };
+                else
+                    { 
+                        println::error "$_arg_path is not a valid bashbox project" 1
+                    };
+                fi
+            };
+        fi;
+        readonly _arg_path;
+        readonly _src_dir="$_arg_path/src";
+        readonly _target_dir="$_arg_path/target";
+        readonly _target_debug_dir="$_target_dir/debug";
+        readonly _target_release_dir="$_target_dir/release";
+        for _dir in "$_target_debug_dir" "$_target_release_dir";
+        do
+            { 
+                mkdir -p "$_dir"
+            };
+        done;
+        _build_variant="$(
+	if test "$_arg_release" == "on"; then {
+		echo "${_target_release_dir##*/}";
+	} else {
+		echo "${_target_debug_dir##*/}";
+	} fi
+)";
+        readonly _build_variant;
+        readonly _target_workdir="$_target_dir/$_build_variant";
+        readonly _target_workfile="$_target_workdir/executable";
+        readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+        rsync -a --delete "$_src_dir/" "$_target_workdir";
+        echo > "$_used_symbols_statfile";
+        function Resolve::Colons () 
+        { 
+            awk '{$1=$1;print}' <<< "$1" | sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"
+        };
+        function Resolve::SymbolPath () 
+        { 
+            local _input="$1";
+            local _parent;
+            _parent="$(
 			if grep "^use box::" <<<"$_input" 1>/dev/null; then
-				echo "$_input_src_dir";
+				echo "$_src_dir";
 			else
 				echo "$PWD";
 			fi
-		)"
-		echo "$_parent/$(Resolve::Colons "$_input")"
-	}
-
-	Resolve::UseSymbols() {
-		# TODO: Implement `_symbol` foce-load
-		# TODO: Implement ignoring already loaded symbol
-		# TODO: Implement `mod::` module level symbol resolving
-		# TODO: Implement BASHBOX_LIB_PATH
-		local _input="$1";
-		local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
-		local _parsed_input_name="${_parsed_input##*/}" && {
-			_parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
-			_parsed_input="$(readlink -f "$_parsed_input")";
-			unset _parsed_input_name;
-		}
-		local _src && {
-			if grep "use box::.*" <<<"$_input" 1>/dev/null; then {
-				_src="$_input_src_dir";
-			} else {
-				_src="$(readlink -f "${_parsed_input}")" && {
-					# Don't strip end if is a module dir
-					test ! -d "$_parsed_input" && {
-						_src="${_src%/*}";
-					}
-				} 
-			} fi
-		}
-		local _modname="${_parsed_input##*/}";
-
-		if ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
-			(
-				cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
-
-				# Handle missing symbols
-				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
-					println::error "$_input is missing" 1;
-				} fi
-
-				# Handle wildcard symbol loading
-				if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
-					cat "$_src/"* > "$_src/mod.sh";
-				} fi
-				# Handle module directory if required
-				if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then {
-					_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
-				} fi
-
-				geco "${RED}PWD${RC}: $PWD"; # DEBUG
-				geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
-
-				mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
-
-				# Cycle through main.sh symbols and so on.
-				: ${_last_parsed_input:="${_parsed_input}"};
-				geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
-
-				(
-					for _symbol in "${_use_symbols[@]}"; do
-						_last_parsed_input="${_parsed_input}";
-						Resolve::UseSymbols "$_symbol";
-						
-					done
-				)
-
-				# Start merging process
-				# File names come in reversed order
-				test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && {
-					sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
-					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
-					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
-				}
-				echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
-			)
-		} fi
-	}
-
-	parse_commandline "$@"
-	# handle_passed_args_count
-	assign_positional_args 1 "${_positionals[@]}"
-
-	# Define Vars
-	: "${_arg_path:="$PWD"}"
-	_arg_path="$(readlink -f "$_arg_path")" # Pull full path
-	_input_src_dir="$_arg_path/src"
-	_target_dir="$_arg_path/target/debug"
-	_used_symbols_statfile="$_target_dir/.used_symbols"
-	
-
-	# rm -rf "$_target_dir";
-	mkdir -p "$_target_dir";
-
-	if test ! -d "$_input_src_dir" || test ! -e "$_arg_path/Bashbox.meta"; then
-		println::error "$_arg_path is not a valid bashbox project" 1
-	fi
-
-# 	set -x
-# 	mapfile -t _use_symbols < <(grep -E '^use.*;$' "$_src_dir/main.sh")
-# 	for _symbol in "${_use_symbols[@]}"; do
-# 		Resolve::UseSymbols "$(Resolve::SymbolPath "$_symbol")"
-# 		echo lol
-# 	done
-
-	rsync -a --delete "$_input_src_dir/" "$_target_dir"
-	echo > "$_used_symbols_statfile";
-
-	Resolve::UseSymbols "$_target_dir/main";
-
-	# Concatinate bootstrap header to main.sh
-	local _bb_bootstrap;
-	_bb_bootstrap=$(declare -f bb_bootstrap_header) && {
-		_bb_bootstrap="${_bb_bootstrap#*{}";
-		_bb_bootstrap="${_bb_bootstrap%\}}";
-	}
-	local _ran="$RANDOM";
-	local _tmp_bbb_path="$_target_dir/.bb_bootstrap.$_ran";
-	echo '#!'"$(command -v bash)" > "$_tmp_bbb_path";
-	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path";
-	cat "$_tmp_bbb_path" "$_target_dir/main.sh" > "$_target_dir/executable";
-
-	cat << 'EOF' >> "$_target_dir/executable"
+		)";
+            echo "$_parent/$(Resolve::Colons "$_input")"
+        };
+        function Resolve::UseSymbols () 
+        { 
+            local _input="$1";
+            local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
+            local _parsed_input_name="${_parsed_input##*/}" && { 
+                _parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
+                _parsed_input="$(readlink -f "$_parsed_input")";
+                unset _parsed_input_name
+            };
+            local _src && { 
+                if grep "use box::.*" <<< "$_input" > /dev/null; then
+                    { 
+                        _src="$_src_dir"
+                    };
+                else
+                    { 
+                        _src="$(readlink -f "${_parsed_input}")" && { 
+                            test ! -d "$_parsed_input" && { 
+                                _src="${_src%/*}"
+                            }
+                        }
+                    };
+                fi
+            };
+            local _modname="${_parsed_input##*/}";
+            if ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then
+                { 
+                    ( cd "$_src";
+                    if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
+                        { 
+                            ( sleep 1 && kill -9 "$0" ) & println::error "$_input is missing" 1
+                        };
+                    fi;
+                    if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
+                        { 
+                            cat "$_src/"* > "$_src/mod.sh"
+                        };
+                    fi;
+                    if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then
+                        { 
+                            _parsed_input="$_parsed_input/mod"
+                        };
+                    fi;
+                    geco "${RED}PWD${RC}: $PWD";
+                    geco "${CYAN}File${RC}: ${_parsed_input}.sh";
+                    mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true);
+                    : ${_last_parsed_input:="${_parsed_input}"};
+                    geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
+                    ( for _symbol in "${_use_symbols[@]}";
+                    do
+                        _last_parsed_input="${_parsed_input}";
+                        Resolve::UseSymbols "$_symbol";
+                    done );
+                    test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && { 
+                        sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh"
+                    };
+                    echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)" )
+                };
+            fi
+        };
+        if test -e "$_arg_path/build.sh"; then
+            { 
+                source "$_arg_path/build.sh";
+                if declare -f bashbox_before_build | head -n0; then
+                    { 
+                        bashbox_before_build
+                    };
+                fi
+            };
+        fi;
+        Resolve::UseSymbols "$_target_workdir/main";
+        local _bb_bootstrap;
+        _bb_bootstrap=$(declare -f bb_bootstrap_header) && { 
+            _bb_bootstrap="${_bb_bootstrap#*{}";
+            _bb_bootstrap="${_bb_bootstrap%\}}"
+        };
+        local _ran="$RANDOM";
+        local _tmp_bbb_path="$_target_workdir/.bb_bootstrap.$_ran";
+        echo '#!'"$(command -v bash)" > "$_tmp_bbb_path";
+        echo "${_bb_bootstrap}" >> "$_tmp_bbb_path";
+        cat "$_tmp_bbb_path" "$_target_workdir/main.sh" > "$_target_workfile";
+        cat <<'EOF' >> "$_target_workfile"
 
 main "$@";
 
 EOF
-	rm "$_tmp_bbb_path";
 
-	# set -x
-	# geco '\n------'
-	# _used_symbols_arr_length="${#_used_symbols_arr[@]}";
-	# # _used_symbols_times=0;
-	# for _arr in "${_used_symbols_arr[@]}"; do {
-
-	# 	while test $_used_symbols_arr_length -ne 0; do {
-	# 		_used_symbols_arr_length=$((_used_symbols_arr_length - 1));
-	# 		_used_symbols_times=$((_used_symbols_times + 1));
-	# 		_used_symbols_times_next=$((_used_symbols_times + 1));
-
-	# 		echo "Last: ${_used_symbols_arr[-${_used_symbols_times_next}]}"
-
-	# 		# cat "${_used_symbols_arr[-1 -${_used_symbols_times}]}" "${_used_symbols_arr[-1]}";
-
-	# 		break;
-	# 	} done
-
-	# } done
-
-}
-# use clean;
-# use metadata;
-function subcommand::run() {
-function __use_func() {
-	# Arguments
-	for _input in "${@}"; do {
-		local _input="$_input"; # We re-assign the value to prevent for-loop glob expansion on files.
-		# local _input_extra_args="$BB_USE_ARGS"; # Only assign extra_args if they were actually passed.
-		local _bashbox_std="${BASHBOX_ROOT:-"$HOME/.bashbox"}/lib/std";
-		local _src && {
-			if grep "^box::.*" <<<"$_input" 1>/dev/null; then {
-				_src="$_main_src_dir";
-			} else {
-				_src="$(readlink -f "${BB_SOURCE}")" && _src="${_src%/*}";
-			} fi
-
-		}
-		local _parsed_input && _parsed_input="$(sed "s|box::||g; s|::|/|g" <<<"$_input")";
-		local _parsed_input_name="${_parsed_input##*/}";
-		_parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
-		unset _parsed_input_name;
-
-		# Functions
-		function source_fromFile() {
-			# Arguments
-			local _mod="$1";
-			local _modname="${_parsed_input##*/}";
-
-			function source_call() {
-				builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || {
-					println::error "Syntax/internal errors were detected in $_mod";
-				}
-
-				echo "$_mod" >> "$_use_calls_statfile" || {
-					println::error "Failed to register $_mod in log";
-				}
-			}
-
-			if test "${_modname::1}" == "_"; then {
-				source_call;
-			} elif ! grep "^${_mod}$" "$_use_calls_statfile" 1>/dev/null; then {
-				source_call;
-			} fi
-
-		}
-
-		function source_fromDir() {
-			local _dir="$1";
-			for _mod in "$_dir/"*; do {
-				source_fromFile "${_mod%.sh}";
-			} done
-		}
-
-		function fetchLib_fromPath() {
-			local _mod="$1";
-			local _found_file_mods=();
-			local _found_dir_mods=();
-
-			mapfile -t _paths < <(sed 's|:|\n|g' <<<"$BASHBOX_LIB_PATH");
-			for _path in "${_paths[@]}"; do {
-				if test -e "$_path/$_mod"; then {
-					_found_mods+=("$_path/$_mod");
-				} elif test -d "$_path/$_mod"; then {
-					_found_mods+=("$_path/$_mod");
-				} fi
-			} done
-
-			if test -n "${_found_file_mods[*]}" || test -n "${_found_dir_mods[*]}"; then {
-				for _mod in "${_found_file_mods[@]}"; do {
-					source_fromFile "$_mod";
-				} done
-
-				for _mod in "${_found_dir_mods[@]}"; do {
-					source_fromDir "$_mod";
-				} done
-
-				return 0
-			} else {
-				return 1
-			} fi
-		}
-
-		# Determine how to source
-		if test -e "$_src/${_parsed_input}.sh"; then { # When we have the file in module level.
-			source_fromFile "$_src/${_parsed_input}";
-
-		} elif test -e "$_src/${_parsed_input}/mod.sh"; then { # When we have mod.sh in module dir.
-			source_fromFile "${_src}/${_parsed_input}/mod";
-
-		} elif test -e "$_bashbox_std/${_parsed_input}.sh"; then { # When we have in bashbox std.
-			source_fromFile "$_bashbox_std/${_parsed_input}";
-
-		} elif grep '/\*$' <<<"$_parsed_input" 1>/dev/null; then { # When the input is a whole dir.
-			local _dir; _dir="$(sed 's|/\*$||' <<<"$_parsed_input")";
-
-			if test -d "$_src/$_dir"; then { # Check in module level.
-				source_fromDir "$_src/$_dir";
-			} elif test -d "$_bashbox_std/$_dir"; then { # Check in bashbox std.
-				source_fromDir "$_bashbox_std/$_dir";
-
-			} elif fetchLib_fromPath "$_parsed_input"; then { # Try to loopup in declared LIB PATH.
-				true
-
-			} else {
-				println::error "No such module tree as $_input was found";
-			} fi
-
-		} else {
-			println::error "No such module as $_input was found";
-		} fi
-
-	} done
-	unset BB_USE_ARGS;
-}
-# Created by argbash-init v2.10.0
-# ARG_OPTIONAL_BOOLEAN([debug])
-# ARG_OPTIONAL_BOOLEAN([release])
-# ARG_POSITIONAL_SINGLE([path])
-# ARG_DEFAULTS_POS()
-# ARG_HELP([<The general help message of my script>])
-# ARGBASH_GO()
-# needed because of Argbash --> m4_ignore([
-### START OF CODE GENERATED BY Argbash v2.10.0 one line above ###
-# Argbash is a bash code generator used to get arguments parsing right.
-# Argbash is FREE SOFTWARE, see https://argbash.io for more info
-
-begins_with_short_option()
-{
-	local first_option all_short_options='h'
-	first_option="${1:0:1}"
-	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-}
-
-# THE DEFAULTS INITIALIZATION - POSITIONALS
-_positionals=()
-_arg_path=
-# THE DEFAULTS INITIALIZATION - OPTIONALS
-_arg_debug="off"
-_arg_release="off"
-
-
-print_help()
-{
-	printf '%s\n' "<The general help message of my script>"
-	printf 'Usage: %s [--(no-)debug] [--(no-)release] [-h|--help] <path>\n' "$0"
-	printf '\t%s\n' "-h, --help: Prints help"
-}
-
-
-parse_commandline()
-{
-	_positionals_count=0
-	while test $# -gt 0
-	do
-		_key="$1"
-		case "$_key" in
-			--no-debug|--debug)
-				_arg_debug="on"
-				test "${1:0:5}" = "--no-" && _arg_debug="off"
-				;;
-			--no-release|--release)
-				_arg_release="on"
-				test "${1:0:5}" = "--no-" && _arg_release="off"
-				;;
-			-h|--help)
-				print_help
-				exit 0
-				;;
-			-h*)
-				print_help
-				exit 0
-				;;
-			*)
-				_last_positional="$1"
-				_positionals+=("$_last_positional")
-				_positionals_count=$((_positionals_count + 1))
-				;;
-		esac
-		shift
-	done
-}
-
-
-handle_passed_args_count()
-{
-	local _required_args_string="'path'"
-	test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
-	test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-}
-
-
-assign_positional_args()
-{
-	local _positional_name _shift_for=$1
-	_positional_names="_arg_path "
-
-	shift "$_shift_for"
-	for _positional_name in ${_positional_names}
-	do
-		test $# -gt 0 || break
-		eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1
-		shift
-		_final_args=("$@");
-	done
-}
-
-parse_commandline "$@"
-# handle_passed_args_count
-assign_positional_args 1 "${_positionals[@]}"
-set -- "${_final_args[@]}" && unset _final_args; # Reset arguments without the pos arg
-
-: "${_arg_path:="$PWD"}";
-_arg_path="$(readlink -f "$_arg_path")"; # Pull full path
-readonly _arg_path;
-readonly _src_dir="$_arg_path/src";
-readonly _target_dir="$_arg_path/target";
-readonly _target_debug_dir="$_target_dir/debug";
-readonly _target_release_dir="$_target_dir/release";
-
-# Start with creating the placeholder target dirs
-for _dir in "$_target_debug_dir" "$_target_release_dir"; do
-	mkdir -p "$_dir";
-done
-
-# Now lets detect the run variant
-_build_variant="$(
+        if test "$_build_variant" == "release"; then
+            { 
+                local _shebang;
+                local _zygote_name="main@bashbox%${_ran}";
+                local _tmp_bashfmt="$_target_workdir/.bb.fmt.$_ran";
+                geco "function ${_zygote_name}() {" > "$_tmp_bashfmt";
+                cat "$_target_workfile" >> "$_tmp_bashfmt";
+                geco "\n}" >> "$_tmp_bashfmt";
+                source "$_tmp_bashfmt";
+                _shebang="$(grep "#\!/.*" "$_target_workfile" | head -n1)";
+                geco "$_shebang" > "$_target_workfile";
+                declare -f "$_zygote_name" >> "$_target_workfile";
+                geco "\n${_zygote_name} \"\$@\";" >> "$_target_workfile";
+                rm "$_tmp_bashfmt"
+            };
+        fi;
+        rm "$_tmp_bbb_path";
+        if declare -f bashbox_after_build | head -n0; then
+            { 
+                bashbox_after_build
+            };
+        fi
+    };
+    function __use_func () 
+    { 
+        for _input in "${@}";
+        do
+            { 
+                local _input="$_input";
+                local _bashbox_std="${BASHBOX_ROOT:-"$HOME/.bashbox"}/lib/std";
+                local _src && { 
+                    if grep "^box::.*" <<< "$_input" > /dev/null; then
+                        { 
+                            _src="$_main_src_dir"
+                        };
+                    else
+                        { 
+                            _src="$(readlink -f "${BB_SOURCE}")" && _src="${_src%/*}"
+                        };
+                    fi
+                };
+                local _parsed_input && _parsed_input="$(sed "s|box::||g; s|::|/|g" <<<"$_input")";
+                local _parsed_input_name="${_parsed_input##*/}";
+                _parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
+                unset _parsed_input_name;
+                function source_fromFile () 
+                { 
+                    local _mod="$1";
+                    local _modname="${_parsed_input##*/}";
+                    function source_call () 
+                    { 
+                        builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || { 
+                            println::error "Syntax/internal errors were detected in $_mod"
+                        };
+                        echo "$_mod" >> "$_use_calls_statfile" || { 
+                            println::error "Failed to register $_mod in log"
+                        }
+                    };
+                    if test "${_modname::1}" == "_"; then
+                        { 
+                            source_call
+                        };
+                    else
+                        if ! grep "^${_mod}$" "$_use_calls_statfile" > /dev/null; then
+                            { 
+                                source_call
+                            };
+                        fi;
+                    fi
+                };
+                function source_fromDir () 
+                { 
+                    local _dir="$1";
+                    for _mod in "$_dir/"*;
+                    do
+                        { 
+                            source_fromFile "${_mod%.sh}"
+                        };
+                    done
+                };
+                function fetchLib_fromPath () 
+                { 
+                    local _mod="$1";
+                    local _found_file_mods=();
+                    local _found_dir_mods=();
+                    mapfile -t _paths < <(sed 's|:|\n|g' <<<"$BASHBOX_LIB_PATH");
+                    for _path in "${_paths[@]}";
+                    do
+                        { 
+                            if test -e "$_path/$_mod"; then
+                                { 
+                                    _found_mods+=("$_path/$_mod")
+                                };
+                            else
+                                if test -d "$_path/$_mod"; then
+                                    { 
+                                        _found_mods+=("$_path/$_mod")
+                                    };
+                                fi;
+                            fi
+                        };
+                    done;
+                    if test -n "${_found_file_mods[*]}" || test -n "${_found_dir_mods[*]}"; then
+                        { 
+                            for _mod in "${_found_file_mods[@]}";
+                            do
+                                { 
+                                    source_fromFile "$_mod"
+                                };
+                            done;
+                            for _mod in "${_found_dir_mods[@]}";
+                            do
+                                { 
+                                    source_fromDir "$_mod"
+                                };
+                            done;
+                            return 0
+                        };
+                    else
+                        { 
+                            return 1
+                        };
+                    fi
+                };
+                if test -e "$_src/${_parsed_input}.sh"; then
+                    { 
+                        source_fromFile "$_src/${_parsed_input}"
+                    };
+                else
+                    if test -e "$_src/${_parsed_input}/mod.sh"; then
+                        { 
+                            source_fromFile "${_src}/${_parsed_input}/mod"
+                        };
+                    else
+                        if test -e "$_bashbox_std/${_parsed_input}.sh"; then
+                            { 
+                                source_fromFile "$_bashbox_std/${_parsed_input}"
+                            };
+                        else
+                            if grep '/\*$' <<< "$_parsed_input" > /dev/null; then
+                                { 
+                                    local _dir;
+                                    _dir="$(sed 's|/\*$||' <<<"$_parsed_input")";
+                                    if test -d "$_src/$_dir"; then
+                                        { 
+                                            source_fromDir "$_src/$_dir"
+                                        };
+                                    else
+                                        if test -d "$_bashbox_std/$_dir"; then
+                                            { 
+                                                source_fromDir "$_bashbox_std/$_dir"
+                                            };
+                                        else
+                                            if fetchLib_fromPath "$_parsed_input"; then
+                                                { 
+                                                    true
+                                                };
+                                            else
+                                                { 
+                                                    println::error "No such module tree as $_input was found"
+                                                };
+                                            fi;
+                                        fi;
+                                    fi
+                                };
+                            else
+                                { 
+                                    println::error "No such module as $_input was found"
+                                };
+                            fi;
+                        fi;
+                    fi;
+                fi
+            };
+        done;
+        unset BB_USE_ARGS
+    };
+    function subcommand::run () 
+    { 
+        function gettop () 
+        { 
+            local TOPFILE="Bashbox.meta";
+            local TOPDIR="src";
+            local TOP=;
+            if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then
+                { 
+                    ( cd "$TOP";
+                    echo "$PWD" )
+                };
+            else
+                { 
+                    if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
+                        { 
+                            echo "$PWD"
+                        };
+                    else
+                        { 
+                            local HERE="$PWD";
+                            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
+                                { 
+                                    \cd ..;
+                                    T="$(readlink -f "$PWD")"
+                                };
+                            done;
+                            \cd "$HERE";
+                            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
+                                { 
+                                    echo "$T"
+                                };
+                            fi
+                        };
+                    fi
+                };
+            fi
+        };
+        function begins_with_short_option () 
+        { 
+            local first_option all_short_options='h';
+            first_option="${1:0:1}";
+            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+        };
+        _positionals=();
+        _arg_path=;
+        _arg_debug="off";
+        _arg_release="off";
+        function print_help () 
+        { 
+            printf '%s\n' "<The general help message of my script>";
+            printf 'Usage: %s [--(no-)debug] [--(no-)release] [-h|--help] <path>\n' "$0";
+            printf '\t%s\n' "-h, --help: Prints help"
+        };
+        function parse_commandline () 
+        { 
+            _positionals_count=0;
+            while test $# -gt 0; do
+                _key="$1";
+                case "$_key" in 
+                    --no-debug | --debug)
+                        _arg_debug="on";
+                        test "${1:0:5}" = "--no-" && _arg_debug="off"
+                    ;;
+                    --no-release | --release)
+                        _arg_release="on";
+                        test "${1:0:5}" = "--no-" && _arg_release="off"
+                    ;;
+                    --help)
+                        print_help && exit 0
+                    ;;
+                    --)
+                        return 0
+                    ;;
+                    *)
+                        _last_positional="$1";
+                        _positionals+=("$_last_positional");
+                        _positionals_count=$((_positionals_count + 1))
+                    ;;
+                esac;
+                shift;
+            done
+        };
+        function handle_passed_args_count () 
+        { 
+            local _required_args_string="'path'";
+            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+        };
+        function assign_positional_args () 
+        { 
+            local _positional_name _shift_for=$1;
+            _positional_names="_arg_path ";
+            shift "$_shift_for";
+            for _positional_name in ${_positional_names};
+            do
+                test $# -gt 0 || break;
+                eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+                shift;
+            done
+        };
+        function parse_runargs () 
+        { 
+            for _arg in "${@}";
+            do
+                { 
+                    if test "$_arg" != '--'; then
+                        { 
+                            shift
+                        };
+                    else
+                        { 
+                            shift;
+                            _run_target_args=("$@");
+                            readonly _run_target_args;
+                            break
+                        };
+                    fi
+                };
+            done
+        };
+        parse_commandline "$@";
+        parse_runargs "$@";
+        assign_positional_args 1 "${_positionals[@]}";
+        : "${_arg_path:="$PWD"}";
+        _arg_path="$(readlink -f "$_arg_path")";
+        if test ! -d "$_arg_path/src" || test ! -e "$_arg_path/Bashbox.meta"; then
+            { 
+                _top="$(gettop)";
+                if test -n "$_top"; then
+                    { 
+                        _arg_path="$_top";
+                        unset _top
+                    };
+                else
+                    { 
+                        println::error "$_arg_path is not a valid bashbox project" 1
+                    };
+                fi
+            };
+        fi;
+        readonly _arg_path;
+        readonly _src_dir="$_arg_path/src";
+        readonly _target_dir="$_arg_path/target";
+        readonly _target_debug_dir="$_target_dir/debug";
+        readonly _target_release_dir="$_target_dir/release";
+        for _dir in "$_target_debug_dir" "$_target_release_dir";
+        do
+            { 
+                mkdir -p "$_dir"
+            };
+        done;
+        _build_variant="$(
 	if test "$_arg_release" == "on"; then {
 		echo "${_target_release_dir##*/}";
 	} else {
-		echo "${_target_debug_dir##*/}"
+		echo "${_target_debug_dir##*/}";
 	} fi
-)"; # TODO: Need to add more cases depending on args.
-readonly _build_variant;
-readonly _target_workdir="$_target_dir/$_build_variant";
-
-# Now lets escape self arguments and assign run target argument in a variable.
-_times=0;
-for i in $(
-	a=$#;
-	until test $a -eq 0; do {
-		echo $a;
-		((a--));
-	} done
-); do {
-		test $_times -eq 2 && break;
-		eval "echo \$$i" | grep -E "\-\-debug|\-\-release" 1>/dev/null && {
-			set -- "${@:1:$i-1}" "${@:$i+1}";
-			_times=$((_times + 1))
-		}
-} done
-
-_run_target_args=("$@");
-readonly _run_target_args;
-
-# OTHER STUFF GENERATED BY Argbash
-
-### END OF CODE GENERATED BY Argbash (sortof) ### ])
-# We start with pulling and removing old files from source
-## rsync -a --delete "$_src_dir/" "$_target_workdir";
-rsync -a "$_src_dir/" "$_target_workdir";
-# Now bootstrap the initializer
-cat "$_main_src_dir/init.sh" "$_target_workdir/main.sh" > "$_target_workdir/.main.sh.cat";
-mv "$_target_workdir/.main.sh.cat" "$_target_workdir/main.sh";
-# Change PWD to 
-cd "$_target_workdir";
-chmod +x "main.sh";
-"$PWD/main.sh" "${_run_target_args[@]}";
-}
-# use new;
-
-function print_help() {
-	println::helpgen "${_self^^}" \
-		--short-desc "\
-GearLock Development Kit\
-" \
-		\
-		--usage "\
-${_self} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>\
-" \
-		\
-		--options-desc "\
--V, --version<^>Print version info and exit
+)";
+        readonly _build_variant;
+        readonly _target_workdir="$_target_dir/$_build_variant";
+        readonly _target_workfile="$_target_workdir/executable";
+        readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+        rsync -a --delete "$_src_dir/" "$_target_workdir";
+        echo > "$_used_symbols_statfile";
+        declare -f bb_bootstrap_header | tail -n +3 | head -n -1 > "$_target_workfile";
+        declare -f __use_func >> "$_target_workfile";
+        cat "$_target_workdir/main.sh" >> "$_target_workfile";
+        geco "\nmain \"\$@\";" >> "$_target_workfile";
+        chmod +x "$_target_workfile";
+        "$_target_workfile" "${_run_target_args[@]}"
+    };
+    function print_help () 
+    { 
+        println::helpgen "${_self^^}" --short-desc "GearLock Development Kit" --usage "${_self} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>" --options-desc "-V, --version<^>Print version info and exit
 -v, --verbose<^>Use very verbose output
 -q, --quiet<^>No output printed to stdout
 --offline<^>Run without checking for update
--h, --help<^>Prints this help information\
-" \
-		\
-		--subcommands "\
-new<^>${SUBCOMMANDS_DESC[1]}
+-h, --help<^>Prints this help information" --subcommands "new<^>${SUBCOMMANDS_DESC[1]}
 build<^>${SUBCOMMANDS_DESC[2]}
 clean<^>${SUBCOMMANDS_DESC[3]}
 extract<^>${SUBCOMMANDS_DESC[4]}
 install<^>${SUBCOMMANDS_DESC[5]}
-metadata<^>${SUBCOMMANDS_DESC[6]}\
-" \
-		\
-		--footer-msg "\
-Try 'gdk <subcommand> --help' for more information on a specific command.
-For bugreports: https://github.com/gearlock-users-repo/issues\
-";
-}
-
-function main() {
-	#####################
-	### Initialization
-	#####################
-	### Constants
-	# GCOMM="gearlock"
-	# PS3="$(echo -e "\nEnter a number >> ")"
-	readonly VERSION="0.1.0";
-	readonly SUBCOMMANDS_DESC=(
-		""
-		"Create a new gxp project"
-		"Compile the targetted project"
-		"Cleanup build directories"
-		"Extract a gxp to target dir"
-		"Install gdk onto PATH"
-		"Fetch metadata of a gxp"
-	);
-
-	### Mutables
-	_self="${0##*/}";
-	_selfDir="$(dirname "$(readlink -f "$0")")";
-	_arg_verbose=off;
-	_arg_quiet=off;
-	_arg_offline=off;
-
-	#####################
-	### Start of arg parse
-	#####################
-
-	# Assign optional parent arguments
-	for arg in "${@}"; do
-		case "$arg" in
-			--verbose | -v)
-				_arg_verbose=on;
-				;;
-			--quiet | -q)
-				_arg_quiet=on;
-				;;
-			--offline)
-				_arg_offline=on;
-				;;
-			--version | -V)
-				echo "$VERSION";
-				exit 0;
-				;;
-			--help | -h*)
-				test "$arg" == "$1" && print_help && exit 0;
-				;;
-		esac
-	done
-
-	# Drop/escape optional parent arguments
-	for i in $(
+metadata<^>${SUBCOMMANDS_DESC[6]}" --footer-msg "Try 'gdk <subcommand> --help' for more information on a specific command.
+For bugreports: https://github.com/gearlock-users-repo/issues"
+    };
+    function main () 
+    { 
+        readonly VERSION="0.1.0";
+        readonly SUBCOMMANDS_DESC=("" "Create a new gxp project" "Compile the targetted project" "Cleanup build directories" "Extract a gxp to target dir" "Install gdk onto PATH" "Fetch metadata of a gxp");
+        _self="${0##*/}";
+        _selfDir="$(dirname "$(readlink -f "$0")")";
+        _arg_verbose=off;
+        _arg_quiet=off;
+        _arg_offline=off;
+        for arg in "${@}";
+        do
+            case "$arg" in 
+                --)
+                    break
+                ;;
+                --verbose | -v)
+                    _arg_verbose=on
+                ;;
+                --quiet | -q)
+                    _arg_quiet=on
+                ;;
+                --offline)
+                    _arg_offline=on
+                ;;
+                --version | -V)
+                    echo "$VERSION";
+                    exit 0
+                ;;
+                --help | -h*)
+                    print_help && exit 0
+                ;;
+            esac;
+        done;
+        for i in $(
 		a=$#;
 		until test $a -eq 0; do
 			echo $a;
 			((a--));
 		done
-	); do
-		eval "echo \$$i" | grep -E 'verbose|quiet|offline' 1>/dev/null && {
-			set -- "${@:1:$i-1}" "${@:$i+1}";
-		}
-	done
-	# TODO(LESSON): Dynamic argument parsing on bash is a nightmare. Well, at least for me on this script.
-
-	#####################
-	### Setup options
-	#####################
-	## Verbose
-	test "$_arg_verbose" == on && test "$_arg_quiet" == off && {
-		set -x;
-	}
-
-	#####################
-	### Main execution
-	#####################
-	_subcommand_argv="$1" && shift || true;
-	case "$_subcommand_argv" in
-		run | new | build | clean | metadata)
-			subcommand::$_subcommand_argv "$@";
-			;;
-		*)
-			test -n "$_subcommand_argv" && println::warn "Unknown subcommand: $_subcommand_argv";
-			print_help;
-			test -n "$_subcommand_argv" && exit 1 || exit 0;
-			;;
-	esac
-
-	exit;
+	);
+        do
+            eval "echo \$$i" | grep -E 'verbose|quiet|offline' > /dev/null && { 
+                set -- "${@:1:$i-1}" "${@:$i+1}"
+            };
+        done;
+        test "$_arg_verbose" == on && test "$_arg_quiet" == off && { 
+            set -x
+        };
+        _subcommand_argv="${1:-}" && shift || true;
+        case "$_subcommand_argv" in 
+            run | new | build | clean | metadata)
+                subcommand::$_subcommand_argv "$@"
+            ;;
+            *)
+                test -n "$_subcommand_argv" && println::warn "Unknown subcommand: $_subcommand_argv";
+                print_help;
+                test -n "$_subcommand_argv" && exit 1 || exit 0
+            ;;
+        esac;
+        exit
+    };
+    main "$@"
 }
 
-main "$@";
-
+main@bashbox%332 "$@";

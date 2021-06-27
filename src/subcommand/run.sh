@@ -109,3 +109,15 @@ function __use_func() {
 	} done
 	unset BB_USE_ARGS;
 }
+
+function subcommand::run() {
+	use run_build_clap;
+
+	# Now bootstrap the initializer
+	declare -f bb_bootstrap_header | tail -n +3 | head -n -1 > "$_target_workfile";
+	declare -f __use_func >> "$_target_workfile";
+	cat "$_target_workdir/main.sh" >> "$_target_workfile";
+	geco "\nmain \"\$@\";" >> "$_target_workfile";
+	chmod +x "$_target_workfile";
+	"$_target_workfile" "${_run_target_args[@]}";
+}

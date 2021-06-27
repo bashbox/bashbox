@@ -82,6 +82,9 @@ function main() {
 	# Assign optional parent arguments
 	for arg in "${@}"; do
 		case "$arg" in
+			--)
+				break;
+				;;
 			--verbose | -v)
 				_arg_verbose=on;
 				;;
@@ -96,7 +99,7 @@ function main() {
 				exit 0;
 				;;
 			--help | -h*)
-				test "$arg" == "$1" && print_help && exit 0;
+				print_help && exit 0;
 				;;
 		esac
 	done
@@ -126,7 +129,7 @@ function main() {
 	#####################
 	### Main execution
 	#####################
-	_subcommand_argv="$1" && shift || true;
+	_subcommand_argv="${1:-}" && shift || true;
 	case "$_subcommand_argv" in
 		run | new | build | clean | metadata)
 			subcommand::$_subcommand_argv "$@";
