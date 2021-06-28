@@ -1,5 +1,5 @@
-#!/usr/bin/bash
-main@bashbox%332 () 
+#!/usr/bin/env bash
+main@bashbox%13228 () 
 { 
     set -o pipefail;
     set -o errexit;
@@ -13,6 +13,10 @@ main@bashbox%332 ()
     rm -f "$_use_calls_statfile" && touch "$_use_calls_statfile" || { 
         println::error "Failed to create $_use_calls_statfile"
     };
+    NAME="bashbox";
+    AUTHORS=("AXON <axonasif@gmail.com>");
+    VERSION="1.0";
+    DEPENDENCIES=();
     function bb_bootstrap_header () 
     { 
         set -o pipefail;
@@ -27,6 +31,21 @@ main@bashbox%332 ()
         rm -f "$_use_calls_statfile" && touch "$_use_calls_statfile" || { 
             println::error "Failed to create $_use_calls_statfile"
         }
+    };
+    function coming_soon () 
+    { 
+        println::error "In progress, coming in one of the future updates, try again later";
+        echo "nah"
+    };
+    function geco () 
+    { 
+        echo -e "$@"
+    };
+    function begins_with_short_option () 
+    { 
+        local first_option all_short_options='h';
+        first_option="${1:0:1}";
+        test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
     };
     function println::helpgen () 
     { 
@@ -201,21 +220,6 @@ main@bashbox%332 ()
         echo -e "[!!!] ${BRED}ERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
         exit $_return_code
     };
-    function coming_soon () 
-    { 
-        println::error "In progress, coming in one of the future updates, try again later";
-        echo "nah"
-    };
-    function geco () 
-    { 
-        echo -e "$@"
-    };
-    function begins_with_short_option () 
-    { 
-        local first_option all_short_options='h';
-        first_option="${1:0:1}";
-        test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-    };
     readonly RC='\033[0m' RED='\033[0;31m' BRED='\033[1;31m' GRAY='\033[1;30m';
     readonly BLUE='\033[0;34m' BBLUE='\033[1;34m' CYAN='\033[0;34m' BCYAN='\033[1;34m';
     readonly WHITE='\033[1;37m' GREEN='\033[0;32m' BGREEN='\033[1;32m' YELLOW='\033[1;33m';
@@ -345,8 +349,10 @@ main@bashbox%332 ()
         parse_runargs "$@";
         assign_positional_args 1 "${_positionals[@]}";
         : "${_arg_path:="$PWD"}";
+        readonly _bashbox_meta_name="Bashbox.meta";
+        readonly _src_dir_name="src";
         _arg_path="$(readlink -f "$_arg_path")";
-        if test ! -d "$_arg_path/src" || test ! -e "$_arg_path/Bashbox.meta"; then
+        if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then
             { 
                 _top="$(gettop)";
                 if test -n "$_top"; then
@@ -362,9 +368,10 @@ main@bashbox%332 ()
             };
         fi;
         readonly _arg_path;
-        readonly _src_dir="$_arg_path/src";
+        readonly _src_dir="$_arg_path/$_src_dir_name";
         readonly _target_dir="$_arg_path/target";
         readonly _target_debug_dir="$_target_dir/debug";
+        readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
         for _dir in "$_target_debug_dir" "$_target_release_dir";
         do
@@ -432,7 +439,7 @@ main@bashbox%332 ()
                     ( cd "$_src";
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
                         { 
-                            ( sleep 1 && kill -9 "$0" ) & println::error "$_input is missing" 1
+                            ( kill -9 "$0" ) & println::error "$_input is missing" 1
                         };
                     fi;
                     if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
@@ -480,8 +487,9 @@ main@bashbox%332 ()
         };
         local _ran="$RANDOM";
         local _tmp_bbb_path="$_target_workdir/.bb_bootstrap.$_ran";
-        echo '#!'"$(command -v bash)" > "$_tmp_bbb_path";
+        echo '#!'"$(command -v env) bash" > "$_tmp_bbb_path";
         echo "${_bb_bootstrap}" >> "$_tmp_bbb_path";
+        cat "$_bashbox_meta" >> "$_tmp_bbb_path";
         cat "$_tmp_bbb_path" "$_target_workdir/main.sh" > "$_target_workfile";
         cat <<'EOF' >> "$_target_workfile"
 
@@ -791,8 +799,10 @@ EOF
         parse_runargs "$@";
         assign_positional_args 1 "${_positionals[@]}";
         : "${_arg_path:="$PWD"}";
+        readonly _bashbox_meta_name="Bashbox.meta";
+        readonly _src_dir_name="src";
         _arg_path="$(readlink -f "$_arg_path")";
-        if test ! -d "$_arg_path/src" || test ! -e "$_arg_path/Bashbox.meta"; then
+        if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then
             { 
                 _top="$(gettop)";
                 if test -n "$_top"; then
@@ -808,9 +818,10 @@ EOF
             };
         fi;
         readonly _arg_path;
-        readonly _src_dir="$_arg_path/src";
+        readonly _src_dir="$_arg_path/$_src_dir_name";
         readonly _target_dir="$_arg_path/target";
         readonly _target_debug_dir="$_target_dir/debug";
+        readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
         for _dir in "$_target_debug_dir" "$_target_release_dir";
         do
@@ -861,42 +872,39 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
         _arg_verbose=off;
         _arg_quiet=off;
         _arg_offline=off;
-        for arg in "${@}";
+        for _arg in "${@}";
         do
-            case "$arg" in 
-                --)
-                    break
-                ;;
-                --verbose | -v)
-                    _arg_verbose=on
-                ;;
-                --quiet | -q)
-                    _arg_quiet=on
-                ;;
-                --offline)
-                    _arg_offline=on
-                ;;
-                --version | -V)
-                    echo "$VERSION";
-                    exit 0
-                ;;
-                --help | -h*)
-                    print_help && exit 0
-                ;;
-            esac;
-        done;
-        for i in $(
-		a=$#;
-		until test $a -eq 0; do
-			echo $a;
-			((a--));
-		done
-	);
-        do
-            eval "echo \$$i" | grep -E 'verbose|quiet|offline' > /dev/null && { 
-                set -- "${@:1:$i-1}" "${@:$i+1}"
+            { 
+                if test "$_arg" != "--" && grep -E '\-\-\w+' <<< "$_arg" > /dev/null; then
+                    { 
+                        case "$_arg" in 
+                            --verbose | -v)
+                                _arg_verbose=on
+                            ;;
+                            --quiet | -q)
+                                _arg_quiet=on
+                            ;;
+                            --offline)
+                                _arg_offline=on
+                            ;;
+                            --version | -V)
+                                echo "$VERSION";
+                                exit 0
+                            ;;
+                            --help | -h*)
+                                print_help && exit 0
+                            ;;
+                        esac;
+                        shift
+                    };
+                else
+                    { 
+                        break
+                    };
+                fi
             };
         done;
+        unset _arg;
         test "$_arg_verbose" == on && test "$_arg_quiet" == off && { 
             set -x
         };
@@ -916,4 +924,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%332 "$@";
+main@bashbox%13228 "$@";
