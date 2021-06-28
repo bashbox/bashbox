@@ -4,8 +4,8 @@ use header;
 #####################
 ### Public functions
 #####################
-use println::*;
 use utils;
+use term::print::*;
 use term::colors;
 # use install::garca;
 # use ensure::garca;

@@ -13,5 +13,5 @@ println::error() {
 	test "${_PRINT_HELP:-no}" == yes && print_help >&2
 
 	echo -e "[!!!] ${BRED}ERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
-	exit $_return_code;
+	# exit $_return_code;
 }

@@ -137,8 +137,10 @@ parse_runargs "$@";
 assign_positional_args 1 "${_positionals[@]}";
 
 : "${_arg_path:="$PWD"}";
+readonly _bashbox_meta_name="Bashbox.meta";
+readonly _src_dir_name="src";
 _arg_path="$(readlink -f "$_arg_path")"; # Pull full path
-if test ! -d "$_arg_path/src" || test ! -e "$_arg_path/Bashbox.meta"; then {
+if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then {
 	_top="$(gettop)";
 	if test -n "$_top"; then {
 		_arg_path="$_top";
@@ -148,9 +150,10 @@ if test ! -d "$_arg_path/src" || test ! -e "$_arg_path/Bashbox.meta"; then {
 	} fi
 } fi
 readonly _arg_path;
-readonly _src_dir="$_arg_path/src";
+readonly _src_dir="$_arg_path/$_src_dir_name";
 readonly _target_dir="$_arg_path/target";
 readonly _target_debug_dir="$_target_dir/debug";
+readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
 readonly _target_release_dir="$_target_dir/release";
 
 # Start with creating the placeholder target dirs

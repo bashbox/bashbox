@@ -111,10 +111,12 @@ function subcommand::build()
 	}
 	local _ran="$RANDOM";
 	local _tmp_bbb_path="$_target_workdir/.bb_bootstrap.$_ran";
-	echo '#!'"$(command -v bash)" > "$_tmp_bbb_path";
-	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path";
-	cat "$_tmp_bbb_path" "$_target_workdir/main.sh" > "$_target_workfile";
-
+	echo '#!'"$(command -v env) bash" > "$_tmp_bbb_path"; # Place shebang
+	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path"; # Concat bootstrap
+	cat "$_bashbox_meta" >> "$_tmp_bbb_path"; # Concat Bashbox.meta
+	cat "$_tmp_bbb_path" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
+	
+	# Concat main execution call
 	cat << 'EOF' >> "$_target_workfile"
 
 main "$@";
