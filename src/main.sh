@@ -83,8 +83,8 @@ function main() {
 	# Drop/escape optional parent arguments
 	# TODO: Needs review and improvement
 	for _arg in "${@}"; do {
-		# Doesnt contain `--`` and is a whole word with leading `--`
-		if test "$_arg" != "--" && grep -E '\-\-\w+' <<<"$_arg" 1>/dev/null; then {			
+		# Doesnt contain `--`` and is a whole word with leading `-`
+		if test "$_arg" != "--" && grep -E '\-\w+' <<<"$_arg" 1>/dev/null; then {
 			case "$_arg" in
 				# --)
 				# 	break;

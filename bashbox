@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%13228 () 
+main@bashbox%17696 () 
 { 
     set -o pipefail;
     set -o errexit;
@@ -875,7 +875,7 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
         for _arg in "${@}";
         do
             { 
-                if test "$_arg" != "--" && grep -E '\-\-\w+' <<< "$_arg" > /dev/null; then
+                if test "$_arg" != "--" && grep -E '\-\w+' <<< "$_arg" > /dev/null; then
                     { 
                         case "$_arg" in 
                             --verbose | -v)
@@ -924,4 +924,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%13228 "$@";
+main@bashbox%17696 "$@";
