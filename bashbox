@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%17696 () 
+main@bashbox%22906 () 
 { 
     set -o pipefail;
     set -o errexit;
@@ -409,6 +409,15 @@ main@bashbox%17696 ()
 		)";
             echo "$_parent/$(Resolve::Colons "$_input")"
         };
+        function Resolve::CheckNewline () 
+        { 
+            local _input="$1";
+            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
+                { 
+                    echo >> "$_input"
+                };
+            fi
+        };
         function Resolve::UseSymbols () 
         { 
             local _input="$1";
@@ -444,7 +453,13 @@ main@bashbox%17696 ()
                     fi;
                     if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
                         { 
-                            cat "$_src/"* > "$_src/mod.sh"
+                            for _modFile in "$_src/"*;
+                            do
+                                { 
+                                    Resolve::CheckNewline "$_modFile";
+                                    cat "$_modFile"* >> "$_src/mod.sh"
+                                };
+                            done
                         };
                     fi;
                     if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then
@@ -463,6 +478,7 @@ main@bashbox%17696 ()
                         Resolve::UseSymbols "$_symbol";
                     done );
                     test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && { 
+                        Resolve::CheckNewline "${_parsed_input}.sh";
                         sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh"
                     };
                     echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)" )
@@ -924,4 +940,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%17696 "$@";
+main@bashbox%22906 "$@";

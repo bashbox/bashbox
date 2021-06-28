@@ -18,7 +18,14 @@ function subcommand::build()
 				echo "$PWD";
 			fi
 		)"
-		echo "$_parent/$(Resolve::Colons "$_input")"
+		echo "$_parent/$(Resolve::Colons "$_input")"		
+	}
+
+	Resolve::CheckNewline() {
+		local _input="$1";
+		if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then {
+			echo >> "$_input";
+		} fi
 	}
 
 	Resolve::UseSymbols() {
@@ -56,7 +63,10 @@ function subcommand::build()
 
 				# Handle wildcard symbol loading
 				if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
-					cat "$_src/"* > "$_src/mod.sh";
+					for _modFile in "$_src/"*; do {
+						Resolve::CheckNewline "$_modFile";
+						cat "$_modFile"* >> "$_src/mod.sh";
+					} done
 				} fi
 				# Handle module directory if required
 				if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then {
@@ -83,6 +93,7 @@ function subcommand::build()
 				# Start merging process
 				# File names come in reversed order
 				test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && {
+					Resolve::CheckNewline "${_parsed_input}.sh";
 					sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
 					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
 					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
