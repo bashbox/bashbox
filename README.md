@@ -9,3 +9,5 @@ Bashbox compiles your modular bash project into a single file along bringing a s
 And hey, we finally have _some sort of_ `std` library for bash too! Along the ability to create your own library and let others use it.
 
 Bashbox design is `cargo` inspired but _for the bash buddies_, so I hope that tells the rest.
+
+## More things to write, this is incomplete at the moment
