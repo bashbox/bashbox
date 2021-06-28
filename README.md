@@ -1,37 +1,13 @@
-# BashBox
+# Introduction
 
-BashBox is purely written in bash unlike other utilities out there.
+Bashbox is a wannabe bash _compiler_ which aims to help create modular and maintainable bash projects.
 
-Meaning you don't need heavy stuff like python. As long you can run a bash script, this also runs.
+To give huge bash codebase a predictable form. Specially for the single script bash projects with thousands of lines of code.
 
-It allows you to easily do syntax/error-checking, beautification and optimization in tradional bash way in one shot!
+Bashbox compiles your modular bash project into a single file along bringing a standard set of bash enforcements to ensure that your code is safe and less error-prone while you code and test before publishing it in an production environment.
 
-# Installation & Usage
+And hey, we finally have _some sort of_ `std` library for bash too! Along the ability to create your own library and let others use it.
 
-To install clone this repository into your local machine and you should be good to go.
+Bashbox design is `cargo` inspired but _for the bash buddies_, so I hope that tells the rest.
 
-```bash
-git clone https://github.com/AXIM0S/bashbox && cd bashbox
-```
-
-You can pass as many bash scripts you want and the output will be written in a new file with `.bb.sh` suffix.
-
-```bash
-./bashbox bash-script.sh
-```
-
-[![asciicast](https://asciinema.org/a/pZO2PAWupVaTSBuVH2qmWxS24.svg)](https://asciinema.org/a/pZO2PAWupVaTSBuVH2qmWxS24)
-
-Protip: Place `bashbox` in _PATH_  to access from anywhere.
-
-# Future Plans
-
-* Minification feature
-* Obfuscation feature
-* More command line parameters to change how bashbox works
-
-# Get in touch
-
-## You can find me at https://supreme-gamers.com/members/axon.1
-
-I hope **bashbox** was helpful to you :)
+## More things to write, this is incomplete at the moment
