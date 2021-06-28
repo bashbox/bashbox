@@ -80,42 +80,52 @@ function main() {
 	#####################
 
 	# Assign optional parent arguments
-	for arg in "${@}"; do
-		case "$arg" in
-			--)
-				break;
-				;;
-			--verbose | -v)
-				_arg_verbose=on;
-				;;
-			--quiet | -q)
-				_arg_quiet=on;
-				;;
-			--offline)
-				_arg_offline=on;
-				;;
-			--version | -V)
-				echo "$VERSION";
-				exit 0;
-				;;
-			--help | -h*)
-				print_help && exit 0;
-				;;
-		esac
-	done
-
 	# Drop/escape optional parent arguments
-	for i in $(
-		a=$#;
-		until test $a -eq 0; do
-			echo $a;
-			((a--));
-		done
-	); do
-		eval "echo \$$i" | grep -E 'verbose|quiet|offline' 1>/dev/null && {
-			set -- "${@:1:$i-1}" "${@:$i+1}";
-		}
-	done
+	# TODO: Needs review and improvement
+	for _arg in "${@}"; do {
+		# Doesnt contain `--`` and is a whole word with leading `--`
+		if test "$_arg" != "--" && grep -E '\-\-\w+' <<<"$_arg" 1>/dev/null; then {			
+			case "$_arg" in
+				# --)
+				# 	break;
+				# 	;;
+				--verbose | -v)
+					_arg_verbose=on;
+					;;
+				--quiet | -q)
+					_arg_quiet=on;
+					;;
+				--offline)
+					_arg_offline=on;
+					;;
+				--version | -V)
+					echo "$VERSION";
+					exit 0;
+					;;
+				--help | -h*)
+					print_help && exit 0;
+					;;
+			esac
+			shift;
+		} else {
+			break;
+		} fi
+	} done
+	unset _arg;
+
+	# for i in $(
+	# 	a=$#;
+	# 	until test $a -eq 0; do
+	# 		echo $a;
+	# 		((a--));
+	# 	done
+	# ); do {
+	# 	echo "$i"
+	# 	eval "echo \$$i" | grep -E 'verbose|quiet|offline' 1>/dev/null && {
+	# 		set -- "${@:1:$i-1}" "${@:$i+1}";
+	# 	}
+	# } done
+	# unset i;
 	# TODO(LESSON): Dynamic argument parsing on bash is a nightmare. Well, at least for me on this script.
 
 	#####################
