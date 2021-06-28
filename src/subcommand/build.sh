@@ -51,7 +51,7 @@ function subcommand::build()
 
 				# Handle missing symbols
 				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
-					(sleep 1 && kill -9 "$0") & println::error "$_input is missing" 1;
+					(kill -9 "$0") & println::error "$_input is missing" 1;
 				} fi
 
 				# Handle wildcard symbol loading
