@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
-main@bashbox%13338 () 
+main@bashbox%17343 () 
 { 
     set -o pipefail;
     set -o errexit;
     set -o errtrace;
     set -o nounset;
     shopt -s expand_aliases;
-    alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
     trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR;
-    _main_src_dir="$(dirname "$(readlink -f "$0")")";
-    _use_calls_statfile="/tmp/.bashbox.use.calls";
-    rm -f "$_use_calls_statfile" && touch "$_use_calls_statfile" || { 
-        println::error "Failed to create $_use_calls_statfile"
-    };
     NAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
     VERSION="1.0";
@@ -24,14 +18,10 @@ main@bashbox%13338 ()
         set -o errtrace;
         set -o nounset;
         shopt -s expand_aliases;
-        alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
-        trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR;
-        _main_src_dir="$(dirname "$(readlink -f "$0")")";
-        _use_calls_statfile="/tmp/.bashbox.use.calls";
-        rm -f "$_use_calls_statfile" && touch "$_use_calls_statfile" || { 
-            println::error "Failed to create $_use_calls_statfile"
-        }
+        trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR
     };
+    readonly _bashbox_meta_name="Bashbox.meta";
+    readonly _src_dir_name="src";
     function coming_soon () 
     { 
         println::error "In progress, coming in one of the future updates, try again later";
@@ -318,9 +308,6 @@ main@bashbox%13338 ()
         parse_commandline "$@";
         parse_runargs "$@";
         assign_positional_args 1 "${_positionals[@]}";
-        : "${_arg_path:="$PWD"}";
-        readonly _bashbox_meta_name="Bashbox.meta";
-        readonly _src_dir_name="src";
         function gettop () 
         { 
             local TOPFILE="$_bashbox_meta_name";
@@ -358,6 +345,7 @@ main@bashbox%13338 ()
                 };
             fi
         };
+        : "${_arg_path:="$PWD"}";
         _arg_path="$(readlink -f "$_arg_path")";
         if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then
             { 
@@ -580,7 +568,7 @@ EOF
                         builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || { 
                             println::error "Syntax/internal errors were detected in $_mod"
                         };
-                        echo "$_mod" >> "$_use_calls_statfile" || { 
+                        echo "$_mod" >> "$_used_symbols_statfile" || { 
                             println::error "Failed to register $_mod in log"
                         }
                     };
@@ -589,7 +577,7 @@ EOF
                             source_call
                         };
                     else
-                        if ! grep "^${_mod}$" "$_use_calls_statfile" > /dev/null; then
+                        if ! grep "^${_mod}$" "$_used_symbols_statfile" > /dev/null; then
                             { 
                                 source_call
                             };
@@ -797,9 +785,6 @@ EOF
         parse_commandline "$@";
         parse_runargs "$@";
         assign_positional_args 1 "${_positionals[@]}";
-        : "${_arg_path:="$PWD"}";
-        readonly _bashbox_meta_name="Bashbox.meta";
-        readonly _src_dir_name="src";
         function gettop () 
         { 
             local TOPFILE="$_bashbox_meta_name";
@@ -837,6 +822,7 @@ EOF
                 };
             fi
         };
+        : "${_arg_path:="$PWD"}";
         _arg_path="$(readlink -f "$_arg_path")";
         if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then
             { 
@@ -879,11 +865,127 @@ EOF
         rsync -a --delete "$_src_dir/" "$_target_workdir";
         echo > "$_used_symbols_statfile";
         declare -f bb_bootstrap_header | tail -n +3 | head -n -1 > "$_target_workfile";
+        cat <<'EOF' >> "$_target_workfile"
+	alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
+	_main_src_dir="$(dirname "$(readlink -f "$0")")";
+EOF
+
         declare -f __use_func >> "$_target_workfile";
         cat "$_target_workdir/main.sh" >> "$_target_workfile";
         geco "\nmain \"\$@\";" >> "$_target_workfile";
         chmod +x "$_target_workfile";
         "$_target_workfile" "${_run_target_args[@]}"
+    };
+    function subcommand::new () 
+    { 
+        _positionals=();
+        _arg_path=;
+        _arg_codename=;
+        function print_help () 
+        { 
+            println::helpgen "${_self^^}-${_subcommand_argv^^}" --short-desc "${SUBCOMMANDS_DESC[1]}" --usage "${_self} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "-c, --codename<^>Avoid directory-as-codename
+-t, --template<^>core, mesa, kernel templates
+-h, --help<^>Prints this help information" --examples "### The basic way:
+${YELLOW}${_self} ${_subcommand_argv} awesome_project${RC}
+
+### Pre-setting project codename, avoiding directory-path as codename:
+${YELLOW}${_self} ${_subcommand_argv} --codename cake awesome_project${RC}
+
+### Using a specific template for project initialization(core is default):
+${YELLOW}${_self} ${_subcommand_argv} --template kernel awesome_project${RC}
+
+### Random usage EXAMPLES just for referrence:
+${YELLOW}${_self} ${_subcommand_argv} --template mesa graphics_lib
+${_self} ${_subcommand_argv} --template=kernel vanilla_kernel --codename vkernel
+${_self} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
+        };
+        function parse_commandline () 
+        { 
+            _positionals_count=0;
+            while test $# -gt 0; do
+                _key="$1";
+                case "$_key" in 
+                    --codename | -c)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_codename="$2";
+                        shift
+                    ;;
+                    --codename=*)
+                        _arg_codename="${_key##--codename=}"
+                    ;;
+                    -h | --help)
+                        print_help;
+                        exit 0
+                    ;;
+                    -h*)
+                        print_help;
+                        exit 0
+                    ;;
+                    *)
+                        _last_positional="$1";
+                        _positionals+=("$_last_positional");
+                        _positionals_count=$((_positionals_count + 1))
+                    ;;
+                esac;
+                shift;
+            done
+        };
+        function handle_passed_args_count () 
+        { 
+            local _required_args_string="'path'";
+            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+        };
+        function assign_positional_args () 
+        { 
+            local _positional_name _shift_for=$1;
+            _positional_names="_arg_path ";
+            shift "$_shift_for";
+            for _positional_name in ${_positional_names};
+            do
+                test $# -gt 0 || break;
+                eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1;
+                shift;
+            done
+        };
+        parse_commandline "$@";
+        handle_passed_args_count;
+        assign_positional_args 1 "${_positionals[@]}";
+        _path_codename="${_arg_path##*/}";
+        : "${_arg_codename:="$_path_codename"}";
+        _arg_codename="$(tr -d '[:space:]' <<<"${_arg_codename,,}")";
+        if test -e "$_arg_path"; then
+            println::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1;
+        fi;
+        println::info "Setting up project at \`$_arg_path\`";
+        mkdir -p "$_arg_path" || println::error "Failed to initialize the project directory";
+        mkdir -p "$_arg_path/$_src_dir_name";
+        cat <<'EOF' > "$_arg_path/$_src_dir_name/main.sh"
+function main() {
+	echo "Hello world";
+}
+
+EOF
+
+        cat <<EOF > "$_arg_path/$_bashbox_meta_name"
+NAME="$_path_codename"
+CODENAME="$_arg_codename"
+AUTHORS=("AXON <axonasif@gmail.com>")
+VERSION="1.0"
+DEPENDENCIES=()
+EOF
+
+        println::info "Initializing git version control for your project";
+        if command -v git > /dev/null; then
+            git init "$_arg_path" > /dev/null || { 
+                _r=$?;
+                rm -r "$_arg_path";
+                println::error "Failed to initialize git at \`$_arg_path\`" $_r
+            };
+        else
+            rm -r "$_arg_path";
+            println::error "git does not seem to be available, please install it" 1;
+        fi
     };
     function print_help () 
     { 
@@ -960,4 +1062,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%13338 "$@";
+main@bashbox%17343 "$@";

@@ -1,9 +1,9 @@
 # Bootstrap
 use header;
-
 #####################
 ### Public functions
 #####################
+use variables;
 use utils;
 use term::print::*;
 use term::colors;

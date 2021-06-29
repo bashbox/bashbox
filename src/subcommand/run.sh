@@ -28,14 +28,14 @@ function __use_func() {
 					println::error "Syntax/internal errors were detected in $_mod";
 				}
 
-				echo "$_mod" >> "$_use_calls_statfile" || {
+				echo "$_mod" >> "$_used_symbols_statfile" || {
 					println::error "Failed to register $_mod in log";
 				}
 			}
 
 			if test "${_modname::1}" == "_"; then {
 				source_call;
-			} elif ! grep "^${_mod}$" "$_use_calls_statfile" 1>/dev/null; then {
+			} elif ! grep "^${_mod}$" "$_used_symbols_statfile" 1>/dev/null; then {
 				source_call;
 			} fi
 
@@ -115,6 +115,10 @@ function subcommand::run() {
 
 	# Now bootstrap the initializer
 	declare -f bb_bootstrap_header | tail -n +3 | head -n -1 > "$_target_workfile";
+	cat << 'EOF' >> "$_target_workfile"
+	alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
+	_main_src_dir="$(dirname "$(readlink -f "$0")")";
+EOF
 	declare -f __use_func >> "$_target_workfile";
 	cat "$_target_workdir/main.sh" >> "$_target_workfile";
 	geco "\nmain \"\$@\";" >> "$_target_workfile";

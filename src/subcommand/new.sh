@@ -5,7 +5,7 @@ function subcommand::new()
 	_arg_path=
 	# THE DEFAULTS INITIALIZATION - OPTIONALS
 	_arg_codename=
-	_arg_template=
+	# _arg_template=
 
 
 	print_help()
@@ -63,14 +63,14 @@ ${_self} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 				--codename=*)
 					_arg_codename="${_key##--codename=}"
 					;;
-				--template|-t)
-					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-					_arg_template="$2"
-					shift
-					;;
-				--template=*)
-					_arg_template="${_key##--template=}"
-					;;
+				# --template|-t)
+				# 	test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
+				# 	_arg_template="$2"
+				# 	shift
+				# 	;;
+				# --template=*)
+				# 	_arg_template="${_key##--template=}"
+				# 	;;
 				-h|--help)
 					print_help
 					exit 0
@@ -128,7 +128,7 @@ ${_self} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 	_path_codename="${_arg_path##*/}"
 	## When no codename || template is specified
 	: "${_arg_codename:="$_path_codename"}"
-	: "${_arg_template:="core"}"
+	## : "${_arg_template:="core"}"
 	_arg_codename="$(tr -d '[:space:]' <<<"${_arg_codename,,}")" # Make lowercase and trim whitespaces
 
 	## When the codename dir already exists
@@ -136,40 +136,43 @@ ${_self} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 		println::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1
 	fi
 
-	## Check if the $_arg_template is valid
-	! echo "$_arg_template" | grep -E 'core|mesa|kernel' 1>/dev/null && {
-		println::error "$_arg_template is not a valid template.\n\t  core, kernel and mesa are the valid ones, so try again." 1
-	}
+	# ## Check if the $_arg_template is valid
+	# if ! echo "$_arg_template" | grep -E 'core|mesa|kernel' 1>/dev/null; then {
+	# 	println::error "$_arg_template is not a valid template.\n\t  core, kernel and mesa are the valid ones, so try again." 1
+	# } fi
 
 	## Finally setup the template as per inputs
 	println::info "Setting up project at \`$_arg_path\`"
 	mkdir -p "$_arg_path" || println::error "Failed to initialize the project directory"
 
-	println::info "Using $_arg_template template"
-	case "$_arg_template" in
-		core)
-			echo '~~~CORE_TEMPLATE_ENCODED~~~'
-			;;
-		mesa)
-			echo '~~~MESA_TEMPLATE_ENCODED~~~'
-			;;
-		kernel)
-			echo '~~~KERNEL_TEMPLATE_ENCODED~~~'
-			;;
-	esac | base64 -d | tar -C "$_arg_path" -xpzf - || { rm -r "$_arg_path"; println::error "Failed to extract $_arg_template template"; }
-	find "$_arg_path" -type f -name '.keep' -exec rm {} \; || { rm -r "$_arg_path"; println::error "Failed to cleanup .keep files"; }
+	# Create src dir and main.sh
+	mkdir -p "$_arg_path/$_src_dir_name";
+	cat << 'EOF' > "$_arg_path/$_src_dir_name/main.sh"
+function main() {
+	echo "Hello world";
+}
+
+EOF
+
+	cat << EOF > "$_arg_path/$_bashbox_meta_name"
+NAME="$_path_codename"
+CODENAME="$_arg_codename"
+AUTHORS=("AXON <axonasif@gmail.com>")
+VERSION="1.0"
+DEPENDENCIES=()
+EOF
 
 # 	rsync -a --exclude='.git' --exclude='.keep' "$TEMPLATES_DIR/$_arg_template/" "$PROJECTS_DIR/$_arg_codename" || exit
 
-	println::info "Resetting CODENAME metadata to $_arg_codename on !zygote.sh"
-	sed -i "s|\bCODENAME=\".*\"|CODENAME=\"$_arg_codename\"|g" "$_arg_path/"'!zygote.sh' \
-		|| { rm -r "$_arg_path"; println::error 'Failed to reset CODENAME metadata on !zygote.sh'; }
+	# println::info "Resetting CODENAME metadata to $_arg_codename on $_bashbox_meta_name"
+	# sed -i "s|\bCODENAME=\".*\"|CODENAME=\"$_arg_codename\"|g" "$_arg_path/$_bashbox_meta_name" \
+	# 	|| { rm -r "$_arg_path"; println::error "Failed to reset CODENAME metadata on $_bashbox_meta_name"; }
 
 	println::info "Initializing git version control for your project"
 	if command -v git 1>/dev/null; then
-		git init "$_arg_path" 1>/dev/null || { rm -r "$_arg_path"; println::error "Failed to initialize git at \`$_arg_path\`"; }
+		git init "$_arg_path" 1>/dev/null || { _r=$?; rm -r "$_arg_path"; println::error "Failed to initialize git at \`$_arg_path\`" $_r; }
 	else
 		rm -r "$_arg_path"
-		println::error "git does not seem to be available" 1
+		println::error "git does not seem to be available, please install it" 1
 	fi
 }

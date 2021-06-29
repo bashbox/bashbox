@@ -109,9 +109,6 @@ parse_runargs "$@";
 # handle_passed_args_count
 assign_positional_args 1 "${_positionals[@]}";
 
-: "${_arg_path:="$PWD"}";
-readonly _bashbox_meta_name="Bashbox.meta";
-readonly _src_dir_name="src";
 function gettop() {
 	# Taken from AOSP build/envsetup.sh with slight modifications
     local TOPFILE="$_bashbox_meta_name";
@@ -140,6 +137,8 @@ function gettop() {
 		} fi
 	} fi
 }
+
+: "${_arg_path:="$PWD"}";
 _arg_path="$(readlink -f "$_arg_path")"; # Pull full path
 if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then {
 	_top="$(gettop)";
@@ -150,6 +149,7 @@ if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta
 		println::error "$_arg_path is not a valid bashbox project" 1
 	} fi
 } fi
+
 readonly _arg_path;
 readonly _src_dir="$_arg_path/$_src_dir_name";
 readonly _target_dir="$_arg_path/target";
