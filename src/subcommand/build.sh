@@ -47,11 +47,12 @@ function subcommand::build()
 					test ! -d "$_parsed_input" && {
 						_src="${_src%/*}";
 					}
-				} 
+				}
 			} fi
 		}
 		local _modname="${_parsed_input##*/}";
 
+		# TODO: Need to write to $_used_symbols_statfile
 		if ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
 			(
 				cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
@@ -155,6 +156,14 @@ EOF
 	# Run build.sh after actions
 	if declare -f bashbox_after_build | head -n0; then { # Will fail without pipefail
 		bashbox_after_build;
+	} fi
+
+	# Make it executable by the user
+	chmod +x "$_target_workfile";
+	
+	# Run the executable if _arg_run is passed
+	if test "$_arg_run" == "on"; then {
+		"$_target_workfile" "${_run_target_args[@]}";
 	} fi
 
 	# set -x

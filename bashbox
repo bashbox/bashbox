@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%22906 () 
+main@bashbox%13338 () 
 { 
     set -o pipefail;
     set -o errexit;
@@ -226,11 +226,107 @@ main@bashbox%22906 ()
     readonly PURPLE='\033[0;35m' BPURPLE='\033[1;35m' ORANGE='\033[0;33m';
     function subcommand::build () 
     { 
+        function begins_with_short_option () 
+        { 
+            local first_option all_short_options='h';
+            first_option="${1:0:1}";
+            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+        };
+        _positionals=();
+        _arg_path=;
+        _arg_debug="off";
+        _arg_release="off";
+        _arg_run="off";
+        function print_help () 
+        { 
+            printf '%s\n' "<The general help message of my script>";
+            printf 'Usage: %s [--(no-)debug] [--(no-)release] [-h|--help] <path>\n' "$0";
+            printf '\t%s\n' "-h, --help: Prints help"
+        };
+        function parse_commandline () 
+        { 
+            _positionals_count=0;
+            while test $# -gt 0; do
+                { 
+                    _key="$1";
+                    case "$_key" in 
+                        --debug)
+                            _arg_debug="on"
+                        ;;
+                        --release)
+                            _arg_release="on"
+                        ;;
+                        --run)
+                            _arg_run="on"
+                        ;;
+                        --help)
+                            print_help && exit 0
+                        ;;
+                        --)
+                            return 0
+                        ;;
+                        *)
+                            _last_positional="$1";
+                            _positionals+=("$_last_positional");
+                            _positionals_count=$((_positionals_count + 1))
+                        ;;
+                    esac;
+                    shift
+                };
+            done
+        };
+        function handle_passed_args_count () 
+        { 
+            local _required_args_string="'path'";
+            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+        };
+        function assign_positional_args () 
+        { 
+            local _positional_name _shift_for=$1;
+            _positional_names="_arg_path ";
+            shift "$_shift_for";
+            for _positional_name in ${_positional_names};
+            do
+                { 
+                    test $# -gt 0 || break;
+                    eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+                    shift
+                };
+            done
+        };
+        function parse_runargs () 
+        { 
+            for _arg in "${@}";
+            do
+                { 
+                    if test "$_arg" != '--'; then
+                        { 
+                            shift
+                        };
+                    else
+                        { 
+                            shift;
+                            _run_target_args=("$@");
+                            readonly _run_target_args;
+                            break
+                        };
+                    fi
+                };
+            done
+        };
+        parse_commandline "$@";
+        parse_runargs "$@";
+        assign_positional_args 1 "${_positionals[@]}";
+        : "${_arg_path:="$PWD"}";
+        readonly _bashbox_meta_name="Bashbox.meta";
+        readonly _src_dir_name="src";
         function gettop () 
         { 
-            local TOPFILE="Bashbox.meta";
-            local TOPDIR="src";
+            local TOPFILE="$_bashbox_meta_name";
+            local TOPDIR="$_src_dir_name";
             local TOP=;
+            local T;
             if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then
                 { 
                     ( cd "$TOP";
@@ -262,95 +358,6 @@ main@bashbox%22906 ()
                 };
             fi
         };
-        function begins_with_short_option () 
-        { 
-            local first_option all_short_options='h';
-            first_option="${1:0:1}";
-            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-        };
-        _positionals=();
-        _arg_path=;
-        _arg_debug="off";
-        _arg_release="off";
-        function print_help () 
-        { 
-            printf '%s\n' "<The general help message of my script>";
-            printf 'Usage: %s [--(no-)debug] [--(no-)release] [-h|--help] <path>\n' "$0";
-            printf '\t%s\n' "-h, --help: Prints help"
-        };
-        function parse_commandline () 
-        { 
-            _positionals_count=0;
-            while test $# -gt 0; do
-                _key="$1";
-                case "$_key" in 
-                    --no-debug | --debug)
-                        _arg_debug="on";
-                        test "${1:0:5}" = "--no-" && _arg_debug="off"
-                    ;;
-                    --no-release | --release)
-                        _arg_release="on";
-                        test "${1:0:5}" = "--no-" && _arg_release="off"
-                    ;;
-                    --help)
-                        print_help && exit 0
-                    ;;
-                    --)
-                        return 0
-                    ;;
-                    *)
-                        _last_positional="$1";
-                        _positionals+=("$_last_positional");
-                        _positionals_count=$((_positionals_count + 1))
-                    ;;
-                esac;
-                shift;
-            done
-        };
-        function handle_passed_args_count () 
-        { 
-            local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-        };
-        function assign_positional_args () 
-        { 
-            local _positional_name _shift_for=$1;
-            _positional_names="_arg_path ";
-            shift "$_shift_for";
-            for _positional_name in ${_positional_names};
-            do
-                test $# -gt 0 || break;
-                eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
-                shift;
-            done
-        };
-        function parse_runargs () 
-        { 
-            for _arg in "${@}";
-            do
-                { 
-                    if test "$_arg" != '--'; then
-                        { 
-                            shift
-                        };
-                    else
-                        { 
-                            shift;
-                            _run_target_args=("$@");
-                            readonly _run_target_args;
-                            break
-                        };
-                    fi
-                };
-            done
-        };
-        parse_commandline "$@";
-        parse_runargs "$@";
-        assign_positional_args 1 "${_positionals[@]}";
-        : "${_arg_path:="$PWD"}";
-        readonly _bashbox_meta_name="Bashbox.meta";
-        readonly _src_dir_name="src";
         _arg_path="$(readlink -f "$_arg_path")";
         if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then
             { 
@@ -534,6 +541,12 @@ EOF
             { 
                 bashbox_after_build
             };
+        fi;
+        chmod +x "$_target_workfile";
+        if test "$_arg_run" == "on"; then
+            { 
+                "$_target_workfile" "${_run_target_args[@]}"
+            };
         fi
     };
     function __use_func () 
@@ -692,11 +705,107 @@ EOF
     };
     function subcommand::run () 
     { 
+        function begins_with_short_option () 
+        { 
+            local first_option all_short_options='h';
+            first_option="${1:0:1}";
+            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+        };
+        _positionals=();
+        _arg_path=;
+        _arg_debug="off";
+        _arg_release="off";
+        _arg_run="off";
+        function print_help () 
+        { 
+            printf '%s\n' "<The general help message of my script>";
+            printf 'Usage: %s [--(no-)debug] [--(no-)release] [-h|--help] <path>\n' "$0";
+            printf '\t%s\n' "-h, --help: Prints help"
+        };
+        function parse_commandline () 
+        { 
+            _positionals_count=0;
+            while test $# -gt 0; do
+                { 
+                    _key="$1";
+                    case "$_key" in 
+                        --debug)
+                            _arg_debug="on"
+                        ;;
+                        --release)
+                            _arg_release="on"
+                        ;;
+                        --run)
+                            _arg_run="on"
+                        ;;
+                        --help)
+                            print_help && exit 0
+                        ;;
+                        --)
+                            return 0
+                        ;;
+                        *)
+                            _last_positional="$1";
+                            _positionals+=("$_last_positional");
+                            _positionals_count=$((_positionals_count + 1))
+                        ;;
+                    esac;
+                    shift
+                };
+            done
+        };
+        function handle_passed_args_count () 
+        { 
+            local _required_args_string="'path'";
+            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+        };
+        function assign_positional_args () 
+        { 
+            local _positional_name _shift_for=$1;
+            _positional_names="_arg_path ";
+            shift "$_shift_for";
+            for _positional_name in ${_positional_names};
+            do
+                { 
+                    test $# -gt 0 || break;
+                    eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+                    shift
+                };
+            done
+        };
+        function parse_runargs () 
+        { 
+            for _arg in "${@}";
+            do
+                { 
+                    if test "$_arg" != '--'; then
+                        { 
+                            shift
+                        };
+                    else
+                        { 
+                            shift;
+                            _run_target_args=("$@");
+                            readonly _run_target_args;
+                            break
+                        };
+                    fi
+                };
+            done
+        };
+        parse_commandline "$@";
+        parse_runargs "$@";
+        assign_positional_args 1 "${_positionals[@]}";
+        : "${_arg_path:="$PWD"}";
+        readonly _bashbox_meta_name="Bashbox.meta";
+        readonly _src_dir_name="src";
         function gettop () 
         { 
-            local TOPFILE="Bashbox.meta";
-            local TOPDIR="src";
+            local TOPFILE="$_bashbox_meta_name";
+            local TOPDIR="$_src_dir_name";
             local TOP=;
+            local T;
             if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then
                 { 
                     ( cd "$TOP";
@@ -728,95 +837,6 @@ EOF
                 };
             fi
         };
-        function begins_with_short_option () 
-        { 
-            local first_option all_short_options='h';
-            first_option="${1:0:1}";
-            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-        };
-        _positionals=();
-        _arg_path=;
-        _arg_debug="off";
-        _arg_release="off";
-        function print_help () 
-        { 
-            printf '%s\n' "<The general help message of my script>";
-            printf 'Usage: %s [--(no-)debug] [--(no-)release] [-h|--help] <path>\n' "$0";
-            printf '\t%s\n' "-h, --help: Prints help"
-        };
-        function parse_commandline () 
-        { 
-            _positionals_count=0;
-            while test $# -gt 0; do
-                _key="$1";
-                case "$_key" in 
-                    --no-debug | --debug)
-                        _arg_debug="on";
-                        test "${1:0:5}" = "--no-" && _arg_debug="off"
-                    ;;
-                    --no-release | --release)
-                        _arg_release="on";
-                        test "${1:0:5}" = "--no-" && _arg_release="off"
-                    ;;
-                    --help)
-                        print_help && exit 0
-                    ;;
-                    --)
-                        return 0
-                    ;;
-                    *)
-                        _last_positional="$1";
-                        _positionals+=("$_last_positional");
-                        _positionals_count=$((_positionals_count + 1))
-                    ;;
-                esac;
-                shift;
-            done
-        };
-        function handle_passed_args_count () 
-        { 
-            local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-        };
-        function assign_positional_args () 
-        { 
-            local _positional_name _shift_for=$1;
-            _positional_names="_arg_path ";
-            shift "$_shift_for";
-            for _positional_name in ${_positional_names};
-            do
-                test $# -gt 0 || break;
-                eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
-                shift;
-            done
-        };
-        function parse_runargs () 
-        { 
-            for _arg in "${@}";
-            do
-                { 
-                    if test "$_arg" != '--'; then
-                        { 
-                            shift
-                        };
-                    else
-                        { 
-                            shift;
-                            _run_target_args=("$@");
-                            readonly _run_target_args;
-                            break
-                        };
-                    fi
-                };
-            done
-        };
-        parse_commandline "$@";
-        parse_runargs "$@";
-        assign_positional_args 1 "${_positionals[@]}";
-        : "${_arg_path:="$PWD"}";
-        readonly _bashbox_meta_name="Bashbox.meta";
-        readonly _src_dir_name="src";
         _arg_path="$(readlink -f "$_arg_path")";
         if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then
             { 
@@ -940,4 +960,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%22906 "$@";
+main@bashbox%13338 "$@";

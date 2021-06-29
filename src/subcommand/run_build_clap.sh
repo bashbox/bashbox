@@ -10,47 +10,21 @@
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 
-function gettop() {
-	# Taken from AOSP build/envsetup.sh with slight modifications
-    local TOPFILE="Bashbox.meta";
-	local TOPDIR="src";
-	local TOP=;
-    if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then {
-        # The following circumlocution ensures we remove symlinks from TOP.
-        (cd "$TOP"; echo "$PWD");
-    } else {
-        if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then {
-            # The following circumlocution (repeated below as well) ensures
-            # that we record the true directory name and not one that is
-            # faked up with symlink names.
-            echo "$PWD";
-		} else {
-            local HERE="$PWD";
-            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do {
-                \cd ..;
-                T="$(readlink -f "$PWD")";
-			} done
-            \cd "$HERE";
-            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then {
-                echo "$T";
-			} fi
-		} fi
-	} fi
-}
 
 begins_with_short_option()
 {
-	local first_option all_short_options='h'
-	first_option="${1:0:1}"
-	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+	local first_option all_short_options='h';
+	first_option="${1:0:1}";
+	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0;
 }
 
 # THE DEFAULTS INITIALIZATION - POSITIONALS
-_positionals=()
-_arg_path=
+_positionals=();
+_arg_path=;
 # THE DEFAULTS INITIALIZATION - OPTIONALS
-_arg_debug="off"
-_arg_release="off"
+_arg_debug="off";
+_arg_release="off";
+_arg_run="off";
 
 
 print_help()
@@ -63,56 +37,55 @@ print_help()
 
 parse_commandline()
 {
-	_positionals_count=0
-	while test $# -gt 0
-	do
+	_positionals_count=0;
+	while test $# -gt 0; do {
 		_key="$1"
 		case "$_key" in
-			--no-debug|--debug)
-				_arg_debug="on"
-				test "${1:0:5}" = "--no-" && _arg_debug="off"
+			--debug)
+				_arg_debug="on";
 				;;
-			--no-release|--release)
-				_arg_release="on"
-				test "${1:0:5}" = "--no-" && _arg_release="off"
+			--release)
+				_arg_release="on";
 				;;
-				--help)
-					print_help && exit 0;
+			--run)
+				_arg_run="on";
+				;;
+			--help)
+				print_help && exit 0;
 				;;
 			--) # Do not parse anymore if _run_target_args are found.
 				return 0;
 				;;
 			*)
-				_last_positional="$1"
-				_positionals+=("$_last_positional")
-				_positionals_count=$((_positionals_count + 1))
+				_last_positional="$1";
+				_positionals+=("$_last_positional");
+				_positionals_count=$((_positionals_count + 1));
 				;;
 		esac
 		shift
-	done
+	} done
 }
 
 
 handle_passed_args_count()
 {
-	local _required_args_string="'path'"
-	test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
-	test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+	local _required_args_string="'path'";
+	test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+	test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1;
 }
 
 
 assign_positional_args()
 {
-	local _positional_name _shift_for=$1
-	_positional_names="_arg_path "
+	local _positional_name _shift_for=$1;
+	_positional_names="_arg_path ";
 
-	shift "$_shift_for"
-	for _positional_name in ${_positional_names}
-	do
-		test $# -gt 0 || break
-		eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1
-		shift
-	done
+	shift "$_shift_for";
+	for _positional_name in ${_positional_names}; do {
+		test $# -gt 0 || break;
+		eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+		shift;
+	} done
 }
 
 parse_runargs()
@@ -139,6 +112,34 @@ assign_positional_args 1 "${_positionals[@]}";
 : "${_arg_path:="$PWD"}";
 readonly _bashbox_meta_name="Bashbox.meta";
 readonly _src_dir_name="src";
+function gettop() {
+	# Taken from AOSP build/envsetup.sh with slight modifications
+    local TOPFILE="$_bashbox_meta_name";
+	local TOPDIR="$_src_dir_name";
+	local TOP=;
+	local T;
+    if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then {
+        # The following circumlocution ensures we remove symlinks from TOP.
+        (cd "$TOP"; echo "$PWD");
+    } else {
+        if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then {
+            # The following circumlocution (repeated below as well) ensures
+            # that we record the true directory name and not one that is
+            # faked up with symlink names.
+            echo "$PWD";
+		} else {
+            local HERE="$PWD";
+            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do {
+                \cd ..;
+                T="$(readlink -f "$PWD")";
+			} done
+            \cd "$HERE";
+            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then {
+                echo "$T";
+			} fi
+		} fi
+	} fi
+}
 _arg_path="$(readlink -f "$_arg_path")"; # Pull full path
 if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then {
 	_top="$(gettop)";
@@ -181,5 +182,3 @@ echo > "$_used_symbols_statfile";
 # OTHER STUFF GENERATED BY Argbash
 
 ### END OF CODE GENERATED BY Argbash (sortof) ### ])
-
-
