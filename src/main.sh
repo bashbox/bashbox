@@ -20,7 +20,7 @@ use subcommand;
 function print_help() {
 	println::helpgen "${_self^^}" \
 		--short-desc "\
-GearLock Development Kit\
+Wannabe bash compiler\
 " \
 		\
 		--usage "\

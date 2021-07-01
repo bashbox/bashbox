@@ -3,7 +3,7 @@ function __use_func() {
 	for _input in "${@}"; do {
 		local _input="$_input"; # We re-assign the value to prevent for-loop glob expansion on files.
 		# local _input_extra_args="$BB_USE_ARGS"; # Only assign extra_args if they were actually passed.
-		local _bashbox_std="${BASHBOX_ROOT:-"$HOME/.bashbox"}/lib/std";
+	
 		local _src && {
 			if grep "^box::.*" <<<"$_input" 1>/dev/null; then {
 				_src="$_main_src_dir";
@@ -21,7 +21,7 @@ function __use_func() {
 		function source_fromFile() {
 			# Arguments
 			local _mod="$1";
-			local _modname="${_parsed_input##*/}";
+			local _modname="${_input##*::}";
 
 			function source_call() {
 				builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || {
@@ -50,15 +50,18 @@ function __use_func() {
 
 		function fetchLib_fromPath() {
 			local _mod="$1";
+			local _paths;
 			local _found_file_mods=();
 			local _found_dir_mods=();
 
 			mapfile -t _paths < <(sed 's|:|\n|g' <<<"$BASHBOX_LIB_PATH");
 			for _path in "${_paths[@]}"; do {
 				if test -e "$_path/$_mod"; then {
-					_found_mods+=("$_path/$_mod");
+					_found_file_mods+=("$_path/$_mod");
+					break;
 				} elif test -d "$_path/$_mod"; then {
-					_found_mods+=("$_path/$_mod");
+					_found_dir_mods+=("$_path/$_mod");
+					break;
 				} fi
 			} done
 
@@ -84,18 +87,18 @@ function __use_func() {
 		} elif test -e "$_src/${_parsed_input}/mod.sh"; then { # When we have mod.sh in module dir.
 			source_fromFile "${_src}/${_parsed_input}/mod";
 
-		} elif test -e "$_bashbox_std/${_parsed_input}.sh"; then { # When we have in bashbox std.
-			source_fromFile "$_bashbox_std/${_parsed_input}";
+		} elif test -e "$_bashbox_libdir/${_parsed_input}.sh"; then { # When we have in bashbox std.
+			source_fromFile "$_bashbox_libdir/${_parsed_input}";
 
 		} elif grep '/\*$' <<<"$_parsed_input" 1>/dev/null; then { # When the input is a whole dir.
 			local _dir; _dir="$(sed 's|/\*$||' <<<"$_parsed_input")";
 
 			if test -d "$_src/$_dir"; then { # Check in module level.
 				source_fromDir "$_src/$_dir";
-			} elif test -d "$_bashbox_std/$_dir"; then { # Check in bashbox std.
-				source_fromDir "$_bashbox_std/$_dir";
+			} elif test -d "$_bashbox_libdir/$_dir"; then { # Check in bashbox std.
+				source_fromDir "$_bashbox_libdir/$_dir";
 
-			} elif fetchLib_fromPath "$_parsed_input"; then { # Try to loopup in declared LIB PATH.
+			} elif fetchLib_fromPath "$_parsed_input"; then { # Try to lookup in declared LIB PATH.
 				true
 
 			} else {
@@ -111,13 +114,14 @@ function __use_func() {
 }
 
 function subcommand::run() {
-	use run_build_clap;
+	use _run_build_clap;
 
 	# Now bootstrap the initializer
 	declare -f bb_bootstrap_header | tail -n +3 | head -n -1 > "$_target_workfile";
 	cat << 'EOF' >> "$_target_workfile"
 	alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
 	_main_src_dir="$(dirname "$(readlink -f "$0")")";
+	_used_symbols_statfile="$_main_src_dir/.used_symbols";
 EOF
 	declare -f __use_func >> "$_target_workfile";
 	cat "$_target_workdir/main.sh" >> "$_target_workfile";

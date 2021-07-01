@@ -1,7 +1,7 @@
 function subcommand::build()
 {
 # 	ensure::garca
-	use run_build_clap;
+	use _run_build_clap;
 	
 	Resolve::Colons() {
 		 awk '{$1=$1;print}' <<<"$1" \
@@ -34,6 +34,7 @@ function subcommand::build()
 		local _input="$1";
 		local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
 		local _parsed_input_name="${_parsed_input##*/}" && {
+			local _modname="${_parsed_input_name}";
 			_parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
 			_parsed_input="$(readlink -f "$_parsed_input")";
 			unset _parsed_input_name;
@@ -50,10 +51,10 @@ function subcommand::build()
 				}
 			} fi
 		}
-		local _modname="${_parsed_input##*/}";
 
 		# TODO: Need to write to $_used_symbols_statfile
-		if ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
+		if test "${_modname::1}" == "_" \
+		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
 			(
 				cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
 
@@ -93,12 +94,13 @@ function subcommand::build()
 
 				# Start merging process
 				# File names come in reversed order
-				test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && {
+				if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then {
 					Resolve::CheckNewline "${_parsed_input}.sh";
 					sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
 					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
 					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
-				}
+				} fi
+				echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
 				echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
 			)
 		} fi

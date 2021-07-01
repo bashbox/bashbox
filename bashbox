@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%17343 () 
+main@bashbox%7928 () 
 { 
     set -o pipefail;
     set -o errexit;
@@ -22,6 +22,8 @@ main@bashbox%17343 ()
     };
     readonly _bashbox_meta_name="Bashbox.meta";
     readonly _src_dir_name="src";
+    readonly _bashbox_home="${HOME:-"${0%/*}"}/.bashbox" && mkdir -p "$_bashbox_home";
+    readonly _bashbox_libdir="$_bashbox_home/lib" && mkdir -p "$_bashbox_libdir";
     function coming_soon () 
     { 
         println::error "In progress, coming in one of the future updates, try again later";
@@ -418,6 +420,7 @@ main@bashbox%17343 ()
             local _input="$1";
             local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
             local _parsed_input_name="${_parsed_input##*/}" && { 
+                local _modname="${_parsed_input_name}";
                 _parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
                 _parsed_input="$(readlink -f "$_parsed_input")";
                 unset _parsed_input_name
@@ -437,8 +440,7 @@ main@bashbox%17343 ()
                     };
                 fi
             };
-            local _modname="${_parsed_input##*/}";
-            if ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then
+            if test "${_modname::1}" == "_" || ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then
                 { 
                     ( cd "$_src";
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
@@ -472,10 +474,13 @@ main@bashbox%17343 ()
                         _last_parsed_input="${_parsed_input}";
                         Resolve::UseSymbols "$_symbol";
                     done );
-                    test "${_parsed_input}.sh" != "${_last_parsed_input}.sh" && { 
-                        Resolve::CheckNewline "${_parsed_input}.sh";
-                        sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh"
-                    };
+                    if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then
+                        { 
+                            Resolve::CheckNewline "${_parsed_input}.sh";
+                            sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh"
+                        };
+                    fi;
+                    echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
                     echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)" )
                 };
             fi
@@ -543,7 +548,6 @@ EOF
         do
             { 
                 local _input="$_input";
-                local _bashbox_std="${BASHBOX_ROOT:-"$HOME/.bashbox"}/lib/std";
                 local _src && { 
                     if grep "^box::.*" <<< "$_input" > /dev/null; then
                         { 
@@ -562,7 +566,7 @@ EOF
                 function source_fromFile () 
                 { 
                     local _mod="$1";
-                    local _modname="${_parsed_input##*/}";
+                    local _modname="${_input##*::}";
                     function source_call () 
                     { 
                         builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || { 
@@ -597,6 +601,7 @@ EOF
                 function fetchLib_fromPath () 
                 { 
                     local _mod="$1";
+                    local _paths;
                     local _found_file_mods=();
                     local _found_dir_mods=();
                     mapfile -t _paths < <(sed 's|:|\n|g' <<<"$BASHBOX_LIB_PATH");
@@ -605,12 +610,14 @@ EOF
                         { 
                             if test -e "$_path/$_mod"; then
                                 { 
-                                    _found_mods+=("$_path/$_mod")
+                                    _found_file_mods+=("$_path/$_mod");
+                                    break
                                 };
                             else
                                 if test -d "$_path/$_mod"; then
                                     { 
-                                        _found_mods+=("$_path/$_mod")
+                                        _found_dir_mods+=("$_path/$_mod");
+                                        break
                                     };
                                 fi;
                             fi
@@ -648,9 +655,9 @@ EOF
                             source_fromFile "${_src}/${_parsed_input}/mod"
                         };
                     else
-                        if test -e "$_bashbox_std/${_parsed_input}.sh"; then
+                        if test -e "$_bashbox_libdir/${_parsed_input}.sh"; then
                             { 
-                                source_fromFile "$_bashbox_std/${_parsed_input}"
+                                source_fromFile "$_bashbox_libdir/${_parsed_input}"
                             };
                         else
                             if grep '/\*$' <<< "$_parsed_input" > /dev/null; then
@@ -662,9 +669,9 @@ EOF
                                             source_fromDir "$_src/$_dir"
                                         };
                                     else
-                                        if test -d "$_bashbox_std/$_dir"; then
+                                        if test -d "$_bashbox_libdir/$_dir"; then
                                             { 
-                                                source_fromDir "$_bashbox_std/$_dir"
+                                                source_fromDir "$_bashbox_libdir/$_dir"
                                             };
                                         else
                                             if fetchLib_fromPath "$_parsed_input"; then
@@ -868,6 +875,7 @@ EOF
         cat <<'EOF' >> "$_target_workfile"
 	alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
 	_main_src_dir="$(dirname "$(readlink -f "$0")")";
+	_used_symbols_statfile="$_main_src_dir/.used_symbols";
 EOF
 
         declare -f __use_func >> "$_target_workfile";
@@ -989,7 +997,7 @@ EOF
     };
     function print_help () 
     { 
-        println::helpgen "${_self^^}" --short-desc "GearLock Development Kit" --usage "${_self} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>" --options-desc "-V, --version<^>Print version info and exit
+        println::helpgen "${_self^^}" --short-desc "Wannabe bash compiler" --usage "${_self} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>" --options-desc "-V, --version<^>Print version info and exit
 -v, --verbose<^>Use very verbose output
 -q, --quiet<^>No output printed to stdout
 --offline<^>Run without checking for update
@@ -1062,4 +1070,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%17343 "$@";
+main@bashbox%7928 "$@";
