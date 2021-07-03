@@ -123,6 +123,7 @@ function subcommand::run() {
 	_main_src_dir="$(dirname "$(readlink -f "$0")")";
 	_used_symbols_statfile="$_main_src_dir/.used_symbols";
 EOF
+	declare -f 'println::error' >> "$_target_workfile";
 	declare -f __use_func >> "$_target_workfile";
 	cat "$_target_workdir/main.sh" >> "$_target_workfile";
 	geco "\nmain \"\$@\";" >> "$_target_workfile";
