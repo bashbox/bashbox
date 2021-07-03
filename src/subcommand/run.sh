@@ -116,8 +116,12 @@ function __use_func() {
 function subcommand::run() {
 	use _run_build_clap;
 
+	# Add some variables
+	cat << 'EOF' > "$_target_workfile"
+_self_executable="$0";
+EOF
 	# Now bootstrap the initializer
-	declare -f bb_bootstrap_header | tail -n +3 | head -n -1 > "$_target_workfile";
+	declare -f bb_bootstrap_header | tail -n +3 | head -n -1 >> "$_target_workfile";
 	cat << 'EOF' >> "$_target_workfile"
 	alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
 	_main_src_dir="$(dirname "$(readlink -f "$0")")";

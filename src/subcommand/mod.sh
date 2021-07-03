@@ -3,3 +3,4 @@ use build;
 # use metadata;
 use run;
 use new;
+use selfinstall;

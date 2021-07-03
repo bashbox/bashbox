@@ -18,6 +18,15 @@ use term::colors;
 use subcommand;
 
 function print_help() {
+	readonly SUBCOMMANDS_DESC=(
+		""
+		"Create a new bashbox project"
+		"Compile the targetted project"
+		"Cleanup build directories"
+		"Install a bashbox project from repo"
+		"Install bashbox into PATH"
+	);
+
 	println::helpgen "${_self^^}" \
 		--short-desc "\
 Wannabe bash compiler\
@@ -39,15 +48,15 @@ ${_self} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>\
 new<^>${SUBCOMMANDS_DESC[1]}
 build<^>${SUBCOMMANDS_DESC[2]}
 clean<^>${SUBCOMMANDS_DESC[3]}
-extract<^>${SUBCOMMANDS_DESC[4]}
-install<^>${SUBCOMMANDS_DESC[5]}
-metadata<^>${SUBCOMMANDS_DESC[6]}\
+install<^>${SUBCOMMANDS_DESC[4]}
+selfinstall<^>${SUBCOMMANDS_DESC[5]}\
 " \
 		\
 		--footer-msg "\
 Try 'gdk <subcommand> --help' for more information on a specific command.
 For bugreports: https://github.com/gearlock-users-repo/issues\
 ";
+
 }
 
 function main() {
@@ -58,15 +67,6 @@ function main() {
 	# GCOMM="gearlock"
 	# PS3="$(echo -e "\nEnter a number >> ")"
 	readonly VERSION="0.1.0";
-	readonly SUBCOMMANDS_DESC=(
-		""
-		"Create a new gxp project"
-		"Compile the targetted project"
-		"Cleanup build directories"
-		"Extract a gxp to target dir"
-		"Install gdk onto PATH"
-		"Fetch metadata of a gxp"
-	);
 
 	### Mutables
 	_self="${0##*/}";
@@ -141,7 +141,7 @@ function main() {
 	#####################
 	_subcommand_argv="${1:-}" && shift || true;
 	case "$_subcommand_argv" in
-		run | new | build | clean | metadata)
+		run | new | build | clean | install | selfinstall)
 			subcommand::$_subcommand_argv "$@";
 			;;
 		*)

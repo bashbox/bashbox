@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-main@bashbox%18343 () 
+main@bashbox%30230 () 
 { 
+    _self_executable="$0";
     function println::error () 
     { 
         local _return_code=${2:-$?};
@@ -40,6 +41,7 @@ main@bashbox%18343 ()
     readonly _src_dir_name="src";
     readonly _bashbox_home="${HOME:-"${0%/*}"}/.bashbox" && mkdir -p "$_bashbox_home";
     readonly _bashbox_libdir="$_bashbox_home/lib" && mkdir -p "$_bashbox_libdir";
+    readonly _bashbox_bindir="$_bashbox_home/bin" && mkdir -p "$_bashbox_bindir";
     function coming_soon () 
     { 
         println::error "In progress, coming in one of the future updates, try again later";
@@ -527,6 +529,10 @@ main@bashbox%18343 ()
         local _ran="$RANDOM";
         local _tmp_bbb_path="$_target_workdir/.bb_bootstrap.$_ran";
         echo '#!'"$(command -v env) bash" > "$_tmp_bbb_path";
+        cat <<'EOF' >> "$_tmp_bbb_path"
+_self_executable="$0";
+EOF
+
         declare -f 'println::error' >> "$_tmp_bbb_path";
         echo "${_bb_bootstrap}" >> "$_tmp_bbb_path";
         cat "$_bashbox_meta" >> "$_tmp_bbb_path";
@@ -895,7 +901,11 @@ EOF
         readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
         rsync -a --delete "$_src_dir/" "$_target_workdir";
         echo > "$_used_symbols_statfile";
-        declare -f bb_bootstrap_header | tail -n +3 | head -n -1 > "$_target_workfile";
+        cat <<'EOF' > "$_target_workfile"
+_self_executable="$0";
+EOF
+
+        declare -f bb_bootstrap_header | tail -n +3 | head -n -1 >> "$_target_workfile";
         cat <<'EOF' >> "$_target_workfile"
 	alias use='BB_USE_ARGS=("$@"); BB_SOURCE="${BASH_SOURCE[0]}" __use_func';
 	_main_src_dir="$(dirname "$(readlink -f "$0")")";
@@ -1020,8 +1030,72 @@ EOF
             println::error "git does not seem to be available, please install it" 1;
         fi
     };
+    function subcommand::selfinstall () 
+    { 
+        local PATH="$_bashbox_bindir:$PATH";
+        local _path;
+        while read -r _path; do
+            { 
+                if test -w "$_path"; then
+                    { 
+                        local _target_install_dir="$_path";
+                        break
+                    };
+                fi
+            };
+        done < <(sed 's|:|\n|g' <<<"$PATH");
+        if ! test -v _target_install_dir; then
+            { 
+                println::error "Failed to retrieve a usable PATH directory" 1
+            };
+        fi;
+        function check_shellrc_key () 
+        { 
+            local _input_file="$1";
+            if grep "$_shellrc_key" "$_input_file" > /dev/null; then
+                { 
+                    return 0
+                };
+            else
+                { 
+                    return 1
+                };
+            fi
+        };
+        local _shellrc_key="BASHBOX_BINDIR";
+        local _shellrcs=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish");
+        for _shellrc in "${_shellrcs[@]}";
+        do
+            { 
+                if test -e "$_shellrc" && ! check_shellrc_key "$_shellrc"; then
+                    { 
+                        case "$_shellrc" in 
+                            "${_shellrcs[0]}")
+                                echo "${_shellrc_key}=\"$_bashbox_bindir\"" >> "$_shellrc";
+                                echo "export PATH=\"\$${_shellrc_key}:\$PATH\"" >> "$_shellrc"
+                            ;;
+                            "${_shellrcs[1]}")
+                                echo "${_shellrc_key}=\"$_bashbox_bindir\"" >> "$_shellrc";
+                                echo "export PATH=\"\$${_shellrc_key}:\$PATH\"" >> "$_shellrc"
+                            ;;
+                            "${_shellrcs[2]}")
+                                echo "set ${_shellrc_key} \"$_bashbox_bindir\"" >> "$_shellrc";
+                                echo "set PATH \"\$${_shellrc_key}\" \"\$PATH\"" >> "$_shellrc";
+                                echo "export PATH" >> "$_shellrc"
+                            ;;
+                        esac
+                    };
+                fi
+            };
+        done;
+        println::info "Installing to $_target_install_dir";
+        cp "$_self_executable" "$_target_install_dir";
+        chmod +x "$_target_install_dir/${_self_executable##*/}";
+        println::info "Installation complete, now simply run \`${_self_executable##*/} --help\` to get started"
+    };
     function print_help () 
     { 
+        readonly SUBCOMMANDS_DESC=("" "Create a new bashbox project" "Compile the targetted project" "Cleanup build directories" "Install a bashbox project from repo" "Install bashbox into PATH");
         println::helpgen "${_self^^}" --short-desc "Wannabe bash compiler" --usage "${_self} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>" --options-desc "-V, --version<^>Print version info and exit
 -v, --verbose<^>Use very verbose output
 -q, --quiet<^>No output printed to stdout
@@ -1029,15 +1103,13 @@ EOF
 -h, --help<^>Prints this help information" --subcommands "new<^>${SUBCOMMANDS_DESC[1]}
 build<^>${SUBCOMMANDS_DESC[2]}
 clean<^>${SUBCOMMANDS_DESC[3]}
-extract<^>${SUBCOMMANDS_DESC[4]}
-install<^>${SUBCOMMANDS_DESC[5]}
-metadata<^>${SUBCOMMANDS_DESC[6]}" --footer-msg "Try 'gdk <subcommand> --help' for more information on a specific command.
+install<^>${SUBCOMMANDS_DESC[4]}
+selfinstall<^>${SUBCOMMANDS_DESC[5]}" --footer-msg "Try 'gdk <subcommand> --help' for more information on a specific command.
 For bugreports: https://github.com/gearlock-users-repo/issues"
     };
     function main () 
     { 
         readonly VERSION="0.1.0";
-        readonly SUBCOMMANDS_DESC=("" "Create a new gxp project" "Compile the targetted project" "Cleanup build directories" "Extract a gxp to target dir" "Install gdk onto PATH" "Fetch metadata of a gxp");
         _self="${0##*/}";
         _selfDir="$(dirname "$(readlink -f "$0")")";
         _arg_verbose=off;
@@ -1081,7 +1153,7 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
         };
         _subcommand_argv="${1:-}" && shift || true;
         case "$_subcommand_argv" in 
-            run | new | build | clean | metadata)
+            run | new | build | clean | install | selfinstall)
                 subcommand::$_subcommand_argv "$@"
             ;;
             *)
@@ -1095,4 +1167,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%18343 "$@";
+main@bashbox%30230 "$@";

@@ -126,6 +126,10 @@ function subcommand::build()
 	local _ran="$RANDOM";
 	local _tmp_bbb_path="$_target_workdir/.bb_bootstrap.$_ran";
 	echo '#!'"$(command -v env) bash" > "$_tmp_bbb_path"; # Place shebang
+	# Add some variables
+	cat << 'EOF' >> "$_tmp_bbb_path"
+_self_executable="$0";
+EOF
 	declare -f 'println::error'	>> "$_tmp_bbb_path"; # Concate println:error
 	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path"; # Concat bootstrap
 	cat "$_bashbox_meta" >> "$_tmp_bbb_path"; # Concat Bashbox.meta
