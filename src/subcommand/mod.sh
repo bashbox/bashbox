@@ -4,3 +4,4 @@ use build;
 use run;
 use new;
 use selfinstall;
+use install;
