@@ -171,6 +171,10 @@ EOF
 	println::info "Initializing git version control for your project"
 	if command -v git 1>/dev/null; then
 		git init "$_arg_path" 1>/dev/null || { _r=$?; rm -r "$_arg_path"; println::error "Failed to initialize git at \`$_arg_path\`" $_r; }
+
+		# Create .gitignore
+		geco '/target' > "$_arg_path/.gitignore";
+
 	else
 		rm -r "$_arg_path"
 		println::error "git does not seem to be available, please install it" 1

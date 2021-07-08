@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%11390 () 
+main@bashbox%29386 () 
 { 
     _self_executable="$0";
     function println::error () 
@@ -1025,6 +1025,7 @@ EOF
                 rm -r "$_arg_path";
                 println::error "Failed to initialize git at \`$_arg_path\`" $_r
             };
+            geco '/target' > "$_arg_path/.gitignore";
         else
             rm -r "$_arg_path";
             println::error "git does not seem to be available, please install it" 1;
@@ -1251,4 +1252,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%11390 "$@";
+main@bashbox%29386 "$@";
