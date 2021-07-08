@@ -52,6 +52,11 @@ Swap `run` with `build` if you want a self contained single bash script.
 
 For more information try `bashbox --help`
 
+
+# Compiling bashbox
+
+It's simple, just run `./bashbox build --release` after cloning this repository and bashbox will compile itself.
+
 ## More things to write, this is incomplete at the moment
 
 Please note that this project is very experimental and needs more work.
