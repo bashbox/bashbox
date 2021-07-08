@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%2998 () 
+main@bashbox%30037 () 
 { 
     _self_executable="$0";
     function println::error () 
@@ -8,7 +8,7 @@ main@bashbox%2998 ()
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
         local _command="$1";
         test "${_PRINT_HELP:-no}" == yes && print_help 1>&2;
-        echo -e "[!!!] ${BRED}ERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
+        echo -e "[!!!] \033[1;31mERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
         case "${JOB:-"exit"}" in 
             exit)
                 exit $_return_code
@@ -227,7 +227,7 @@ main@bashbox%2998 ()
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
         local _command="$1";
         test "${_PRINT_HELP:-no}" == yes && print_help 1>&2;
-        echo -e "[!!!] \033[1;31mERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
+        echo -e "[!!!] \033[1;31mERROR\033[0m[$_return_code]: $_source[$BASH_LINENO]: $_command";
         case "${JOB:-"exit"}" in 
             exit)
                 exit $_return_code
@@ -1252,4 +1252,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%2998 "$@";
+main@bashbox%30037 "$@";
