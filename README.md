@@ -42,7 +42,7 @@ function foo() {
 }
 ```
 
-You can try run the project by running:
+You can run the project by:
 
 ```bash
 bashbox run --release
