@@ -60,5 +60,6 @@ function subcommand::selfinstall() {
 	mv "$___self" "$_target_install_dir/${_self_name##*/}";
 	chmod +x "$_target_install_dir/${_self_name##*/}";
 	println::info "Installation complete, now simply run \`${_self_name##*/} --help\` to get started";
+	println::info "Note: You might need to restart your shell to take effect"
 
 }
