@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%14024 () 
+main@bashbox%15990 () 
 { 
     ___self="$0";
     function println::error () 
@@ -1625,7 +1625,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
 build<^>${SUBCOMMANDS_DESC[2]}
 clean<^>${SUBCOMMANDS_DESC[3]}
 install<^>${SUBCOMMANDS_DESC[4]}
-selfinstall<^>${SUBCOMMANDS_DESC[5]}" --footer-msg "Try 'gdk <subcommand> --help' for more information on a specific command.
+selfinstall<^>${SUBCOMMANDS_DESC[5]}" --footer-msg "Try '${_self_name} <subcommand> --help' for more information on a specific command.
 For bugreports: $REPOSITORY"
     };
     function main () 
@@ -1687,4 +1687,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%14024 "$@";
+main@bashbox%15990 "$@";
