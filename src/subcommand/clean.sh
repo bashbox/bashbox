@@ -5,7 +5,7 @@ function subcommand::clean()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
 			--short-desc "\
-${SUBCOMMANDS_DESC[3]}\
+${SUBCOMMANDS_DESC[4]}\
 " \
 	\
 			--usage "\

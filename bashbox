@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%21019 () 
+main@bashbox%20724 () 
 { 
     ___self="$0";
     function println::error () 
@@ -243,11 +243,215 @@ main@bashbox%21019 ()
     readonly BLUE='\033[0;34m' BBLUE='\033[1;34m' CYAN='\033[0;34m' BCYAN='\033[1;34m';
     readonly WHITE='\033[1;37m' GREEN='\033[0;32m' BGREEN='\033[1;32m' YELLOW='\033[1;33m';
     readonly PURPLE='\033[0;35m' BPURPLE='\033[1;35m' ORANGE='\033[0;33m';
+    function subcommand::new () 
+    { 
+        _positionals=();
+        _arg_path=;
+        _arg_codename=;
+        function print_help () 
+        { 
+            println::helpgen "${_self_name^^}-${_subcommand_argv^^}" --short-desc "${SUBCOMMANDS_DESC[1]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "-c, --codename<^>Avoid directory-as-codename
+-h, --help<^>Prints this help information" --examples "### The basic way:
+${YELLOW}${_self_name} ${_subcommand_argv} awesome_project${RC}
+
+### Pre-setting project codename, avoiding directory-path as codename:
+${YELLOW}${_self_name} ${_subcommand_argv} --codename cake awesome_project${RC}
+
+### Using a specific template for project initialization(core is default):
+${YELLOW}${_self_name} ${_subcommand_argv} --template kernel awesome_project${RC}
+
+### Random usage EXAMPLES just for referrence:
+${YELLOW}${_self_name} ${_subcommand_argv} --template mesa graphics_lib
+${_self_name} ${_subcommand_argv} --template=kernel vanilla_kernel --codename vkernel
+${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
+        };
+        function parse_commandline () 
+        { 
+            _positionals_count=0;
+            while test $# -gt 0; do
+                _key="$1";
+                case "$_key" in 
+                    --codename | -c)
+                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        _arg_codename="$2";
+                        shift
+                    ;;
+                    --codename=*)
+                        _arg_codename="${_key##--codename=}"
+                    ;;
+                    -h | --help)
+                        print_help;
+                        exit 0
+                    ;;
+                    -h*)
+                        print_help;
+                        exit 0
+                    ;;
+                    *)
+                        _last_positional="$1";
+                        _positionals+=("$_last_positional");
+                        _positionals_count=$((_positionals_count + 1))
+                    ;;
+                esac;
+                shift;
+            done
+        };
+        function handle_passed_args_count () 
+        { 
+            local _required_args_string="'path'";
+            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
+            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+        };
+        function assign_positional_args () 
+        { 
+            local _positional_name _shift_for=$1;
+            _positional_names="_arg_path ";
+            shift "$_shift_for";
+            for _positional_name in ${_positional_names};
+            do
+                test $# -gt 0 || break;
+                eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1;
+                shift;
+            done
+        };
+        parse_commandline "$@";
+        handle_passed_args_count;
+        assign_positional_args 1 "${_positionals[@]}";
+        _path_codename="${_arg_path##*/}";
+        : "${_arg_codename:="$_path_codename"}";
+        _arg_codename="$(tr -d '[:space:]' <<<"${_arg_codename,,}")";
+        if test -e "$_arg_path"; then
+            println::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1;
+        fi;
+        println::info "Setting up project at \`$_arg_path\`";
+        mkdir -p "$_arg_path" || println::error "Failed to initialize the project directory";
+        mkdir -p "$_arg_path/$_src_dir_name";
+        cat <<'EOF' > "$_arg_path/$_src_dir_name/main.sh"
+function main() {
+	echo "Hello world";
+}
+
+EOF
+
+        cat <<EOF > "$_arg_path/$_bashbox_meta_name"
+NAME="$_path_codename"
+CODENAME="$_arg_codename"
+AUTHORS=("AXON <axonasif@gmail.com>")
+VERSION="1.0"
+DEPENDENCIES=()
+REPOSITORY=""
+EOF
+
+        println::info "Initializing git version control for your project";
+        if command -v git > /dev/null; then
+            git init "$_arg_path" > /dev/null || { 
+                _r=$?;
+                rm -r "$_arg_path";
+                println::error "Failed to initialize git at \`$_arg_path\`" $_r
+            };
+            geco '/target' > "$_arg_path/.gitignore";
+        else
+            rm -r "$_arg_path";
+            println::error "git does not seem to be available, please install it" 1;
+        fi
+    };
+    function subcommand::install () 
+    { 
+        function trim_leading_trailing () 
+        { 
+            local _stream="${1:-}";
+            local _stdin;
+            if test -z "${_stream}"; then
+                { 
+                    read -r _stdin;
+                    _stream="$_stdin"
+                };
+            fi;
+            _stream="${_stream#"${_stream%%[![:space:]]*}"}";
+            _stream="${_stream%"${_stream##*[![:space:]]}"}";
+            printf '%s\n' "$_stream"
+        };
+        readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
+        readonly _registry_meta_url="https://raw.githubusercontent.com/bashbox/registry/main/registry.meta";
+        readonly _registry_lastsync_file="${_bashbox_home}/.registry.lastsync" && touch "$_registry_lastsync_file";
+        readonly _user_repo="bashbox/registry";
+        readonly _check_file="registry.meta";
+        readonly _branch="main";
+        println::info "Syncing repository metadata";
+        local _local_sha _remote_sha;
+        _local_sha="$(< "$_registry_lastsync_file")";
+        _remote_sha="$(curl --silent "https://api.github.com/repos/${_user_repo}/contents/${_check_file}?ref=${_branch}" 					| head -n4 | grep -I '"sha":' | sed -E 's/.*"([^"]+)".*/\1/')";
+        readonly _local_sha _remote_sha;
+        if test "$_local_sha" != "$_remote_sha"; then
+            { 
+                println::info "Updating registry.meta";
+                curl --silent -o "$_registry_meta_file" -L "$_registry_meta_url";
+                echo "$_remote_sha" > "$_registry_lastsync_file"
+            };
+        fi;
+        local _input _libdir;
+        readonly _input="$1";
+        readonly _libdir="$_bashbox_libdir/$_input";
+        _tarball_download_link="$(grep ".*/$_input" "$_registry_meta_file")" || println::error "No such box as $_input was found" 1;
+        readonly _tarball_download_link;
+        if test -e "$_libdir"; then
+            { 
+                rm -r "$_libdir"
+            };
+        fi;
+        mkdir -p "$_libdir";
+        println::info "Downloading box $_input";
+        curl --silent -L "${_tarball_download_link}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_libdir" -xpzf -;
+        local _gitmod_file="$_libdir/.gitmodules";
+        if test -e "$_gitmod_file"; then
+            { 
+                local _path _url _install_path;
+                println::info "Resolving submodules";
+                while read -r _line; do
+                    { 
+                        _line="${_line%%:*}";
+                        _path="$(sed "${_line}q;d" "$_gitmod_file" 				| cut -d '=' -f2 | trim_leading_trailing)";
+                        _url="$(sed "$(( _line + 1 ))q;d" "$_gitmod_file" 				| cut -d '=' -f2 | trim_leading_trailing)";
+                        _install_path="${_libdir}/${_path}";
+                        println::info "Downloading submodule: $_path";
+                        if test -e "$_install_path"; then
+                            { 
+                                rm -r "$_install_path";
+                                mkdir -p "$_install_path"
+                            };
+                        fi;
+                        curl --silent -L "${_url}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -
+                    };
+                done < <(grep -n 'path.*=' "$_gitmod_file")
+            };
+        fi;
+        if test -e "$_libdir/$_bashbox_meta_name"; then
+            { 
+                println::info "Compiling $_input in release mode";
+                local _build_log && { 
+                    _build_log="$("$___self" build "$_libdir" --release 2>&1)" || { 
+                        geco "$_build_log";
+                        println::error "Errors were found while compiling $_input, operation failed" 1
+                    }
+                };
+                local _built_executable="$_libdir/target/release/executable";
+                local _install_executable="$_bashbox_bindir/$_input";
+                chmod +x "$_built_executable";
+                ln -srf "$_built_executable" "$_install_executable";
+                chmod +x "$_install_executable";
+                println::info "$_input was successfully installed"
+            };
+        else
+            { 
+                println::info "$_input was installed as a library"
+            };
+        fi
+    };
     function subcommand::build () 
     { 
         function print_help () 
         { 
-            println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[2]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "--release<^>Build in release mode
+            println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[3]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "--release<^>Build in release mode
 --debug<^>Build in debug mode(default)
 --run<^>Auto-run the executable after build
 --<^>Pass arguments to your compiled program
@@ -438,6 +642,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
         Resolve::CheckNewline "$_bashbox_meta";
         rsync -a --delete "$_src_dir/" "$_target_workdir";
         echo > "$_used_symbols_statfile";
+        if test ! -e "$_bashbox_libdir/std"; then
+            { 
+                subcommand::install std
+            };
+        fi;
         function Resolve::Colons () 
         { 
             awk '{$1=$1;print}' <<< "$1" | sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"
@@ -610,194 +819,6 @@ EOF
                 "$_target_workfile" "${_run_target_args[@]}"
             };
         fi
-    };
-    function subcommand::clean () 
-    { 
-        function print_help () 
-        { 
-            println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[3]}" --usage "${_self_name} $_subcommand_argv <path>" --examples "### The basic way:
-${YELLOW}${_self_name} ${_subcommand_argv}${RC} # Cleans the project in your current directory
-
-### Clean project from a specified directory:
-${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
-        };
-        function begins_with_short_option () 
-        { 
-            local first_option all_short_options='h';
-            first_option="${1:0:1}";
-            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-        };
-        _positionals=();
-        _arg_path=;
-        _arg_debug="off";
-        _arg_release="off";
-        _arg_run="off";
-        function parse_commandline () 
-        { 
-            _positionals_count=0;
-            while test $# -gt 0; do
-                { 
-                    _key="$1";
-                    case "$_key" in 
-                        --debug)
-                            _arg_debug="on"
-                        ;;
-                        --release)
-                            _arg_release="on"
-                        ;;
-                        --run)
-                            _arg_run="on"
-                        ;;
-                        --help)
-                            print_help && exit 0
-                        ;;
-                        --)
-                            return 0
-                        ;;
-                        *)
-                            _last_positional="$1";
-                            _positionals+=("$_last_positional");
-                            _positionals_count=$((_positionals_count + 1))
-                        ;;
-                    esac;
-                    shift
-                };
-            done
-        };
-        function handle_passed_args_count () 
-        { 
-            local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-        };
-        function assign_positional_args () 
-        { 
-            local _positional_name _shift_for=$1;
-            _positional_names="_arg_path ";
-            shift "$_shift_for";
-            for _positional_name in ${_positional_names};
-            do
-                { 
-                    test $# -gt 0 || break;
-                    eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
-                    shift
-                };
-            done
-        };
-        function parse_runargs () 
-        { 
-            for _arg in "${@}";
-            do
-                { 
-                    if test "$_arg" != '--'; then
-                        { 
-                            shift
-                        };
-                    else
-                        { 
-                            shift;
-                            _run_target_args=("$@");
-                            readonly _run_target_args;
-                            break
-                        };
-                    fi
-                };
-            done
-        };
-        function Resolve::CheckNewline () 
-        { 
-            local _input="$1";
-            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
-                { 
-                    echo >> "$_input"
-                };
-            fi
-        };
-        parse_commandline "$@";
-        parse_runargs "$@";
-        assign_positional_args 1 "${_positionals[@]}";
-        function gettop () 
-        { 
-            local TOPFILE="$_bashbox_meta_name";
-            local TOPDIR="$_src_dir_name";
-            local TOP=;
-            local T;
-            if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then
-                { 
-                    ( cd "$TOP";
-                    echo "$PWD" )
-                };
-            else
-                { 
-                    if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
-                        { 
-                            echo "$PWD"
-                        };
-                    else
-                        { 
-                            local HERE="$PWD";
-                            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
-                                { 
-                                    \cd ..;
-                                    T="$(readlink -f "$PWD")"
-                                };
-                            done;
-                            \cd "$HERE";
-                            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
-                                { 
-                                    echo "$T"
-                                };
-                            fi
-                        };
-                    fi
-                };
-            fi
-        };
-        : "${_arg_path:="$PWD"}";
-        _arg_path="$(readlink -f "$_arg_path")";
-        if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta_name"; then
-            { 
-                _top="$(gettop)";
-                if test -n "$_top"; then
-                    { 
-                        _arg_path="$_top";
-                        unset _top
-                    };
-                else
-                    { 
-                        println::error "$_arg_path is not a valid bashbox project" 1
-                    };
-                fi
-            };
-        fi;
-        readonly _arg_path;
-        readonly _src_dir="$_arg_path/$_src_dir_name";
-        readonly _target_dir="$_arg_path/target";
-        readonly _target_debug_dir="$_target_dir/debug";
-        readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
-        readonly _target_release_dir="$_target_dir/release";
-        for _dir in "$_target_debug_dir" "$_target_release_dir";
-        do
-            { 
-                mkdir -p "$_dir"
-            };
-        done;
-        _build_variant="$(
-	if test "$_arg_release" == "on"; then {
-		echo "${_target_release_dir##*/}";
-	} else {
-		echo "${_target_debug_dir##*/}";
-	} fi
-)";
-        readonly _build_variant;
-        readonly _target_workdir="$_target_dir/$_build_variant";
-        readonly _target_workfile="$_target_workdir/executable";
-        readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
-        readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
-        Resolve::CheckNewline "$_bashbox_meta";
-        rsync -a --delete "$_src_dir/" "$_target_workdir";
-        echo > "$_used_symbols_statfile";
-        rm -r "$_target_dir"
     };
     function subcommand::run () 
     { 
@@ -1149,6 +1170,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
         Resolve::CheckNewline "$_bashbox_meta";
         rsync -a --delete "$_src_dir/" "$_target_workdir";
         echo > "$_used_symbols_statfile";
+        if test ! -e "$_bashbox_libdir/std"; then
+            { 
+                subcommand::install std
+            };
+        fi;
         cat <<'EOF' > "$_target_workfile"
 ___self="$0";
 EOF
@@ -1167,118 +1193,6 @@ EOF
         geco "\nmain \"\$@\";" >> "$_target_workfile";
         chmod +x "$_target_workfile";
         "$_target_workfile" "${_run_target_args[@]}"
-    };
-    function subcommand::new () 
-    { 
-        _positionals=();
-        _arg_path=;
-        _arg_codename=;
-        function print_help () 
-        { 
-            println::helpgen "${_self_name^^}-${_subcommand_argv^^}" --short-desc "${SUBCOMMANDS_DESC[1]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "-c, --codename<^>Avoid directory-as-codename
--t, --template<^>core, mesa, kernel templates
--h, --help<^>Prints this help information" --examples "### The basic way:
-${YELLOW}${_self_name} ${_subcommand_argv} awesome_project${RC}
-
-### Pre-setting project codename, avoiding directory-path as codename:
-${YELLOW}${_self_name} ${_subcommand_argv} --codename cake awesome_project${RC}
-
-### Using a specific template for project initialization(core is default):
-${YELLOW}${_self_name} ${_subcommand_argv} --template kernel awesome_project${RC}
-
-### Random usage EXAMPLES just for referrence:
-${YELLOW}${_self_name} ${_subcommand_argv} --template mesa graphics_lib
-${_self_name} ${_subcommand_argv} --template=kernel vanilla_kernel --codename vkernel
-${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
-        };
-        function parse_commandline () 
-        { 
-            _positionals_count=0;
-            while test $# -gt 0; do
-                _key="$1";
-                case "$_key" in 
-                    --codename | -c)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
-                        _arg_codename="$2";
-                        shift
-                    ;;
-                    --codename=*)
-                        _arg_codename="${_key##--codename=}"
-                    ;;
-                    -h | --help)
-                        print_help;
-                        exit 0
-                    ;;
-                    -h*)
-                        print_help;
-                        exit 0
-                    ;;
-                    *)
-                        _last_positional="$1";
-                        _positionals+=("$_last_positional");
-                        _positionals_count=$((_positionals_count + 1))
-                    ;;
-                esac;
-                shift;
-            done
-        };
-        function handle_passed_args_count () 
-        { 
-            local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-        };
-        function assign_positional_args () 
-        { 
-            local _positional_name _shift_for=$1;
-            _positional_names="_arg_path ";
-            shift "$_shift_for";
-            for _positional_name in ${_positional_names};
-            do
-                test $# -gt 0 || break;
-                eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1;
-                shift;
-            done
-        };
-        parse_commandline "$@";
-        handle_passed_args_count;
-        assign_positional_args 1 "${_positionals[@]}";
-        _path_codename="${_arg_path##*/}";
-        : "${_arg_codename:="$_path_codename"}";
-        _arg_codename="$(tr -d '[:space:]' <<<"${_arg_codename,,}")";
-        if test -e "$_arg_path"; then
-            println::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1;
-        fi;
-        println::info "Setting up project at \`$_arg_path\`";
-        mkdir -p "$_arg_path" || println::error "Failed to initialize the project directory";
-        mkdir -p "$_arg_path/$_src_dir_name";
-        cat <<'EOF' > "$_arg_path/$_src_dir_name/main.sh"
-function main() {
-	echo "Hello world";
-}
-
-EOF
-
-        cat <<EOF > "$_arg_path/$_bashbox_meta_name"
-NAME="$_path_codename"
-CODENAME="$_arg_codename"
-AUTHORS=("AXON <axonasif@gmail.com>")
-VERSION="1.0"
-DEPENDENCIES=()
-EOF
-
-        println::info "Initializing git version control for your project";
-        if command -v git > /dev/null; then
-            git init "$_arg_path" > /dev/null || { 
-                _r=$?;
-                rm -r "$_arg_path";
-                println::error "Failed to initialize git at \`$_arg_path\`" $_r
-            };
-            geco '/target' > "$_arg_path/.gitignore";
-        else
-            rm -r "$_arg_path";
-            println::error "git does not seem to be available, please install it" 1;
-        fi
     };
     function subcommand::selfinstall () 
     { 
@@ -1344,95 +1258,11 @@ EOF
         println::info "Installation complete, now simply run \`${_self_name##*/} --help\` to get started";
         println::info "Note: You might need to restart your shell to take effect"
     };
-    function subcommand::install () 
-    { 
-        function trim_leading_trailing () 
-        { 
-            local _stream="${1:-}";
-            local _stdin;
-            if test -z "${_stream}"; then
-                { 
-                    read -r _stdin;
-                    _stream="$_stdin"
-                };
-            fi;
-            _stream="${_stream#"${_stream%%[![:space:]]*}"}";
-            _stream="${_stream%"${_stream##*[![:space:]]}"}";
-            printf '%s\n' "$_stream"
-        };
-        readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
-        readonly _registry_meta_url="https://raw.githubusercontent.com/bashbox/registry/main/registry.meta";
-        readonly _registry_lastsync_file="${_bashbox_home}/.registry.lastsync" && touch "$_registry_lastsync_file";
-        readonly _user_repo="bashbox/registry";
-        readonly _check_file="registry.meta";
-        readonly _branch="main";
-        println::info "Syncing repository metadata";
-        local _local_sha _remote_sha;
-        _local_sha="$(< "$_registry_lastsync_file")";
-        _remote_sha="$(curl --silent "https://api.github.com/repos/${_user_repo}/contents/${_check_file}?ref=${_branch}" 					| head -n4 | grep -I '"sha":' | sed -E 's/.*"([^"]+)".*/\1/')";
-        readonly _local_sha _remote_sha;
-        if test "$_local_sha" != "$_remote_sha"; then
-            { 
-                println::info "Updating registry.meta";
-                curl --silent -o "$_registry_meta_file" -L "$_registry_meta_url";
-                echo "$_remote_sha" > "$_registry_lastsync_file"
-            };
-        fi;
-        local _input _libdir;
-        readonly _input="$1";
-        readonly _libdir="$_bashbox_libdir/$_input";
-        _tarball_download_link="$(grep ".*/$_input" "$_registry_meta_file")" || println::error "No such box as $_input was found" 1;
-        readonly _tarball_download_link;
-        if test -e "$_libdir"; then
-            { 
-                rm -r "$_libdir"
-            };
-        fi;
-        mkdir -p "$_libdir";
-        println::info "Downloading box $_input";
-        curl --silent -L "${_tarball_download_link}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_libdir" -xpzf -;
-        local _gitmod_file="$_libdir/.gitmodules";
-        if test -e "$_gitmod_file"; then
-            { 
-                local _path _url _install_path;
-                println::info "Resolving submodules";
-                while read -r _line; do
-                    { 
-                        _line="${_line%%:*}";
-                        _path="$(sed "${_line}q;d" "$_gitmod_file" 				| cut -d '=' -f2 | trim_leading_trailing)";
-                        _url="$(sed "$(( _line + 1 ))q;d" "$_gitmod_file" 				| cut -d '=' -f2 | trim_leading_trailing)";
-                        _install_path="${_libdir}/${_path}";
-                        println::info "Downloading submodule: $_path";
-                        if test -e "$_install_path"; then
-                            { 
-                                rm -r "$_install_path";
-                                mkdir -p "$_install_path"
-                            };
-                        fi;
-                        curl --silent -L "${_url}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -
-                    };
-                done < <(grep -n 'path.*=' "$_gitmod_file")
-            };
-        fi;
-        println::info "Compiling $_input in release mode";
-        local _build_log && { 
-            _build_log="$("$___self" build "$_libdir" --release 2>&1)" || { 
-                geco "$_build_log";
-                println::error "Errors were found while compiling $_input, operation failed" 1
-            }
-        };
-        local _built_executable="$_libdir/target/release/executable";
-        local _install_executable="$_bashbox_bindir/$_input";
-        chmod +x "$_built_executable";
-        ln -srf "$_built_executable" "$_install_executable";
-        chmod +x "$_install_executable";
-        println::info "$_input was successfully installed"
-    };
     function subcommand::clean () 
     { 
         function print_help () 
         { 
-            println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[3]}" --usage "${_self_name} $_subcommand_argv <path>" --examples "### The basic way:
+            println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[4]}" --usage "${_self_name} $_subcommand_argv <path>" --examples "### The basic way:
 ${YELLOW}${_self_name} ${_subcommand_argv}${RC} # Cleans the project in your current directory
 
 ### Clean project from a specified directory:
@@ -1614,6 +1444,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
         Resolve::CheckNewline "$_bashbox_meta";
         rsync -a --delete "$_src_dir/" "$_target_workdir";
         echo > "$_used_symbols_statfile";
+        if test ! -e "$_bashbox_libdir/std"; then
+            { 
+                subcommand::install std
+            };
+        fi;
         rm -r "$_target_dir"
     };
     function print_help () 
@@ -1674,7 +1509,7 @@ For bugreports: $REPOSITORY"
         };
         _subcommand_argv="${1:-}" && shift || true;
         case "$_subcommand_argv" in 
-            run | new | build | clean | install | selfinstall)
+            new | run | build | clean | install | selfinstall)
                 subcommand::$_subcommand_argv "$@"
             ;;
             *)
@@ -1688,4 +1523,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%21019 "$@";
+main@bashbox%20724 "$@";

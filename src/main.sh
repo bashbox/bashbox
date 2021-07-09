@@ -5,8 +5,8 @@ use header;
 #####################
 use variables;
 use utils;
-use term::print::*;
-use term::colors;
+use std::term::print::*;
+use std::term::colors;
 # use install::garca;
 # use ensure::garca;
 # use metadata::fetch_value;
@@ -133,7 +133,7 @@ function main() {
 	#####################
 	_subcommand_argv="${1:-}" && shift || true;
 	case "$_subcommand_argv" in
-		run | new | build | clean | install | selfinstall)
+		new | run | build | clean | install | selfinstall)
 			subcommand::$_subcommand_argv "$@";
 			;;
 		*)

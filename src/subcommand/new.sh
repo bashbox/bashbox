@@ -25,7 +25,6 @@ ${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>\
 	\
 			--options-desc "\
 -c, --codename<^>Avoid directory-as-codename
--t, --template<^>core, mesa, kernel templates
 -h, --help<^>Prints this help information\
 " \
 	\
@@ -160,6 +159,7 @@ CODENAME="$_arg_codename"
 AUTHORS=("AXON <axonasif@gmail.com>")
 VERSION="1.0"
 DEPENDENCIES=()
+REPOSITORY=""
 EOF
 
 # 	rsync -a --exclude='.git' --exclude='.keep' "$TEMPLATES_DIR/$_arg_template/" "$PROJECTS_DIR/$_arg_codename" || exit

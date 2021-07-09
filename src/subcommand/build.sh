@@ -4,7 +4,7 @@ function subcommand::build()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
 			--short-desc "\
-${SUBCOMMANDS_DESC[2]}\
+${SUBCOMMANDS_DESC[3]}\
 " \
 	\
 			--usage "\

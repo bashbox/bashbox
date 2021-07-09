@@ -1,5 +1,5 @@
 function subcommand::install() {
-	use box::string::trim;
+	use std::string::trim;
 	
 	readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
 	readonly _registry_meta_url="https://raw.githubusercontent.com/bashbox/registry/main/registry.meta";
@@ -73,22 +73,25 @@ function subcommand::install() {
 		} done < <(grep -n 'path.*=' "$_gitmod_file")
 	} fi
 
-	
-	println::info "Compiling $_input in release mode";
-	local _build_log && {
-		_build_log="$("$___self" build "$_libdir" --release 2>&1)" \
-		|| {
-			geco "$_build_log";
-			println::error "Errors were found while compiling $_input, operation failed" 1;
-		};
-	}
+	if test -e "$_libdir/$_bashbox_meta_name"; then {
+		println::info "Compiling $_input in release mode";
+		local _build_log && {
+			_build_log="$("$___self" build "$_libdir" --release 2>&1)" \
+			|| {
+				geco "$_build_log";
+				println::error "Errors were found while compiling $_input, operation failed" 1;
+			};
+		}
 
-	local _built_executable="$_libdir/target/release/executable";
-	local _install_executable="$_bashbox_bindir/$_input";
+		local _built_executable="$_libdir/target/release/executable";
+		local _install_executable="$_bashbox_bindir/$_input";
 
-	chmod +x "$_built_executable";
-	ln -srf "$_built_executable" "$_install_executable";
-	chmod +x "$_install_executable";
-	println::info "$_input was successfully installed";
+		chmod +x "$_built_executable";
+		ln -srf "$_built_executable" "$_install_executable";
+		chmod +x "$_install_executable";
+		println::info "$_input was successfully installed";
+	} else {
+		println::info "$_input was installed as a library";
+	} fi
 
 }
