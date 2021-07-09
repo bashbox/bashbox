@@ -18,22 +18,15 @@ use term::colors;
 use subcommand;
 
 function print_help() {
-	readonly SUBCOMMANDS_DESC=(
-		""
-		"Create a new bashbox project"
-		"Compile the targetted project"
-		"Cleanup build directories"
-		"Install a bashbox project from repo"
-		"Install bashbox into PATH"
-	);
 
-	println::helpgen "${_self^^}" \
+
+	println::helpgen "${_self_name^^}" \
 		--short-desc "\
 Wannabe bash compiler\
 " \
 		\
 		--usage "\
-${_self} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>\
+${_self_name} [OPTIONAL-OPTIONS] [SUBCOMMAND] <subcommand-arguments>\
 " \
 		\
 		--options-desc "\
@@ -54,7 +47,7 @@ selfinstall<^>${SUBCOMMANDS_DESC[5]}\
 		\
 		--footer-msg "\
 Try 'gdk <subcommand> --help' for more information on a specific command.
-For bugreports: https://github.com/gearlock-users-repo/issues\
+For bugreports: $REPOSITORY\
 ";
 
 }
@@ -69,8 +62,7 @@ function main() {
 	readonly VERSION="0.1.0";
 
 	### Mutables
-	_self="${0##*/}";
-	_selfDir="$(dirname "$(readlink -f "$0")")";
+	_self_name="${___self##*/}";
 	_arg_verbose=off;
 	_arg_quiet=off;
 	_arg_offline=off;

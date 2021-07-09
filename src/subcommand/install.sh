@@ -76,7 +76,7 @@ function subcommand::install() {
 	
 	println::info "Compiling $_input in release mode";
 	local _build_log && {
-		_build_log="$("$_self_executable" build "$_libdir" --release 2>&1)" \
+		_build_log="$("$___self" build "$_libdir" --release 2>&1)" \
 		|| {
 			geco "$_build_log";
 			println::error "Errors were found while compiling $_input, operation failed" 1;

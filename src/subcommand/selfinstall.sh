@@ -57,8 +57,8 @@ function subcommand::selfinstall() {
 	} done
 
 	println::info "Installing to $_target_install_dir";
-	mv "$_self_executable" "$_target_install_dir/${_self_executable##*/}";
-	chmod +x "$_target_install_dir/${_self_executable##*/}";
-	println::info "Installation complete, now simply run \`${_self_executable##*/} --help\` to get started";
+	mv "$___self" "$_target_install_dir/${_self_name##*/}";
+	chmod +x "$_target_install_dir/${_self_name##*/}";
+	println::info "Installation complete, now simply run \`${_self_name##*/} --help\` to get started";
 
 }

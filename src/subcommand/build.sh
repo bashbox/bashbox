@@ -1,7 +1,38 @@
 function subcommand::build()
 {
-# 	ensure::garca
-	use _run_build_clap;
+	print_help()
+	{
+		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
+			--short-desc "\
+${SUBCOMMANDS_DESC[2]}\
+" \
+	\
+			--usage "\
+${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>\
+" \
+	\
+			--options-desc "\
+--release<^>Build in release mode
+--debug<^>Build in debug mode(default)
+--run<^>Auto-run the executable after build
+--<^>Pass arguments to your compiled program
+-h, --help<^>Prints this help information\
+" \
+	\
+			--examples "\
+### The basic way:
+# Buld the project in your current directory hierarchy in release-mode
+${YELLOW}${_self_name} ${_subcommand_argv} --release${RC}
+
+### Build project from a specified directory:
+${YELLOW}${_self_name} ${_subcommand_argv} --release /home/me/awesome_project${RC}
+
+### Pass arguments to the compiled executable and auto-run it after build
+${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"string arg\" and-so-on${RC}
+"
+
+	}
+	use _clap;
 	
 	Resolve::Colons() {
 		 awk '{$1=$1;print}' <<<"$1" \
@@ -19,13 +50,6 @@ function subcommand::build()
 			fi
 		)"
 		echo "$_parent/$(Resolve::Colons "$_input")"		
-	}
-
-	Resolve::CheckNewline() {
-		local _input="$1";
-		if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then {
-			echo >> "$_input";
-		} fi
 	}
 
 	Resolve::IsMain() {
@@ -64,13 +88,13 @@ function subcommand::build()
 		}
 
 		# TODO: Need to write to $_used_symbols_statfile
-		echo "---------- $_modname";
+		echo "---------- $_modname"; # DEBUG
 		if test "${_modname::1}" == "_" \
 		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
 			
 
 				# Handle missing symbols
-				echo "Parsed_input: $_parsed_input";
+				# echo "Parsed_input: $_parsed_input"; # DEBUG
 				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
 					# echo "$PWD"
 					println::error "$_input is missing" 1;
@@ -78,13 +102,13 @@ function subcommand::build()
 
 				# Handle wildcard symbol loading
 				if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
-					if test -e "$_compiled_mod_bundle"; then {
-						rm "$_compiled_mod_bundle";
-					} fi
+					# if test -e "$_compiled_mod_bundle"; then {
+					# 	rm "$_compiled_mod_bundle";
+					# } fi
 					for _modFile in "$_parsed_input/"*; do {
 						Resolve::CheckNewline "$_modFile";
 					} done
-					cat "$_parsed_input/"* > "$_compiled_mod_bundle";
+					cat "$_parsed_input/"* > "$_compiled_mod_bundle.sh";
 					_parsed_input="$_compiled_mod_bundle";
 				} elif test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then { # Handle module directory if required
 					_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
@@ -149,7 +173,7 @@ function subcommand::build()
 	echo '#!'"$(command -v env) bash" > "$_tmp_bbb_path"; # Place shebang
 	# Add some variables
 	cat << 'EOF' >> "$_tmp_bbb_path"
-_self_executable="$0";
+___self="$0";
 EOF
 	declare -f 'println::error'	>> "$_tmp_bbb_path"; # Concate println:error
 	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path"; # Concat bootstrap

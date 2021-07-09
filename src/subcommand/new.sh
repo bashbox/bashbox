@@ -14,13 +14,13 @@ function subcommand::new()
 # 		printf 'Usage: %s [--codename <arg>] [--template <arg>] [-h|--help] <path>\n' "$0"
 # 		printf '\t%s\n' "-h, --help: Prints help"
 
-		println::helpgen "${_self^^}-${_subcommand_argv^^}" \
+		println::helpgen "${_self_name^^}-${_subcommand_argv^^}" \
 			--short-desc "\
 ${SUBCOMMANDS_DESC[1]}\
 " \
 	\
 			--usage "\
-${_self} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>\
+${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>\
 " \
 	\
 			--options-desc "\
@@ -31,18 +31,18 @@ ${_self} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>\
 	\
 			--examples "\
 ### The basic way:
-${YELLOW}${_self} ${_subcommand_argv} awesome_project${RC}
+${YELLOW}${_self_name} ${_subcommand_argv} awesome_project${RC}
 
 ### Pre-setting project codename, avoiding directory-path as codename:
-${YELLOW}${_self} ${_subcommand_argv} --codename cake awesome_project${RC}
+${YELLOW}${_self_name} ${_subcommand_argv} --codename cake awesome_project${RC}
 
 ### Using a specific template for project initialization(core is default):
-${YELLOW}${_self} ${_subcommand_argv} --template kernel awesome_project${RC}
+${YELLOW}${_self_name} ${_subcommand_argv} --template kernel awesome_project${RC}
 
 ### Random usage EXAMPLES just for referrence:
-${YELLOW}${_self} ${_subcommand_argv} --template mesa graphics_lib
-${_self} ${_subcommand_argv} --template=kernel vanilla_kernel --codename vkernel
-${_self} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
+${YELLOW}${_self_name} ${_subcommand_argv} --template mesa graphics_lib
+${_self_name} ${_subcommand_argv} --template=kernel vanilla_kernel --codename vkernel
+${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 "
 
 	}
