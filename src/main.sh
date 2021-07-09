@@ -46,7 +46,7 @@ selfinstall<^>${SUBCOMMANDS_DESC[5]}\
 " \
 		\
 		--footer-msg "\
-Try 'gdk <subcommand> --help' for more information on a specific command.
+Try '${_self_name} <subcommand> --help' for more information on a specific command.
 For bugreports: $REPOSITORY\
 ";
 
