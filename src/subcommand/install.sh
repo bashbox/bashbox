@@ -1,5 +1,5 @@
 function subcommand::install() {
-	use string::trim;
+	use box::string::trim;
 	
 	readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
 	readonly _registry_meta_url="https://raw.githubusercontent.com/bashbox/registry/main/registry.meta";
