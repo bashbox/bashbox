@@ -48,7 +48,25 @@ You can run the project by:
 bashbox run --release
 ```
 
-Swap `run` with `build` if you want a self contained single bash script.
+If you want to pass some arguments:
+
+```bash
+bashbox run --release -- arg1 arg2 and-so-on
+```
+
+You can also execute run the project in build mode:
+
+```bash
+bashbox build --release --run -- arg1 arg2 and-so-on
+```
+
+Note: Don't pass `--run` in build command unless you want to auto-run it after compiling.
+
+A simple example:
+
+```bash
+bashbox build --release
+```
 
 For more information try `bashbox --help`
 
