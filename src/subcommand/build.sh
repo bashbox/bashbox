@@ -28,52 +28,70 @@ function subcommand::build()
 		} fi
 	}
 
+	Resolve::IsMain() {
+		if test "$_target_workdir/main" == "$_input"; then {
+			true;
+		} else {
+			false;
+		} fi
+	}
+
 	Resolve::UseSymbols() {
-		# TODO: Implement `_symbol` foce-load
 		# TODO: Implement BASHBOX_LIB_PATH
 		local _input="$1";
+		if Resolve::IsMain; then {
+			_input="main";
+		} fi
 		local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
 		local _parsed_input_name="${_parsed_input##*/}" && {
 			local _modname="${_parsed_input_name}";
 			_parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
-			_parsed_input="$(readlink -f "$_parsed_input")";
+			# _parsed_input="$(readlink -f "$_parsed_input")";
 			unset _parsed_input_name;
 		}
 		local _src && {
-			if grep "use box::.*" <<<"$_input" 1>/dev/null; then {
-				_src="$_src_dir";
+			if grep 'use box::' <<<"$_input" 1>/dev/null; then {
+				_src="$_target_workdir";	
+			} elif grep 'use std::' <<<"$_input" 1>/dev/null; then {
+				echo "++++++++++++++++ Working ++++++++++++"
+				_src="$_bashbox_libdir";
 			} else {
-				_src="$(readlink -f "${_parsed_input}")" && {
-					# Don't strip end if is a module dir
-					test ! -d "$_parsed_input" && {
-						_src="${_src%/*}";
-					}
-				}
+				_src="$PWD";
+				
 			} fi
+			_parsed_input="$_src/$_parsed_input";
+
 		}
 
 		# TODO: Need to write to $_used_symbols_statfile
+		echo "---------- $_modname";
 		if test "${_modname::1}" == "_" \
 		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
-			(
-				cd "$_src"; # Change PWD for `Resolve::SymbolPath()`
+			
 
 				# Handle missing symbols
+				echo "Parsed_input: $_parsed_input";
 				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
+					# echo "$PWD"
 					println::error "$_input is missing" 1;
 				} fi
 
 				# Handle wildcard symbol loading
 				if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
-					for _modFile in "$_src/"*; do {
+					if test -e "$_compiled_mod_bundle"; then {
+						rm "$_compiled_mod_bundle";
+					} fi
+					for _modFile in "$_parsed_input/"*; do {
 						Resolve::CheckNewline "$_modFile";
-						cat "$_modFile"* >> "$_src/mod.sh";
 					} done
-				} fi
-				# Handle module directory if required
-				if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then {
+					cat "$_parsed_input/"* > "$_compiled_mod_bundle";
+					_parsed_input="$_compiled_mod_bundle";
+				} elif test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then { # Handle module directory if required
 					_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
 				} fi
+
+
+				cd "$(dirname "$_parsed_input")"
 
 				geco "${RED}PWD${RC}: $PWD"; # DEBUG
 				geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
@@ -81,16 +99,18 @@ function subcommand::build()
 				mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
 
 				# Cycle through main.sh symbols and so on.
+				# local _last_parsed_input;
 				: ${_last_parsed_input:="${_parsed_input}"};
 				geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
 
-				(
+				
 					for _symbol in "${_use_symbols[@]}"; do
-						_last_parsed_input="${_parsed_input}";
-						Resolve::UseSymbols "$_symbol";
-						
+						(
+							_last_parsed_input="${_parsed_input}";
+							Resolve::UseSymbols "$_symbol";
+						)
 					done
-				)
+				
 
 				# Start merging process
 				# File names come in reversed order
@@ -102,7 +122,7 @@ function subcommand::build()
 				} fi
 				echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
 				echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
-			)
+			
 		} fi
 	}
 
@@ -115,6 +135,7 @@ function subcommand::build()
 	} fi
 
 	# Define Vars
+	cd "$_target_workdir";
 	Resolve::UseSymbols "$_target_workdir/main";
 
 	# Concatinate bootstrap header to main.sh

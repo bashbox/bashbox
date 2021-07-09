@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%30037 () 
+main@bashbox%1278 () 
 { 
     _self_executable="$0";
     function println::error () 
@@ -8,7 +8,7 @@ main@bashbox%30037 ()
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
         local _command="$1";
         test "${_PRINT_HELP:-no}" == yes && print_help 1>&2;
-        echo -e "[!!!] \033[1;31mERROR${RC}[$_return_code]: $_source[$BASH_LINENO]: $_command";
+        echo -e "[!!!] \033[1;31mERROR\033[0m[$_return_code]: $_source[$BASH_LINENO]: $_command";
         case "${JOB:-"exit"}" in 
             exit)
                 exit $_return_code
@@ -56,186 +56,6 @@ main@bashbox%30037 ()
         local first_option all_short_options='h';
         first_option="${1:0:1}";
         test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-    };
-    function println::helpgen () 
-    { 
-        _positionals=();
-        _arg_helpname=;
-        _arg_short_desc=;
-        _arg_usage=;
-        _arg_options_desc=;
-        _arg_subcommands=;
-        _arg_examples=;
-        _arg_footer_msg=;
-        function print_help () 
-        { 
-            printf '%s\n' "<The general help message of my script>";
-            printf 'Usage: %s [--short-desc <arg>] [--usage <arg>] [--options-desc <arg>] [--subcommands <arg>] [--examples <arg>] [--footer-msg <arg>] [-h|--help] <helpname>\n' "$0";
-            printf '\t%s\n' "-h, --help: Prints help"
-        };
-        function parse_commandline () 
-        { 
-            _positionals_count=0;
-            while test $# -gt 0; do
-                _key="$1";
-                case "$_key" in 
-                    --short-desc)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
-                        _arg_short_desc="$2";
-                        shift
-                    ;;
-                    --short-desc=*)
-                        _arg_short_desc="${_key##--short-desc=}"
-                    ;;
-                    --usage)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
-                        _arg_usage="$2";
-                        shift
-                    ;;
-                    --usage=*)
-                        _arg_usage="${_key##--usage=}"
-                    ;;
-                    --options-desc)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
-                        _arg_options_desc="$2";
-                        shift
-                    ;;
-                    --options-desc=*)
-                        _arg_options_desc="${_key##--options-desc=}"
-                    ;;
-                    --subcommands)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
-                        _arg_subcommands="$2";
-                        shift
-                    ;;
-                    --subcommands=*)
-                        _arg_subcommands="${_key##--subcommands=}"
-                    ;;
-                    --examples)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
-                        _arg_examples="$2";
-                        shift
-                    ;;
-                    --examples=*)
-                        _arg_examples="${_key##--examples=}"
-                    ;;
-                    --footer-msg)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
-                        _arg_footer_msg="$2";
-                        shift
-                    ;;
-                    --footer-msg=*)
-                        _arg_footer_msg="${_key##--footer-msg=}"
-                    ;;
-                    -h | --help)
-                        print_help;
-                        exit 0
-                    ;;
-                    -h*)
-                        print_help;
-                        exit 0
-                    ;;
-                    *)
-                        _last_positional="$1";
-                        _positionals+=("$_last_positional");
-                        _positionals_count=$((_positionals_count + 1))
-                    ;;
-                esac;
-                shift;
-            done
-        };
-        function handle_passed_args_count () 
-        { 
-            local _required_args_string="'helpname'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
-        };
-        function assign_positional_args () 
-        { 
-            local _positional_name _shift_for=$1;
-            _positional_names="_arg_helpname ";
-            shift "$_shift_for";
-            for _positional_name in ${_positional_names};
-            do
-                test $# -gt 0 || break;
-                eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1;
-                shift;
-            done
-        };
-        parse_commandline "$@";
-        handle_passed_args_count;
-        assign_positional_args 1 "${_positionals[@]}";
-        echo -e "${_arg_helpname}\c";
-        if test -n "$_arg_short_desc"; then
-            echo -e " - $_arg_short_desc\n";
-        else
-            echo;
-        fi;
-        if test -n "$_arg_usage"; then
-            echo -e "USAGE:";
-            while read -r line; do
-                echo -e "    $line";
-            done < <(echo "$_arg_usage");
-            echo;
-        fi;
-        for child in "$_arg_options_desc" "$_arg_subcommands";
-        do
-            if test -n "$child"; then
-                local _startString _endString gapVar;
-                _startString="$(sed 's|<^>.*||g' <<<"${child}")";
-                _endString="$(sed 's|.*<^>||g' <<<"${child}")";
-                mapfile -t _startString < <(echo "$_startString");
-                mapfile -t _endString < <(echo "$_endString");
-                local i=0;
-                local firstChild=false;
-                ! "$firstChild" && echo -e "OPTIONS:" || echo -e 'SUBCOMMANDS:' && firstChild=true;
-                for line in "${_startString[@]}";
-                do
-                    gapVar="$(
-					for t in $(seq $((30 - ${#line}))); do
-						echo -n " "
-					done
-				)";
-                    echo -e "    $line${gapVar}${_endString[$i]}";
-                    i=$((i+1));
-                done;
-                echo;
-            fi;
-        done;
-        if test -n "$_arg_examples"; then
-            echo -e "EXAMPLES:";
-            while read -r line; do
-                echo -e "    $line";
-            done < <(echo "$_arg_examples");
-            echo;
-        fi;
-        if test -n "$_arg_footer_msg"; then
-            echo -e "$_arg_footer_msg\n";
-        fi
-    };
-    function println::info () 
-    { 
-        test "$_arg_quiet" == "off" && echo -e "[%%%] ${WHITE}info${RC}: $@"
-    };
-    function println::warn () 
-    { 
-        test "$_arg_quiet" == "off" && echo -e "[***] ${YELLOW}warn${RC}: $@"
-    };
-    function println::error () 
-    { 
-        local _return_code=${2:-$?};
-        local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
-        local _command="$1";
-        test "${_PRINT_HELP:-no}" == yes && print_help 1>&2;
-        echo -e "[!!!] \033[1;31mERROR\033[0m[$_return_code]: $_source[$BASH_LINENO]: $_command";
-        case "${JOB:-"exit"}" in 
-            exit)
-                exit $_return_code
-            ;;
-            kill)
-                kill -9 "$BASHPID"
-            ;;
-        esac
     };
     readonly RC='\033[0m' RED='\033[0;31m' BRED='\033[1;31m' GRAY='\033[1;30m';
     readonly BLUE='\033[0;34m' BBLUE='\033[1;34m' CYAN='\033[0;34m' BCYAN='\033[1;34m';
@@ -412,6 +232,7 @@ main@bashbox%30037 ()
         readonly _target_workdir="$_target_dir/$_build_variant";
         readonly _target_workfile="$_target_workdir/executable";
         readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+        readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod.sh";
         rsync -a --delete "$_src_dir/" "$_target_workdir";
         echo > "$_used_symbols_statfile";
         function Resolve::Colons () 
@@ -440,34 +261,55 @@ main@bashbox%30037 ()
                 };
             fi
         };
+        function Resolve::IsMain () 
+        { 
+            if test "$_target_workdir/main" == "$_input"; then
+                { 
+                    true
+                };
+            else
+                { 
+                    false
+                };
+            fi
+        };
         function Resolve::UseSymbols () 
         { 
             local _input="$1";
+            if Resolve::IsMain; then
+                { 
+                    _input="main"
+                };
+            fi;
             local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
             local _parsed_input_name="${_parsed_input##*/}" && { 
                 local _modname="${_parsed_input_name}";
                 _parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
-                _parsed_input="$(readlink -f "$_parsed_input")";
                 unset _parsed_input_name
             };
             local _src && { 
-                if grep "use box::.*" <<< "$_input" > /dev/null; then
+                if grep 'use box::' <<< "$_input" > /dev/null; then
                     { 
-                        _src="$_src_dir"
+                        _src="$_target_workdir"
                     };
                 else
-                    { 
-                        _src="$(readlink -f "${_parsed_input}")" && { 
-                            test ! -d "$_parsed_input" && { 
-                                _src="${_src%/*}"
-                            }
-                        }
-                    };
-                fi
+                    if grep 'use std::' <<< "$_input" > /dev/null; then
+                        { 
+                            echo "++++++++++++++++ Working ++++++++++++";
+                            _src="$_bashbox_libdir"
+                        };
+                    else
+                        { 
+                            _src="$PWD"
+                        };
+                    fi;
+                fi;
+                _parsed_input="$_src/$_parsed_input"
             };
+            echo "---------- $_modname";
             if test "${_modname::1}" == "_" || ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then
                 { 
-                    ( cd "$_src";
+                    echo "Parsed_input: $_parsed_input";
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
                         { 
                             println::error "$_input is missing" 1
@@ -475,30 +317,38 @@ main@bashbox%30037 ()
                     fi;
                     if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
                         { 
-                            for _modFile in "$_src/"*;
+                            if test -e "$_compiled_mod_bundle"; then
+                                { 
+                                    rm "$_compiled_mod_bundle"
+                                };
+                            fi;
+                            for _modFile in "$_parsed_input/"*;
                             do
                                 { 
-                                    Resolve::CheckNewline "$_modFile";
-                                    cat "$_modFile"* >> "$_src/mod.sh"
+                                    Resolve::CheckNewline "$_modFile"
                                 };
-                            done
+                            done;
+                            cat "$_parsed_input/"* > "$_compiled_mod_bundle";
+                            _parsed_input="$_compiled_mod_bundle"
                         };
+                    else
+                        if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then
+                            { 
+                                _parsed_input="$_parsed_input/mod"
+                            };
+                        fi;
                     fi;
-                    if test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then
-                        { 
-                            _parsed_input="$_parsed_input/mod"
-                        };
-                    fi;
+                    cd "$(dirname "$_parsed_input")";
                     geco "${RED}PWD${RC}: $PWD";
                     geco "${CYAN}File${RC}: ${_parsed_input}.sh";
                     mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true);
                     : ${_last_parsed_input:="${_parsed_input}"};
                     geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
-                    ( for _symbol in "${_use_symbols[@]}";
+                    for _symbol in "${_use_symbols[@]}";
                     do
-                        _last_parsed_input="${_parsed_input}";
-                        Resolve::UseSymbols "$_symbol";
-                    done );
+                        ( _last_parsed_input="${_parsed_input}";
+                        Resolve::UseSymbols "$_symbol" );
+                    done;
                     if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then
                         { 
                             Resolve::CheckNewline "${_parsed_input}.sh";
@@ -506,7 +356,7 @@ main@bashbox%30037 ()
                         };
                     fi;
                     echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
-                    echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)" )
+                    echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)"
                 };
             fi
         };
@@ -520,6 +370,7 @@ main@bashbox%30037 ()
                 fi
             };
         fi;
+        cd "$_target_workdir";
         Resolve::UseSymbols "$_target_workdir/main";
         local _bb_bootstrap;
         _bb_bootstrap=$(declare -f bb_bootstrap_header) && { 
@@ -899,6 +750,7 @@ EOF
         readonly _target_workdir="$_target_dir/$_build_variant";
         readonly _target_workfile="$_target_workdir/executable";
         readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+        readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod.sh";
         rsync -a --delete "$_src_dir/" "$_target_workdir";
         echo > "$_used_symbols_statfile";
         cat <<'EOF' > "$_target_workfile"
@@ -1252,4 +1104,4 @@ For bugreports: https://github.com/gearlock-users-repo/issues"
     main "$@"
 }
 
-main@bashbox%30037 "$@";
+main@bashbox%1278 "$@";

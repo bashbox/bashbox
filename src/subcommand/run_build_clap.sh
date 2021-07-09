@@ -174,6 +174,7 @@ readonly _build_variant;
 readonly _target_workdir="$_target_dir/$_build_variant";
 readonly _target_workfile="$_target_workdir/executable";
 readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod.sh";
 
 # Merge old-new files
 rsync -a --delete "$_src_dir/" "$_target_workdir";
