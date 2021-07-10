@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%20724 () 
+main@bashbox%15117 () 
 { 
     ___self="$0";
     function println::error () 
@@ -1523,4 +1523,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%20724 "$@";
+main@bashbox%15117 "$@";
