@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%15117 () 
+main@bashbox%4293 () 
 { 
     ___self="$0";
     function println::error () 
@@ -698,7 +698,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                 else
                     if grep 'use std::' <<< "$_input" > /dev/null; then
                         { 
-                            echo "++++++++++++++++ Working ++++++++++++";
                             _src="$_bashbox_libdir"
                         };
                     else
@@ -709,7 +708,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                 fi;
                 _parsed_input="$_src/$_parsed_input"
             };
-            echo "---------- $_modname";
+            if test "$_arg_verbose" == "off"; then
+                { 
+                    geco "   ${BGREEN}Compiling${RC} $_modname"
+                };
+            else
+                { 
+                    geco "---------- $_modname"
+                };
+            fi;
             if test "${_modname::1}" == "_" || ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then
                 { 
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
@@ -736,11 +743,19 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                         fi;
                     fi;
                     cd "$(dirname "$_parsed_input")";
-                    geco "${RED}PWD${RC}: $PWD";
-                    geco "${CYAN}File${RC}: ${_parsed_input}.sh";
+                    if test "$_arg_verbose" == "on"; then
+                        { 
+                            geco "${RED}PWD${RC}: $PWD";
+                            geco "${CYAN}File${RC}: ${_parsed_input}.sh"
+                        };
+                    fi;
                     mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true);
                     : ${_last_parsed_input:="${_parsed_input}"};
-                    geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
+                    if test "$_arg_verbose" == "on"; then
+                        { 
+                            geco "${PURPLE}Caller${RC}: $_last_parsed_input\n"
+                        };
+                    fi;
                     for _symbol in "${_use_symbols[@]}";
                     do
                         ( _last_parsed_input="${_parsed_input}";
@@ -753,7 +768,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                         };
                     fi;
                     echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
-                    echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)"
+                    if test "$_arg_verbose" == "on"; then
+                        { 
+                            echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)"
+                        };
+                    fi
                 };
             fi
         };
@@ -814,6 +833,20 @@ EOF
             };
         fi;
         chmod +x "$_target_workfile";
+        if test "$_arg_verbose" == "off"; then
+            { 
+                local _is_optimized;
+                _is_optimized=$(
+			if test "$_build_variant" == "release"; then {
+				echo "optimized"
+			} else {
+				echo "unoptimized"
+			} fi
+		);
+                geco "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s";
+                unset _is_optimized
+            };
+        fi;
         if test "$_arg_run" == "on"; then
             { 
                 "$_target_workfile" "${_run_target_args[@]}"
@@ -1449,7 +1482,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                 subcommand::install std
             };
         fi;
-        rm -r "$_target_dir"
+        rm -rf "$_target_dir"
     };
     function print_help () 
     { 
@@ -1504,9 +1537,6 @@ For bugreports: $REPOSITORY"
             };
         done;
         unset _arg;
-        test "$_arg_verbose" == on && test "$_arg_quiet" == off && { 
-            set -x
-        };
         _subcommand_argv="${1:-}" && shift || true;
         case "$_subcommand_argv" in 
             new | run | build | clean | install | selfinstall)
@@ -1523,4 +1553,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%15117 "$@";
+main@bashbox%4293 "$@";

@@ -125,9 +125,9 @@ function main() {
 	### Setup options
 	#####################
 	## Verbose
-	test "$_arg_verbose" == on && test "$_arg_quiet" == off && {
-		set -x;
-	}
+	# test "$_arg_verbose" == on && test "$_arg_quiet" == off && {
+		# set -x;
+	# }
 
 	#####################
 	### Main execution

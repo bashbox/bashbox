@@ -24,5 +24,5 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}\
 
 	use _clap;
 
-	rm -r "$_target_dir";
+	rm -rf "$_target_dir";
 }

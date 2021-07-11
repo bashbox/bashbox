@@ -77,7 +77,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 			if grep 'use box::' <<<"$_input" 1>/dev/null; then {
 				_src="$_target_workdir";	
 			} elif grep 'use std::' <<<"$_input" 1>/dev/null; then {
-				echo "++++++++++++++++ Working ++++++++++++"
 				_src="$_bashbox_libdir";
 			} else {
 				_src="$PWD";
@@ -88,7 +87,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 		}
 
 		# TODO: Need to write to $_used_symbols_statfile
-		echo "---------- $_modname"; # DEBUG
+		if test "$_arg_verbose" == "off"; then {
+			geco "   ${BGREEN}Compiling${RC} $_modname";
+		} else {
+			geco "---------- $_modname"; # DEBUG
+		} fi
 		if test "${_modname::1}" == "_" \
 		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
 			
@@ -117,25 +120,28 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 
 				cd "$(dirname "$_parsed_input")"
 
-				geco "${RED}PWD${RC}: $PWD"; # DEBUG
-				geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
+				if test "$_arg_verbose" == "on"; then {
+					geco "${RED}PWD${RC}: $PWD"; # DEBUG
+					geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
+				} fi
 
 				mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
 
 				# Cycle through main.sh symbols and so on.
 				# local _last_parsed_input;
 				: ${_last_parsed_input:="${_parsed_input}"};
-				geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
 
+				if test "$_arg_verbose" == "on"; then {
+					geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
+				} fi
 				
-					for _symbol in "${_use_symbols[@]}"; do
-						(
-							_last_parsed_input="${_parsed_input}";
-							Resolve::UseSymbols "$_symbol";
-						)
-					done
-				
-
+				for _symbol in "${_use_symbols[@]}"; do
+					(
+						_last_parsed_input="${_parsed_input}";
+						Resolve::UseSymbols "$_symbol";
+					)
+				done
+			
 				# Start merging process
 				# File names come in reversed order
 				if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then {
@@ -145,7 +151,10 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
 				} fi
 				echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
-				echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
+				if test "$_arg_verbose" == "on"; then {
+					echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
+				} fi
+				
 			
 		} fi
 	}
@@ -213,6 +222,22 @@ EOF
 	# Make it executable by the user
 	chmod +x "$_target_workfile";
 	
+	# Print success message
+	if test "$_arg_verbose" == "off"; then {
+		local _is_optimized;
+		_is_optimized=$(
+			if test "$_build_variant" == "release"; then {
+				echo "optimized"
+			} else {
+				echo "unoptimized"
+			} fi
+		);
+
+		geco "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s"
+
+		unset _is_optimized;
+	} fi
+
 	# Run the executable if _arg_run is passed
 	if test "$_arg_run" == "on"; then {
 		"$_target_workfile" "${_run_target_args[@]}";
