@@ -229,7 +229,7 @@ EOF
 			if test "$_build_variant" == "release"; then {
 				echo "optimized"
 			} else {
-				echo "unoptimized"
+				echo "unoptimized + debuginfo"
 			} fi
 		);
 

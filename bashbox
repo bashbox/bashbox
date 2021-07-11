@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%4293 () 
+main@bashbox%23621 () 
 { 
     ___self="$0";
     function println::error () 
@@ -466,12 +466,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release /home/me/awesome_project${R
 ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"string arg\" and-so-on${RC}
 "
         };
-        function begins_with_short_option () 
-        { 
-            local first_option all_short_options='h';
-            first_option="${1:0:1}";
-            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-        };
         _positionals=();
         _arg_path=;
         _arg_debug="off";
@@ -840,7 +834,7 @@ EOF
 			if test "$_build_variant" == "release"; then {
 				echo "optimized"
 			} else {
-				echo "unoptimized"
+				echo "unoptimized + debuginfo"
 			} fi
 		);
                 geco "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s";
@@ -1026,12 +1020,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                 };
             done;
             unset BB_USE_ARGS
-        };
-        function begins_with_short_option () 
-        { 
-            local first_option all_short_options='h';
-            first_option="${1:0:1}";
-            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
         };
         _positionals=();
         _arg_path=;
@@ -1301,12 +1289,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv}${RC} # Cleans the project in your cur
 ### Clean project from a specified directory:
 ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
         };
-        function begins_with_short_option () 
-        { 
-            local first_option all_short_options='h';
-            first_option="${1:0:1}";
-            test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
-        };
         _positionals=();
         _arg_path=;
         _arg_debug="off";
@@ -1553,4 +1535,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%4293 "$@";
+main@bashbox%23621 "$@";
