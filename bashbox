@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%23621 () 
+main@bashbox%7393 () 
 { 
     ___self="$0";
     function println::error () 
@@ -44,6 +44,13 @@ main@bashbox%23621 ()
     readonly _bashbox_libdir="$_bashbox_home/lib" && mkdir -p "$_bashbox_libdir";
     readonly _bashbox_bindir="$_bashbox_home/bin" && mkdir -p "$_bashbox_bindir";
     readonly SUBCOMMANDS_DESC=("" "Create a new bashbox project" "Directly run a bashbox project" "Compile a bashbox project" "Cleanup target/ directories" "Install a bashbox project from repo" "Install bashbox into PATH");
+    _var_exports=(_bashbox_libdir);
+    for _var in "${_var_exports[@]}";
+    do
+        { 
+            export "$_var"
+        };
+    done;
     function coming_soon () 
     { 
         println::error "In progress, coming in one of the future updates, try again later";
@@ -1535,4 +1542,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%23621 "$@";
+main@bashbox%7393 "$@";

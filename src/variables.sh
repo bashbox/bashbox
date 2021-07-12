@@ -12,3 +12,11 @@ readonly SUBCOMMANDS_DESC=(
 	"Install a bashbox project from repo"
 	"Install bashbox into PATH"
 );
+
+# Exports
+_var_exports=(
+	_bashbox_libdir
+)
+for _var in "${_var_exports[@]}"; do {
+	export "$_var";
+} done
