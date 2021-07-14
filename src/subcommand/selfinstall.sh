@@ -1,6 +1,6 @@
 function subcommand::selfinstall() {
 	# Locate a writable PATH
-	local PATH="$_bashbox_bindir:$PATH"; # IDK
+# 	local PATH="$_bashbox_bindir:$PATH"; # IDK
 	local _path;
 	while read -r _path; do {
 		# Check if PATH exists and write perm is present
@@ -8,7 +8,7 @@ function subcommand::selfinstall() {
 			local _target_install_dir="$_path";
 			break;
 		} fi
-	} done < <(sed 's|:|\n|g' <<<"$PATH");
+	} done < <(echo -e "${PATH//:/\\n}");
 
 	# Check if we were able to fetch a usable installation path
 	if ! test -v _target_install_dir; then {
@@ -57,9 +57,15 @@ function subcommand::selfinstall() {
 	} done
 
 	println::info "Installing to $_target_install_dir";
-	mv "$___self" "$_target_install_dir/${_self_name##*/}";
-	chmod +x "$_target_install_dir/${_self_name##*/}";
-	println::info "Installation complete, now simply run \`${_self_name##*/} --help\` to get started";
-	println::info "Note: You might need to restart your shell to take effect"
+
+	local _target_full_path="$_target_install_dir/$NAME";
+	local _target_funcname="${FUNCNAME[-1]}";
+	echo '#!/usr/bin/env bash' > "$_target_full_path";
+	declare -f "$_target_funcname" >> "$_target_full_path";
+	echo "$_target_funcname \"$@\";" >> "$_target_full_path";
+	chmod +x "$_target_full_path";
+
+	println::info "Installation complete, now simply run \`$NAME --help\` to get started";
+# 	println::info "Note: You might need to restart your shell to take effect"
 
 }

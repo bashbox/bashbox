@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%7393 () 
+main@bashbox%15940 () 
 { 
     ___self="$0";
     function println::error () 
@@ -1224,7 +1224,6 @@ EOF
     };
     function subcommand::selfinstall () 
     { 
-        local PATH="$_bashbox_bindir:$PATH";
         local _path;
         while read -r _path; do
             { 
@@ -1235,7 +1234,7 @@ EOF
                     };
                 fi
             };
-        done < <(sed 's|:|\n|g' <<<"$PATH");
+        done < <(echo -e "${PATH//:/\\n}");
         if ! test -v _target_install_dir; then
             { 
                 println::error "Failed to retrieve a usable PATH directory" 1
@@ -1281,10 +1280,13 @@ EOF
             };
         done;
         println::info "Installing to $_target_install_dir";
-        mv "$___self" "$_target_install_dir/${_self_name##*/}";
-        chmod +x "$_target_install_dir/${_self_name##*/}";
-        println::info "Installation complete, now simply run \`${_self_name##*/} --help\` to get started";
-        println::info "Note: You might need to restart your shell to take effect"
+        local _target_full_path="$_target_install_dir/$NAME";
+        local _target_funcname="${FUNCNAME[-1]}";
+        echo '#!/usr/bin/env bash' > "$_target_full_path";
+        declare -f "$_target_funcname" >> "$_target_full_path";
+        echo "$_target_funcname \"$@\";" >> "$_target_full_path";
+        chmod +x "$_target_full_path";
+        println::info "Installation complete, now simply run \`$NAME --help\` to get started"
     };
     function subcommand::clean () 
     { 
@@ -1542,4 +1544,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%7393 "$@";
+main@bashbox%15940 "$@";
