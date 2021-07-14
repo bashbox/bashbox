@@ -62,7 +62,7 @@ function subcommand::selfinstall() {
 	local _target_funcname="${FUNCNAME[-1]}";
 	echo '#!/usr/bin/env bash' > "$_target_full_path";
 	declare -f "$_target_funcname" >> "$_target_full_path";
-	echo "$_target_funcname \"$@\";" >> "$_target_full_path";
+	echo "$_target_funcname \"\$@\";" >> "$_target_full_path";
 	chmod +x "$_target_full_path";
 
 	println::info "Installation complete, now simply run \`$NAME --help\` to get started";
