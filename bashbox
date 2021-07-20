@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%16754 () 
+main@bashbox%3837 () 
 { 
     ___self="$0";
     function println::error () 
@@ -378,9 +378,11 @@ EOF
             _stream="${_stream%"${_stream##*[![:space:]]}"}";
             printf '%s\n' "$_stream"
         };
+        local _registry_meta_file _registry_meta_url _registry_lastsync_file;
         readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
         readonly _registry_meta_url="https://raw.githubusercontent.com/bashbox/registry/main/registry.meta";
         readonly _registry_lastsync_file="${_bashbox_home}/.registry.lastsync" && touch "$_registry_lastsync_file";
+        local _user_repo _check_file _branch;
         readonly _user_repo="bashbox/registry";
         readonly _check_file="registry.meta";
         readonly _branch="main";
@@ -396,63 +398,64 @@ EOF
                 echo "$_remote_sha" > "$_registry_lastsync_file"
             };
         fi;
-        local _input _libdir;
-        readonly _input="$1";
-        readonly _libdir="$_bashbox_libdir/$_input";
-        _tarball_download_link="$(grep ".*/$_input" "$_registry_meta_file")" || println::error "No such box as $_input was found" 1;
-        readonly _tarball_download_link;
-        if test -e "$_libdir"; then
+        local _input _libdir _tarball_download_link _package _gitmod_file;
+        local _path _url _install_path _install_executable _built_executable;
+        for _package in "${@}";
+        do
             { 
-                rm -r "$_libdir"
-            };
-        fi;
-        mkdir -p "$_libdir";
-        println::info "Downloading box $_input";
-        curl --silent -L "${_tarball_download_link}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_libdir" -xpzf -;
-        local _gitmod_file="$_libdir/.gitmodules";
-        if test -e "$_gitmod_file"; then
-            { 
-                local _path _url _install_path;
-                println::info "Resolving submodules";
-                while read -r _line; do
+                _input="$_package";
+                _libdir="$_bashbox_libdir/$_input";
+                _tarball_download_link="$(grep ".*/$_input" "$_registry_meta_file")" || println::error "No such box as $_input was found" 1;
+                if test -e "$_libdir"; then
                     { 
-                        _line="${_line%%:*}";
-                        _path="$(sed "${_line}q;d" "$_gitmod_file" 				| cut -d '=' -f2 | trim_leading_trailing)";
-                        _url="$(sed "$(( _line + 1 ))q;d" "$_gitmod_file" 				| cut -d '=' -f2 | trim_leading_trailing)";
-                        _install_path="${_libdir}/${_path}";
-                        println::info "Downloading submodule: $_path";
-                        if test -e "$_install_path"; then
-                            { 
-                                rm -r "$_install_path";
-                                mkdir -p "$_install_path"
-                            };
-                        fi;
-                        curl --silent -L "${_url}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -
+                        rm -r "$_libdir"
                     };
-                done < <(grep -n 'path.*=' "$_gitmod_file")
+                fi;
+                mkdir -p "$_libdir";
+                println::info "Downloading box $_input";
+                curl --silent -L "${_tarball_download_link}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_libdir" -xpzf -;
+                _gitmod_file="$_libdir/.gitmodules";
+                if test -e "$_gitmod_file"; then
+                    { 
+                        println::info "Resolving submodules";
+                        while read -r _line; do
+                            { 
+                                _line="${_line%%:*}";
+                                _path="$(sed "${_line}q;d" "$_gitmod_file" 					| cut -d '=' -f2 | trim_leading_trailing)";
+                                _url="$(sed "$(( _line + 1 ))q;d" "$_gitmod_file" 					| cut -d '=' -f2 | trim_leading_trailing)";
+                                _install_path="${_libdir}/${_path}";
+                                println::info "Downloading submodule: $_path";
+                                if test -e "$_install_path"; then
+                                    { 
+                                        rm -r "$_install_path";
+                                        mkdir -p "$_install_path"
+                                    };
+                                fi;
+                                curl --silent -L "${_url}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -
+                            };
+                        done < <(grep -n 'path.*=' "$_gitmod_file")
+                    };
+                fi;
+                if test -e "$_libdir/$_src_dir_name/main.sh"; then
+                    { 
+                        println::info "Compiling $_input in release mode";
+                        "$___self" build "$_libdir" --release 2>&1 || { 
+                            println::error "Errors were found while compiling $_input, operation failed" 1
+                        };
+                        _built_executable="$_libdir/target/release/executable";
+                        _install_executable="$_bashbox_bindir/$_input";
+                        chmod +x "$_built_executable";
+                        ln -srf "$_built_executable" "$_install_executable";
+                        chmod +x "$_install_executable";
+                        println::info "$_input was successfully installed"
+                    };
+                else
+                    { 
+                        println::info "$_input was installed as a library"
+                    };
+                fi
             };
-        fi;
-        if test -e "$_libdir/$_bashbox_meta_name"; then
-            { 
-                println::info "Compiling $_input in release mode";
-                local _build_log && { 
-                    _build_log="$("$___self" build "$_libdir" --release 2>&1)" || { 
-                        geco "$_build_log";
-                        println::error "Errors were found while compiling $_input, operation failed" 1
-                    }
-                };
-                local _built_executable="$_libdir/target/release/executable";
-                local _install_executable="$_bashbox_bindir/$_input";
-                chmod +x "$_built_executable";
-                ln -srf "$_built_executable" "$_install_executable";
-                chmod +x "$_install_executable";
-                println::info "$_input was successfully installed"
-            };
-        else
-            { 
-                println::info "$_input was installed as a library"
-            };
-        fi
+        done
     };
     function subcommand::build () 
     { 
@@ -472,6 +475,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release /home/me/awesome_project${R
 ### Pass arguments to the compiled executable and auto-run it after build
 ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"string arg\" and-so-on${RC}
 "
+        };
+        function Resolve::CheckNewline () 
+        { 
+            local _input="$1";
+            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
+                { 
+                    echo >> "$_input"
+                };
+            fi
         };
         _positionals=();
         _arg_path=;
@@ -549,15 +561,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                     fi
                 };
             done
-        };
-        function Resolve::CheckNewline () 
-        { 
-            local _input="$1";
-            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
-                { 
-                    echo >> "$_input"
-                };
-            fi
         };
         parse_commandline "$@";
         parse_runargs "$@";
@@ -1028,6 +1031,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
             done;
             unset BB_USE_ARGS
         };
+        function Resolve::CheckNewline () 
+        { 
+            local _input="$1";
+            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
+                { 
+                    echo >> "$_input"
+                };
+            fi
+        };
         _positionals=();
         _arg_path=;
         _arg_debug="off";
@@ -1104,15 +1116,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                     fi
                 };
             done
-        };
-        function Resolve::CheckNewline () 
-        { 
-            local _input="$1";
-            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
-                { 
-                    echo >> "$_input"
-                };
-            fi
         };
         parse_commandline "$@";
         parse_runargs "$@";
@@ -1298,6 +1301,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv}${RC} # Cleans the project in your cur
 ### Clean project from a specified directory:
 ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
         };
+        function Resolve::CheckNewline () 
+        { 
+            local _input="$1";
+            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
+                { 
+                    echo >> "$_input"
+                };
+            fi
+        };
         _positionals=();
         _arg_path=;
         _arg_debug="off";
@@ -1374,15 +1386,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     fi
                 };
             done
-        };
-        function Resolve::CheckNewline () 
-        { 
-            local _input="$1";
-            if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then
-                { 
-                    echo >> "$_input"
-                };
-            fi
         };
         parse_commandline "$@";
         parse_runargs "$@";
@@ -1544,4 +1547,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%16754 "$@";
+main@bashbox%3837 "$@";

@@ -124,16 +124,16 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
 			} elif test -e "$_src/${_parsed_input}/mod.sh"; then { # When we have mod.sh in module dir.
 				source_fromFile "${_src}/${_parsed_input}/mod";
 
-			} elif test -e "$_bashbox_libdir/${_parsed_input}.sh"; then { # When we have in bashbox std.
-				source_fromFile "$_bashbox_libdir/${_parsed_input}";
+			} elif test -e "$_bashbox_registrydir/${_parsed_input}.sh"; then { # When we have in bashbox std.
+				source_fromFile "$_bashbox_registrydir/${_parsed_input}";
 
 			} elif grep '/\*$' <<<"$_parsed_input" 1>/dev/null; then { # When the input is a whole dir.
 				local _dir; _dir="$(sed 's|/\*$||' <<<"$_parsed_input")";
 
 				if test -d "$_src/$_dir"; then { # Check in module level.
 					source_fromDir "$_src/$_dir";
-				} elif test -d "$_bashbox_libdir/$_dir"; then { # Check in bashbox std.
-					source_fromDir "$_bashbox_libdir/$_dir";
+				} elif test -d "$_bashbox_registrydir/$_dir"; then { # Check in bashbox std.
+					source_fromDir "$_bashbox_registrydir/$_dir";
 
 				} elif fetchLib_fromPath "$_parsed_input"; then { # Try to lookup in declared LIB PATH.
 					true

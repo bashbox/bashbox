@@ -5,7 +5,7 @@ use header;
 #####################
 use variables;
 use utils;
-use std::argbash::common;
+use argbash::common;
 use std::term::print::*;
 use std::term::colors;
 # use install::garca;
@@ -57,10 +57,6 @@ function main() {
 	#####################
 	### Initialization
 	#####################
-	### Constants
-	# GCOMM="gearlock"
-	# PS3="$(echo -e "\nEnter a number >> ")"
-	readonly VERSION="0.1.0";
 
 	### Mutables
 	_self_name="${___self##*/}";

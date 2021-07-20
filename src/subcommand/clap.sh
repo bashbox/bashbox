@@ -11,6 +11,8 @@
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 
 
+use std::io::file::check_newline;
+
 # THE DEFAULTS INITIALIZATION - POSITIONALS
 _positionals=();
 _arg_path=;
@@ -84,13 +86,6 @@ parse_runargs()
 			break;
 		} fi
 	} done
-}
-
-Resolve::CheckNewline() {
-	local _input="$1";
-	if ! [[ $(tail -c1 "$_input" | wc -l) -gt 0 ]]; then {
-		echo >> "$_input";
-	} fi
 }
 
 parse_commandline "$@";
@@ -167,14 +162,14 @@ readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
 readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
 
 # Check newline on meta
-Resolve::CheckNewline "$_bashbox_meta";
+io::file::check_newline "$_bashbox_meta";
 
 # Merge old-new files
 rsync -a --delete "$_src_dir/" "$_target_workdir";
 echo > "$_used_symbols_statfile";
 
 # Check for std
-if test ! -e "$_bashbox_libdir/std"; then {
+if test ! -e "$_bashbox_registrydir/std"; then {
 	subcommand::install std;
 } fi
 

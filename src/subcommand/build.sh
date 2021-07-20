@@ -33,7 +33,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 
 	}
 	use _clap;
-	
+		
 	Resolve::Colons() {
 		 awk '{$1=$1;print}' <<<"$1" \
 		 	| sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"; # Swap `::` with `/` and remove [`use `, `/*` `;`] keywords
@@ -77,7 +77,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 			if grep 'use box::' <<<"$_input" 1>/dev/null; then {
 				_src="$_target_workdir";	
 			} elif grep 'use std::' <<<"$_input" 1>/dev/null; then {
-				_src="$_bashbox_libdir";
+				_src="$_bashbox_registrydir";
 			} else {
 				_src="$PWD";
 				
@@ -86,7 +86,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 
 		}
 
-		# TODO: Need to write to $_used_symbols_statfile
 		if test "$_arg_verbose" == "off"; then {
 			geco "   ${BGREEN}Compiling${RC} $_modname";
 		} else {
@@ -109,7 +108,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 					# 	rm "$_compiled_mod_bundle";
 					# } fi
 					for _modFile in "$_parsed_input/"*; do {
-						Resolve::CheckNewline "$_modFile";
+						io::file::check_newline "$_modFile";
 					} done
 					cat "$_parsed_input/"* > "$_compiled_mod_bundle.sh";
 					_parsed_input="$_compiled_mod_bundle";
@@ -118,7 +117,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 				} fi
 
 
-				cd "$(dirname "$_parsed_input")"
+				cd "$(dirname "$_parsed_input")";
 
 				if test "$_arg_verbose" == "on"; then {
 					geco "${RED}PWD${RC}: $PWD"; # DEBUG
@@ -145,7 +144,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 				# Start merging process
 				# File names come in reversed order
 				if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then {
-					Resolve::CheckNewline "${_parsed_input}.sh";
+					io::file::check_newline "${_parsed_input}.sh";
 					sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
 					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
 					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";

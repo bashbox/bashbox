@@ -1,7 +1,7 @@
 readonly _bashbox_meta_name="Bashbox.meta";
 readonly _src_dir_name="src";
 readonly _bashbox_home="${HOME:-"${0%/*}"}/.bashbox" && mkdir -p "$_bashbox_home";
-readonly _bashbox_libdir="$_bashbox_home/lib" && mkdir -p "$_bashbox_libdir";
+readonly _bashbox_registrydir="$_bashbox_home/registry" && mkdir -p "$_bashbox_registrydir";
 readonly _bashbox_bindir="$_bashbox_home/bin" && mkdir -p "$_bashbox_bindir";
 readonly SUBCOMMANDS_DESC=(
 	""
@@ -15,7 +15,7 @@ readonly SUBCOMMANDS_DESC=(
 
 # Exports
 _var_exports=(
-	_bashbox_libdir
+	_bashbox_registrydir
 )
 for _var in "${_var_exports[@]}"; do {
 	export "$_var";
