@@ -1,6 +1,6 @@
 function subcommand::selfinstall() {
 	# Locate a writable PATH
-# 	local PATH="$_bashbox_bindir:$PATH"; # IDK
+	local PATH="$_bashbox_bindir:$PATH"; # IDK
 	local _path;
 	while read -r _path; do {
 		# Check if PATH exists and write perm is present
@@ -20,36 +20,28 @@ function subcommand::selfinstall() {
 	## Add bashbox bindir to path
 	function check_shellrc_key() {
 		local _input_file="$1";
-		if grep "$_shellrc_key" "$_input_file" 1>/dev/null; then {
+		if grep "source.*\.bashbox/env" "$_input_file" 1>/dev/null; then {
 			return 0
 		} else {
 			return 1
 		} fi
 	}
-	local _shellrc_key="BASHBOX_BINDIR";
 	local _shellrcs=(
 		"$HOME/.bashrc" # bash
+		"$HOME/.kshrc" # ksh
 		"$HOME/.zshrc" # zsh
 		"$HOME/.config/fish/config.fish" # fish
 	)
 	for _shellrc in "${_shellrcs[@]}"; do {
 
-		if test -e "$_shellrc" && ! check_shellrc_key "$_shellrc"; then {
-
+		if test -e "$_shellrc" && ! check_shellrc_key "$_shellrc"; then {	
 			case "$_shellrc" in
-				"${_shellrcs[0]}") # bash
-					echo "${_shellrc_key}=\"$_bashbox_bindir\"" >> "$_shellrc";
-					echo "export PATH=\"\$${_shellrc_key}:\$PATH\"" >> "$_shellrc";
-					;;
-				"${_shellrcs[1]}") # zsh
-					echo "${_shellrc_key}=\"$_bashbox_bindir\"" >> "$_shellrc";
-					echo "export PATH=\"\$${_shellrc_key}:\$PATH\"" >> "$_shellrc";
-					;;
-				"${_shellrcs[2]}") # fish
-					echo "set ${_shellrc_key} \"$_bashbox_bindir\"" >> "$_shellrc";
-					echo "set PATH \"\$${_shellrc_key}\" \"\$PATH\"" >> "$_shellrc";
-					echo "export PATH" >> "$_shellrc";
-					;;
+				"${_shellrcs[0]}" | "${_shellrcs[1]}" | "${_shellrcs[2]}") # bash, ksh, zsh
+					echo "source \"$bashbox_posix_envfile\";" >> "$_shellrc";
+				;;
+				"${_shellrcs[3]}") # fish
+					echo "source \"$_bashbox_fish_envfile\";" >> "$_shellrc";
+				;;
 			esac
 		
 		} fi
@@ -65,7 +57,7 @@ function subcommand::selfinstall() {
 	echo "$_target_funcname \"\$@\";" >> "$_target_full_path";
 	chmod +x "$_target_full_path";
 
-	println::info "Installation complete, now simply run \`$NAME --help\` to get started";
+	println::info "Installation complete, now restart your shell and run \`$NAME --help\` to get started";
 # 	println::info "Note: You might need to restart your shell to take effect"
 
 }
