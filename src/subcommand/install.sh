@@ -72,7 +72,7 @@ function subcommand::install() {
 
 		# Ignore args
 		if [[ "$_box" =~ ^-- ]]; then {
-			continue
+			continue;
 		} fi
 
 		_repo_name="${_box%%::*}";
@@ -87,6 +87,11 @@ function subcommand::install() {
 			} fi
 		}
 		_box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
+
+		# Create usemols.meta (INTERNAL-API)
+		if test -v USEMOLS_META_FILE; then {
+			echo "_usemol_${_repo_name}=${_box_dir}/src" >> "$USEMOLS_META_FILE";
+		} fi
 
 		# Exit function if pre-existing
 		if test -e "$_box_dir"; then {
@@ -152,6 +157,8 @@ function subcommand::install() {
 		} else {
 			println::info "$_box was installed as a library";
 		} fi
+	
+
 
 	} done
 }

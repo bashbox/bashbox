@@ -1,6 +1,7 @@
 
 function subcommand::run() {
 	
+	println::error "This command is temporarily unavailable, needs a rewrite";
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \

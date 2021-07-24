@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../../../../../../home/axon/.bashbox/registry"
 		}
 	],
 	"settings": {
@@ -24,5 +27,8 @@
 		"files.autoGuessEncoding": true,
 		"editor.insertSpaces": false,
 		"editor.detectIndentation": false,
+		"files.exclude": {
+			"**/target": true
+		},
 	}
 }

@@ -1,5 +1,8 @@
 NAME="bashbox"
 AUTHORS=("AXON <axonasif@gmail.com>")
-VERSION="1.1"
-DEPENDENCIES=()
+VERSION="0.1.5"
+DEPENDENCIES=(
+	"std::0.1.2"
+	"argbash::0.1.0"
+)
 REPOSITORY="https://github.com/axonasif/bashbox"

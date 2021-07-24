@@ -62,6 +62,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 
 	Resolve::UseSymbols() {
 		# TODO: Implement BASHBOX_LIB_PATH
+		# TODO: This is an absolute hell, needs a rewrite.
 		local _input="$1";
 		if Resolve::IsMain; then {
 			_input="main";
@@ -73,17 +74,20 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 			# _parsed_input="$(readlink -f "$_parsed_input")";
 			unset _parsed_input_name;
 		}
+		local _ref="_usemol_${_parsed_input%%/*}";
 		local _src && {
 			if grep 'use box::' <<<"$_input" 1>/dev/null; then {
 				_src="$_target_workdir";	
-			} elif grep 'use std::' <<<"$_input" 1>/dev/null; then {
-				_src="$_bashbox_registrydir";
+			} elif test -v "$_ref"; then {
+				_src="${!_ref}";
+				_parsed_input="${_parsed_input#*/}";
+			# } elif grep 'use std::' <<<"$_input" 1>/dev/null; then {
+			# 	_src="$_bashbox_registrydir";
 			} else {
 				_src="$PWD";
-				
 			} fi
-			_parsed_input="$_src/$_parsed_input";
 
+			_parsed_input="$_src/$_parsed_input";
 		}
 
 		if test "$_arg_verbose" == "off"; then {
@@ -92,7 +96,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 			geco "---------- $_modname"; # DEBUG
 		} fi
 		if test "${_modname::1}" == "_" \
-		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile"; then {
+		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile" 1>/dev/null; then {
 			
 
 				# Handle missing symbols

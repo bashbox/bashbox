@@ -5,15 +5,10 @@ use header;
 #####################
 use variables;
 use utils;
-use argbash::common;
 use std::term::print::*;
 use std::term::colors;
-# use install::garca;
-# use ensure::garca;
-# use metadata::fetch_value;
-# use metadata::set_value;
-
-#####################
+use std::io::file::check_newline;
+use argbash::common;
 ### Private functions
 #####################
 use subcommand;
