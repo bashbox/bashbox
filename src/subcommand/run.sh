@@ -1,7 +1,5 @@
 
 function subcommand::run() {
-	
-	println::error "This command is temporarily unavailable, needs a rewrite";
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
@@ -37,14 +35,20 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
 
 
 	function __use_func() {	
+		# TODO: Remove fetchLib_fromPath.
+		# TODO: Needs a rewrite ASAP.
 		# Arguments
 		for _input in "${@}"; do {
 			local _input="$_input"; # We re-assign the value to prevent for-loop glob expansion on files.
 			# local _input_extra_args="$BB_USE_ARGS"; # Only assign extra_args if they were actually passed.
 		
+			local _ref="_usemol_${_input%%::*}";
 			local _src && {
 				if grep "^box::.*" <<<"$_input" 1>/dev/null; then {
 					_src="$_main_src_dir";
+				} elif test -v "$_ref"; then {
+					_src="${!_ref}";
+					_input="${_input#*::}";
 				} else {
 					_src="$(readlink -f "${BB_SOURCE}")" && _src="${_src%/*}";
 				} fi
@@ -92,7 +96,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
 				local _found_file_mods=();
 				local _found_dir_mods=();
 
-				mapfile -t _paths < <(sed 's|:|\n|g' <<<"$BASHBOX_LIB_PATH");
+				mapfile -t _paths < <(sed 's|:|\n|g' <<<"${BASHBOX_LIB_PATH:-}");
 				for _path in "${_paths[@]}"; do {
 					if test -e "$_path/$_mod"; then {
 						_found_file_mods+=("$_path/$_mod");
@@ -136,8 +140,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
 				} elif test -d "$_bashbox_registrydir/$_dir"; then { # Check in bashbox std.
 					source_fromDir "$_bashbox_registrydir/$_dir";
 
-				} elif fetchLib_fromPath "$_parsed_input"; then { # Try to lookup in declared LIB PATH.
-					true
+				# } elif fetchLib_fromPath "$_parsed_input"; then { # Try to lookup in declared LIB PATH.
+				# 	true
 
 				} else {
 					println::error "No such module tree as $_input was found";

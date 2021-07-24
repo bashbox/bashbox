@@ -165,7 +165,9 @@ case "$FUNCNAME" in
 		)
 
 		# Now lets load the usemols in RAM
+		set -a;
 		source "$_usemols_meta";
+		set +a;
 
 		# # Check for std
 		# if test ! -e "$_bashbox_registrydir/std"; then {

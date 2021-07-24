@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%11535 () 
+main@bashbox%17810 () 
 { 
     ___self="$0";
     function println::error () 
@@ -279,6 +279,10 @@ main@bashbox%11535 ()
         local first_option all_short_options='h';
         first_option="${1:0:1}";
         test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+    };
+    function okay::man () 
+    { 
+        echo hmmm
     };
     function subcommand::new () 
     { 
@@ -748,7 +752,9 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                         USEMOLS_META_FILE="$_usemols_meta" subcommand::install "$_box"
                     };
                 done );
-                source "$_usemols_meta"
+                set -a;
+                source "$_usemols_meta";
+                set +a
             ;;
         esac;
         function Resolve::Colons () 
@@ -961,7 +967,6 @@ EOF
     };
     function subcommand::run () 
     { 
-        println::error "This command is temporarily unavailable, needs a rewrite";
         function print_help () 
         { 
             println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[2]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "--release<^>Run in release mode
@@ -984,15 +989,23 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
             do
                 { 
                     local _input="$_input";
+                    local _ref="_usemol_${_input%%::*}";
                     local _src && { 
                         if grep "^box::.*" <<< "$_input" > /dev/null; then
                             { 
                                 _src="$_main_src_dir"
                             };
                         else
-                            { 
-                                _src="$(readlink -f "${BB_SOURCE}")" && _src="${_src%/*}"
-                            };
+                            if test -v "$_ref"; then
+                                { 
+                                    _src="${!_ref}";
+                                    _input="${_input#*::}"
+                                };
+                            else
+                                { 
+                                    _src="$(readlink -f "${BB_SOURCE}")" && _src="${_src%/*}"
+                                };
+                            fi;
                         fi
                     };
                     local _parsed_input && _parsed_input="$(sed "s|box::||g; s|::|/|g" <<<"$_input")";
@@ -1040,7 +1053,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                         local _paths;
                         local _found_file_mods=();
                         local _found_dir_mods=();
-                        mapfile -t _paths < <(sed 's|:|\n|g' <<<"$BASHBOX_LIB_PATH");
+                        mapfile -t _paths < <(sed 's|:|\n|g' <<<"${BASHBOX_LIB_PATH:-}");
                         for _path in "${_paths[@]}";
                         do
                             { 
@@ -1110,15 +1123,9 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                                                     source_fromDir "$_bashbox_registrydir/$_dir"
                                                 };
                                             else
-                                                if fetchLib_fromPath "$_parsed_input"; then
-                                                    { 
-                                                        true
-                                                    };
-                                                else
-                                                    { 
-                                                        println::error "No such module tree as $_input was found"
-                                                    };
-                                                fi;
+                                                { 
+                                                    println::error "No such module tree as $_input was found"
+                                                };
                                             fi;
                                         fi
                                     };
@@ -1305,7 +1312,9 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                         USEMOLS_META_FILE="$_usemols_meta" subcommand::install "$_box"
                     };
                 done );
-                source "$_usemols_meta"
+                set -a;
+                source "$_usemols_meta";
+                set +a
             ;;
         esac;
         cat <<'EOF' > "$_target_workfile"
@@ -1567,7 +1576,9 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                         USEMOLS_META_FILE="$_usemols_meta" subcommand::install "$_box"
                     };
                 done );
-                source "$_usemols_meta"
+                set -a;
+                source "$_usemols_meta";
+                set +a
             ;;
         esac;
         rm -rf "$_target_dir"
@@ -1640,4 +1651,4 @@ For bugreports: $REPOSITORY"
     main "$@"
 }
 
-main@bashbox%11535 "$@";
+main@bashbox%17810 "$@";
