@@ -51,7 +51,7 @@ function subcommand::selfinstall() {
 	println::info "Installing to $_target_install_dir";
 
 	local _target_full_path="$_target_install_dir/$NAME";
-	local _target_funcname="${FUNCNAME[-1]}";
+	local _target_funcname="${FUNCNAME[-1 + -1]}";
 	echo '#!/usr/bin/env bash' > "$_target_full_path";
 	declare -f "$_target_funcname" >> "$_target_full_path";
 	echo "$_target_funcname \"\$@\";" >> "$_target_full_path";

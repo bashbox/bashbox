@@ -143,6 +143,7 @@ readonly _usemols_meta="$_target_workdir/$_usemols_meta_name";
 
 case "$FUNCNAME" in
 	"subcommand::build" | "subcommand::run")
+		# TODO: Decide whether to keep ignoring already loaded modules.
 		# Start with creating the placeholder target dirs
 		for _dir in "$_target_debug_dir" "$_target_release_dir"; do {
 			mkdir -p "$_dir";
