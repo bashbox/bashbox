@@ -91,9 +91,9 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 		}
 
 		if test "$_arg_verbose" == "off"; then {
-			geco "   ${BGREEN}Compiling${RC} $_modname";
+			echo -e "   ${BGREEN}Compiling${RC} $_modname";
 		} else {
-			geco "---------- $_modname"; # DEBUG
+			echo -e "---------- $_modname"; # DEBUG
 		} fi
 		if test "${_modname::1}" == "_" \
 		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile" 1>/dev/null; then {
@@ -124,8 +124,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 				cd "$(dirname "$_parsed_input")";
 
 				if test "$_arg_verbose" == "on"; then {
-					geco "${RED}PWD${RC}: $PWD"; # DEBUG
-					geco "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
+					echo -e "${RED}PWD${RC}: $PWD"; # DEBUG
+					echo -e "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
 				} fi
 
 				mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
@@ -135,7 +135,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 				: ${_last_parsed_input:="${_parsed_input}"};
 
 				if test "$_arg_verbose" == "on"; then {
-					geco "${PURPLE}Caller${RC}: $_last_parsed_input\n";
+					echo -e "${PURPLE}Caller${RC}: $_last_parsed_input\n";
 				} fi
 				
 				for _symbol in "${_use_symbols[@]}"; do
@@ -149,6 +149,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 				# File names come in reversed order
 				if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then {
 					io::file::check_newline "${_parsed_input}.sh";
+					bash -n "${_parsed_input}.sh"; # Check syntax
 					sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
 					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
 					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
@@ -170,52 +171,51 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 		} fi
 	} fi
 
-	# Define Vars
+	### Main compile process
 	cd "$_target_workdir";
 	Resolve::UseSymbols "$_target_workdir/main";
 
+
+	### After compile process
 	# Concatinate bootstrap header to main.sh
 	local _bb_bootstrap;
 	_bb_bootstrap=$(declare -f bb_bootstrap_header) && {
 		_bb_bootstrap="${_bb_bootstrap#*{}";
 		_bb_bootstrap="${_bb_bootstrap%\}}";
 	}
+
 	local _ran="$RANDOM";
-	local _tmp_bbb_path="$_target_workdir/.bb_bootstrap.$_ran";
-	echo '#!'"$(command -v env) bash" > "$_tmp_bbb_path"; # Place shebang
-	# Add some variables
-	cat << 'EOF' >> "$_tmp_bbb_path"
-___self="$0";
-EOF
-	declare -f 'println::error'	>> "$_tmp_bbb_path"; # Concate println:error
-	echo "${_bb_bootstrap}"	>> "$_tmp_bbb_path"; # Concat bootstrap
-	cat "$_bashbox_meta" >> "$_tmp_bbb_path"; # Concat Bashbox.meta
-	cat "$_tmp_bbb_path" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
-	
-	# Concat main execution call
-	cat << 'EOF' >> "$_target_workfile"
+	local _main_funcname="main@bashbox%${_ran}";
+	local _tmp_target_workfile="$_target_workdir/.${NAME}.$_ran";
+	local _shebang && {
+		_shebang='#!'"$(command -v env) bash";
+	}
 
-main "$@";
-
-EOF
+	## Initial header creation
+	echo "$_shebang" > "$_tmp_target_workfile"; # Place shebang
+	echo "function ${_main_funcname}() {" >> "$_tmp_target_workfile"; # Create main function
+	echo "${_bb_bootstrap}"	>> "$_tmp_target_workfile"; # Concat bootstrap
+	declare -f 'println::error'	>> "$_tmp_target_workfile"; # Concat println::error
 	
+	# Add API variables
+	cat << EOF >> "$_tmp_target_workfile"
+___self="\$0";
+___MAIN_FUNCNAME="$_main_funcname";
+EOF
+	cat "$_bashbox_meta" >> "$_tmp_target_workfile"; # Concat Bashbox.meta
+	cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
+	echo "main \"\$@\";" >> "$_target_workfile"; # Add execution point for porject main function
+	rm "$_tmp_target_workfile";
+	echo -e '}' >> "$_target_workfile"; # Add function closing bracket
+
 	if test "$_build_variant" == "release"; then {
-		local _shebang;
-		local _zygote_name="main@bashbox%${_ran}";
-		local _tmp_bashfmt="$_target_workdir/.bb.fmt.$_ran";
-		geco "function ${_zygote_name}() {" > "$_tmp_bashfmt";
-		cat "$_target_workfile" >> "$_tmp_bashfmt";
-		geco "\n}" >> "$_tmp_bashfmt";
-		source "$_tmp_bashfmt";
-
-		_shebang="$(grep "#\!/.*" "$_target_workfile" | head -n1)";
-		geco "$_shebang" > "$_target_workfile";
-		declare -f "$_zygote_name" >> "$_target_workfile";
-		geco "\n${_zygote_name} \"\$@\";" >> "$_target_workfile";
-		rm "$_tmp_bashfmt";
+		source "$_target_workfile";
+		echo "$_shebang" > "$_target_workfile";
+		declare -f "$_main_funcname" >> "$_target_workfile";
 	} fi
 
-	rm "$_tmp_bbb_path";
+	# Concat main execution call
+	echo "${_main_funcname} \"\$@\"" >> "$_target_workfile";
 
 	# Run build.sh after actions
 	if declare -f bashbox_after_build | head -n0; then { # Will fail without pipefail
@@ -236,7 +236,7 @@ EOF
 			} fi
 		);
 
-		geco "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s"
+		echo -e "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s"
 
 		unset _is_optimized;
 	} fi
@@ -247,7 +247,7 @@ EOF
 	} fi
 
 	# set -x
-	# geco '\n------'
+	# echo -e '\n------'
 	# _used_symbols_arr_length="${#_used_symbols_arr[@]}";
 	# # _used_symbols_times=0;
 	# for _arr in "${_used_symbols_arr[@]}"; do {

@@ -173,7 +173,7 @@ EOF
 		git init "$_arg_path" 1>/dev/null || { _r=$?; rm -r "$_arg_path"; println::error "Failed to initialize git at \`$_arg_path\`" $_r; }
 
 		# Create .gitignore
-		geco '/target' > "$_arg_path/.gitignore";
+		echo -e '/target' > "$_arg_path/.gitignore";
 
 	else
 		rm -r "$_arg_path"

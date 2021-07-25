@@ -1,5 +1,6 @@
 
 function subcommand::run() {
+	println::error "This command is temporarily unavailable, under a rewrite";
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
@@ -171,7 +172,7 @@ EOF
 	declare -f 'println::error' >> "$_target_workfile";
 	declare -f __use_func >> "$_target_workfile";
 	cat "$_target_workdir/main.sh" >> "$_target_workfile";
-	geco "\nmain \"\$@\";" >> "$_target_workfile";
+	echo -e "\nmain \"\$@\";" >> "$_target_workfile";
 	chmod +x "$_target_workfile";
 	"$_target_workfile" "${_run_target_args[@]}";
 }

@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
-main@bashbox%21359 () 
+main@bashbox%8089 () 
 { 
-    ___self="$0";
+    \command \unalias -a;
+    set -o pipefail;
+    set -o errexit;
+    set -o errtrace;
+    set -o nounset;
+    shopt -s expand_aliases;
+    trap '____r=$?; BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $____r; exit $____r' ERR;
     function println::error () 
     { 
         local _return_code=${2:-$?};
@@ -18,13 +24,8 @@ main@bashbox%21359 ()
             ;;
         esac
     };
-    set -o pipefail;
-    set -o errexit;
-    set -o errtrace;
-    set -o nounset;
-    \command \unalias -a;
-    shopt -s expand_aliases;
-    trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR;
+    ___self="$0";
+    ___MAIN_FUNCNAME="main@bashbox%8089";
     NAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
     VERSION="0.1.5";
@@ -32,16 +33,15 @@ main@bashbox%21359 ()
     REPOSITORY="https://github.com/axonasif/bashbox";
     function bb_bootstrap_header () 
     { 
+        \command \unalias -a;
         set -o pipefail;
         set -o errexit;
         set -o errtrace;
         set -o nounset;
-        \command \unalias -a;
         shopt -s expand_aliases;
-        trap 'BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $?' ERR
+        trap '____r=$?; BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $____r; exit $____r' ERR
     };
     readonly _bashbox_meta_name="Bashbox.meta";
-    readonly _usemols_meta_name="Usemols.meta";
     readonly _src_dir_name="src";
     readonly _bashbox_home="${HOME:-"${0%/*}"}/.bashbox" && mkdir -p "$_bashbox_home";
     readonly _bashbox_registrydir="$_bashbox_home/registry" && mkdir -p "$_bashbox_registrydir";
@@ -390,7 +390,7 @@ EOF
                 rm -r "$_arg_path";
                 println::error "Failed to initialize git at \`$_arg_path\`" $_r
             };
-            geco '/target' > "$_arg_path/.gitignore";
+            echo -e '/target' > "$_arg_path/.gitignore";
         else
             rm -r "$_arg_path";
             println::error "git does not seem to be available, please install it" 1;
@@ -503,9 +503,9 @@ EOF
                     fi
                 };
                 _box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
-                if test -v USEMOLS_META_FILE; then
+                if test "$EXPORT_USEMOL" == "true"; then
                     { 
-                        echo "_usemol_${_repo_name}=${_box_dir}/src" >> "$USEMOLS_META_FILE"
+                        export "_usemol_${_repo_name}=${_box_dir}/src"
                     };
                 fi;
                 if test -e "$_box_dir"; then
@@ -721,21 +721,19 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
         readonly _target_debug_dir="$_target_dir/debug";
         readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
-        _build_variant="$(
-	if test "$_arg_release" == "on"; then {
-		echo "${_target_release_dir##*/}";
-	} else {
-		echo "${_target_debug_dir##*/}";
-	} fi
-)";
-        readonly _build_variant;
-        readonly _target_workdir="$_target_dir/$_build_variant";
-        readonly _target_workfile="$_target_workdir/executable";
-        readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
-        readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
-        readonly _usemols_meta="$_target_workdir/$_usemols_meta_name";
         case "$FUNCNAME" in 
             "subcommand::build" | "subcommand::run")
+                _build_variant="$(
+			if test "$_arg_release" == "on"; then {
+				echo "${_target_release_dir##*/}";
+			} else {
+				echo "${_target_debug_dir##*/}";
+			} fi
+		)";
+                readonly _build_variant;
+                readonly _target_workdir="$_target_dir/$_build_variant";
+                readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+                readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
                 for _dir in "$_target_debug_dir" "$_target_release_dir";
                 do
                     { 
@@ -745,16 +743,14 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                 io::file::check_newline "$_bashbox_meta";
                 rsync -a --delete "$_src_dir/" "$_target_workdir";
                 echo > "$_used_symbols_statfile";
-                ( source "$_bashbox_meta";
+                source "$_bashbox_meta";
                 for _box in "${DEPENDENCIES[@]}";
                 do
                     { 
-                        USEMOLS_META_FILE="$_usemols_meta" subcommand::install "$_box"
+                        EXPORT_USEMOL="true" subcommand::install "$_box"
                     };
-                done );
-                set -a;
-                source "$_usemols_meta";
-                set +a
+                done;
+                readonly _target_workfile="$_target_workdir/$NAME"
             ;;
         esac;
         function Resolve::Colons () 
@@ -822,11 +818,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
             };
             if test "$_arg_verbose" == "off"; then
                 { 
-                    geco "   ${BGREEN}Compiling${RC} $_modname"
+                    echo -e "   ${BGREEN}Compiling${RC} $_modname"
                 };
             else
                 { 
-                    geco "---------- $_modname"
+                    echo -e "---------- $_modname"
                 };
             fi;
             if test "${_modname::1}" == "_" || ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile" > /dev/null; then
@@ -857,15 +853,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                     cd "$(dirname "$_parsed_input")";
                     if test "$_arg_verbose" == "on"; then
                         { 
-                            geco "${RED}PWD${RC}: $PWD";
-                            geco "${CYAN}File${RC}: ${_parsed_input}.sh"
+                            echo -e "${RED}PWD${RC}: $PWD";
+                            echo -e "${CYAN}File${RC}: ${_parsed_input}.sh"
                         };
                     fi;
                     mapfile -t _use_symbols < <(grep -E 'use .*;$' "${_parsed_input}.sh" | grep -v '#' | awk '{$1=$1;print}' || true);
                     : ${_last_parsed_input:="${_parsed_input}"};
                     if test "$_arg_verbose" == "on"; then
                         { 
-                            geco "${PURPLE}Caller${RC}: $_last_parsed_input\n"
+                            echo -e "${PURPLE}Caller${RC}: $_last_parsed_input\n"
                         };
                     fi;
                     for _symbol in "${_use_symbols[@]}";
@@ -876,6 +872,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                     if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then
                         { 
                             io::file::check_newline "${_parsed_input}.sh";
+                            bash -n "${_parsed_input}.sh";
                             sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh"
                         };
                     fi;
@@ -906,39 +903,33 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
             _bb_bootstrap="${_bb_bootstrap%\}}"
         };
         local _ran="$RANDOM";
-        local _tmp_bbb_path="$_target_workdir/.bb_bootstrap.$_ran";
-        echo '#!'"$(command -v env) bash" > "$_tmp_bbb_path";
-        cat <<'EOF' >> "$_tmp_bbb_path"
-___self="$0";
+        local _main_funcname="main@bashbox%${_ran}";
+        local _tmp_target_workfile="$_target_workdir/.${NAME}.$_ran";
+        local _shebang && { 
+            _shebang='#!'"$(command -v env) bash"
+        };
+        echo "$_shebang" > "$_tmp_target_workfile";
+        echo "function ${_main_funcname}() {" >> "$_tmp_target_workfile";
+        echo "${_bb_bootstrap}" >> "$_tmp_target_workfile";
+        declare -f 'println::error' >> "$_tmp_target_workfile";
+        cat <<EOF >> "$_tmp_target_workfile"
+___self="\$0";
+___MAIN_FUNCNAME="$_main_funcname";
 EOF
 
-        declare -f 'println::error' >> "$_tmp_bbb_path";
-        echo "${_bb_bootstrap}" >> "$_tmp_bbb_path";
-        cat "$_bashbox_meta" >> "$_tmp_bbb_path";
-        cat "$_tmp_bbb_path" "$_target_workdir/main.sh" > "$_target_workfile";
-        cat <<'EOF' >> "$_target_workfile"
-
-main "$@";
-
-EOF
-
+        cat "$_bashbox_meta" >> "$_tmp_target_workfile";
+        cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile";
+        echo "main \"\$@\";" >> "$_target_workfile";
+        rm "$_tmp_target_workfile";
+        echo -e '}' >> "$_target_workfile";
         if test "$_build_variant" == "release"; then
             { 
-                local _shebang;
-                local _zygote_name="main@bashbox%${_ran}";
-                local _tmp_bashfmt="$_target_workdir/.bb.fmt.$_ran";
-                geco "function ${_zygote_name}() {" > "$_tmp_bashfmt";
-                cat "$_target_workfile" >> "$_tmp_bashfmt";
-                geco "\n}" >> "$_tmp_bashfmt";
-                source "$_tmp_bashfmt";
-                _shebang="$(grep "#\!/.*" "$_target_workfile" | head -n1)";
-                geco "$_shebang" > "$_target_workfile";
-                declare -f "$_zygote_name" >> "$_target_workfile";
-                geco "\n${_zygote_name} \"\$@\";" >> "$_target_workfile";
-                rm "$_tmp_bashfmt"
+                source "$_target_workfile";
+                echo "$_shebang" > "$_target_workfile";
+                declare -f "$_main_funcname" >> "$_target_workfile"
             };
         fi;
-        rm "$_tmp_bbb_path";
+        echo "${_main_funcname} \"\$@\"" >> "$_target_workfile";
         if declare -f bashbox_after_build | head -n0; then
             { 
                 bashbox_after_build
@@ -955,7 +946,7 @@ EOF
 				echo "unoptimized + debuginfo"
 			} fi
 		);
-                geco "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s";
+                echo -e "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s";
                 unset _is_optimized
             };
         fi;
@@ -967,6 +958,7 @@ EOF
     };
     function subcommand::run () 
     { 
+        println::error "This command is temporarily unavailable, under a rewrite";
         function print_help () 
         { 
             println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[2]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "--release<^>Run in release mode
@@ -1281,21 +1273,19 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
         readonly _target_debug_dir="$_target_dir/debug";
         readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
-        _build_variant="$(
-	if test "$_arg_release" == "on"; then {
-		echo "${_target_release_dir##*/}";
-	} else {
-		echo "${_target_debug_dir##*/}";
-	} fi
-)";
-        readonly _build_variant;
-        readonly _target_workdir="$_target_dir/$_build_variant";
-        readonly _target_workfile="$_target_workdir/executable";
-        readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
-        readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
-        readonly _usemols_meta="$_target_workdir/$_usemols_meta_name";
         case "$FUNCNAME" in 
             "subcommand::build" | "subcommand::run")
+                _build_variant="$(
+			if test "$_arg_release" == "on"; then {
+				echo "${_target_release_dir##*/}";
+			} else {
+				echo "${_target_debug_dir##*/}";
+			} fi
+		)";
+                readonly _build_variant;
+                readonly _target_workdir="$_target_dir/$_build_variant";
+                readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+                readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
                 for _dir in "$_target_debug_dir" "$_target_release_dir";
                 do
                     { 
@@ -1305,16 +1295,14 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                 io::file::check_newline "$_bashbox_meta";
                 rsync -a --delete "$_src_dir/" "$_target_workdir";
                 echo > "$_used_symbols_statfile";
-                ( source "$_bashbox_meta";
+                source "$_bashbox_meta";
                 for _box in "${DEPENDENCIES[@]}";
                 do
                     { 
-                        USEMOLS_META_FILE="$_usemols_meta" subcommand::install "$_box"
+                        EXPORT_USEMOL="true" subcommand::install "$_box"
                     };
-                done );
-                set -a;
-                source "$_usemols_meta";
-                set +a
+                done;
+                readonly _target_workfile="$_target_workdir/$NAME"
             ;;
         esac;
         cat <<'EOF' > "$_target_workfile"
@@ -1332,7 +1320,7 @@ EOF
         declare -f 'println::error' >> "$_target_workfile";
         declare -f __use_func >> "$_target_workfile";
         cat "$_target_workdir/main.sh" >> "$_target_workfile";
-        geco "\nmain \"\$@\";" >> "$_target_workfile";
+        echo -e "\nmain \"\$@\";" >> "$_target_workfile";
         chmod +x "$_target_workfile";
         "$_target_workfile" "${_run_target_args[@]}"
     };
@@ -1388,10 +1376,9 @@ EOF
         done;
         println::info "Installing to $_target_install_dir";
         local _target_full_path="$_target_install_dir/$NAME";
-        local _target_funcname="${FUNCNAME[-1 + -1]}";
         echo '#!/usr/bin/env bash' > "$_target_full_path";
-        declare -f "$_target_funcname" >> "$_target_full_path";
-        echo "$_target_funcname \"\$@\";" >> "$_target_full_path";
+        declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
+        echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
         chmod +x "$_target_full_path";
         println::info "Installation complete, now restart your shell and run \`$NAME --help\` to get started"
     };
@@ -1545,21 +1532,19 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
         readonly _target_debug_dir="$_target_dir/debug";
         readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
-        _build_variant="$(
-	if test "$_arg_release" == "on"; then {
-		echo "${_target_release_dir##*/}";
-	} else {
-		echo "${_target_debug_dir##*/}";
-	} fi
-)";
-        readonly _build_variant;
-        readonly _target_workdir="$_target_dir/$_build_variant";
-        readonly _target_workfile="$_target_workdir/executable";
-        readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
-        readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
-        readonly _usemols_meta="$_target_workdir/$_usemols_meta_name";
         case "$FUNCNAME" in 
             "subcommand::build" | "subcommand::run")
+                _build_variant="$(
+			if test "$_arg_release" == "on"; then {
+				echo "${_target_release_dir##*/}";
+			} else {
+				echo "${_target_debug_dir##*/}";
+			} fi
+		)";
+                readonly _build_variant;
+                readonly _target_workdir="$_target_dir/$_build_variant";
+                readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+                readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
                 for _dir in "$_target_debug_dir" "$_target_release_dir";
                 do
                     { 
@@ -1569,16 +1554,14 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                 io::file::check_newline "$_bashbox_meta";
                 rsync -a --delete "$_src_dir/" "$_target_workdir";
                 echo > "$_used_symbols_statfile";
-                ( source "$_bashbox_meta";
+                source "$_bashbox_meta";
                 for _box in "${DEPENDENCIES[@]}";
                 do
                     { 
-                        USEMOLS_META_FILE="$_usemols_meta" subcommand::install "$_box"
+                        EXPORT_USEMOL="true" subcommand::install "$_box"
                     };
-                done );
-                set -a;
-                source "$_usemols_meta";
-                set +a
+                done;
+                readonly _target_workfile="$_target_workdir/$NAME"
             ;;
         esac;
         rm -rf "$_target_dir"
@@ -1650,5 +1633,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-
-main@bashbox%21359 "$@";
+main@bashbox%8089 "$@"

@@ -88,9 +88,11 @@ function subcommand::install() {
 		}
 		_box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
 
-		# Create usemols.meta (INTERNAL-API)
-		if test -v USEMOLS_META_FILE; then {
-			echo "_usemol_${_repo_name}=${_box_dir}/src" >> "$USEMOLS_META_FILE";
+		# ~~Create~~ Export usemols.metas (INTERNAL-API)
+		if test "$EXPORT_USEMOL" == "true"; then {
+			# echo "_usemol_${_repo_name}=${_box_dir}/src" >> "$USEMOLS_META_FILE";
+			export "_usemol_${_repo_name}=${_box_dir}/src";
+
 		} fi
 
 		# Exit function if pre-existing
@@ -126,7 +128,7 @@ function subcommand::install() {
 
 				println::info "Downloading submodule: $_path";
 				# echo "Url: $_url";
-				# geco '---'
+				# echo -e '---'
 				
 				# if test -e "$_install_path"; then {
 				# 	rm -r "$_install_path";
