@@ -54,7 +54,7 @@ If you want to pass some arguments:
 bashbox run --release -- arg1 arg2 and-so-on
 ```
 
-You can also execute run the project in build mode:
+You can also execute run in build mode:
 
 ```bash
 bashbox build --release --run -- arg1 arg2 and-so-on
