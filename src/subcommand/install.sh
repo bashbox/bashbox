@@ -1,5 +1,6 @@
 function subcommand::install() {
 	use std::string::trim;
+	# use install.clap;
 
 	function sync_repometa() {
 		local _registry_meta_url _registry_lastsync_file 
@@ -70,26 +71,29 @@ function subcommand::install() {
 
 	for _box in "${@}"; do {	
 
+		# TODO: Support local path and full git url
+
 		# Ignore args
 		if [[ "$_box" =~ ^-- ]]; then {
 			continue;
 		} fi
 
-		_repo_name="${_box%%::*}";
+		read -r -d '\n' _repo_name _tag_name < <(echo -e "${_box//::/\\n}") || true; # It might fail
+		# _repo_name="${_box%%::*}";
 		_repo_root_link="$(grep ".*/$_repo_name" "$_registry_meta_file")" || println::error "No such box as $_repo_name was found" 1;
 		# _branch_name="${_box%::*}" && _branch_name="${_branch_name##*::}";
-		_tag_name="${_box##*::}" && {
-			if [[ ! "$_tag_name" =~ ^[0-9]+\.[0-9]+ ]]; then {
+		# _tag_name="${_box##*::}" && {
+			if [ -z "$_tag_name" ]; then {
 				_tag_name="$(curl --silent \
 					"${_github_api_root}/repos/${_repo_root_link##http*github.com\/}/tags" \
 						| head -n3 \
-						| grep -m 1 -Po '"name": "\K.*?(?=")')";
+						| grep -m 1 -Po '"name": "\K.*?(?=")')" || println::error "Failed to fetch latest version tag of $_repo_name";
 			} fi
-		}
+		# }
 		_box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
 
 		# ~~Create~~ Export usemols.metas (INTERNAL-API)
-		if test "$EXPORT_USEMOL" == "true"; then {
+		if test "${EXPORT_USEMOL:-}" == "true"; then {
 			# echo "_usemol_${_repo_name}=${_box_dir}/src" >> "$USEMOLS_META_FILE";
 			export "_usemol_${_repo_name}=${_box_dir}/src";
 
@@ -144,18 +148,19 @@ function subcommand::install() {
 		# Check whether a library package or executable program
 		if test -e "$_box_dir/$_src_dir_name/main.sh"; then {
 			println::info "Compiling $_box in release mode";
-			"$___self" build "$_box_dir" --release 2>&1 \
+			subcommand::build --release "$_box_dir" 2>&1 \
 				|| {
 					println::error "Errors were found while compiling $_box, operation failed" 1;
 				};
 
-			_built_executable="$_box_dir/target/release/executable";
-			_install_executable="$_bashbox_bindir/$_box";
+			source "$_box_dir/$_bashbox_meta_name";
+			_built_executable="$_box_dir/target/release/$NAME";
+			_install_executable="$_bashbox_bindir/$NAME";
 
 			chmod +x "$_built_executable";
 			ln -srf "$_built_executable" "$_install_executable";
 			chmod +x "$_install_executable";
-			println::info "$_box was successfully installed";
+			println::info "$_box was successfully installed as $NAME";
 		} else {
 			println::info "$_box was installed as a library";
 		} fi
