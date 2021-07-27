@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%12799 () 
+main@bashbox%26067 () 
 { 
     \command \unalias -a;
     set -o pipefail;
@@ -25,7 +25,7 @@ main@bashbox%12799 ()
         esac
     };
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%12799";
+    ___MAIN_FUNCNAME="main@bashbox%26067";
     NAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
     VERSION="0.1.5";
@@ -1628,4 +1628,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%12799 "$@"
+main@bashbox%26067 "$@"
