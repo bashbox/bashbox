@@ -198,6 +198,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 	declare -f 'println::error'	>> "$_tmp_target_workfile"; # Concat println::error
 	
 	# Add API variables
+	# TODO: Add ___self_project_root
 	cat << EOF >> "$_tmp_target_workfile"
 ___self="\$0";
 ___MAIN_FUNCNAME="$_main_funcname";

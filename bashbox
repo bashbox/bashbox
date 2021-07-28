@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%26067 () 
+main@bashbox%9049 () 
 { 
     \command \unalias -a;
     set -o pipefail;
@@ -25,11 +25,11 @@ main@bashbox%26067 ()
         esac
     };
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%26067";
+    ___MAIN_FUNCNAME="main@bashbox%9049";
     NAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
     VERSION="0.1.5";
-    DEPENDENCIES=("std::0.1.2" "argbash::0.1.0");
+    DEPENDENCIES=("std::ab0607d" "argbash::0.1.0");
     REPOSITORY="https://github.com/axonasif/bashbox";
     function bb_bootstrap_header () 
     { 
@@ -517,7 +517,7 @@ EOF
                 fi;
                 mkdir -p "$_box_dir";
                 println::info "Downloading box $_repo_name $_tag_name";
-                curl --silent -L "${_repo_root_link}/archive/refs/tags/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
+                curl --silent -L "${_repo_root_link}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
                 _gitmod_file="$_box_dir/.gitmodules";
                 if test -e "$_gitmod_file"; then
                     { 
@@ -1628,4 +1628,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%26067 "$@"
+main@bashbox%9049 "$@"

@@ -111,7 +111,7 @@ function subcommand::install() {
 		mkdir -p "$_box_dir";
 		
 		println::info "Downloading box $_repo_name $_tag_name";
-		curl --silent -L "${_repo_root_link}/archive/refs/tags/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
+		curl --silent -L "${_repo_root_link}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
 
 		# Now resolve submodules if necessary
 		_gitmod_file="$_box_dir/.gitmodules";
