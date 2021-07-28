@@ -1,6 +1,6 @@
 
 function subcommand::run() {
-	println::error "This command is temporarily unavailable, under a rewrite";
+	println::error "This command is temporarily unavailable, under a rewrite, use \`build --run\` for now" 1;
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
