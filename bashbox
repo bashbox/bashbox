@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%5443 () 
+main@bashbox%4303 () 
 { 
     \command \unalias -a;
     set -o pipefail;
@@ -25,7 +25,7 @@ main@bashbox%5443 ()
         esac
     };
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%5443";
+    ___MAIN_FUNCNAME="main@bashbox%4303";
     NAME="BashBox";
     CODENAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
@@ -898,7 +898,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                             echo -e "${CYAN}File${RC}: ${_parsed_input}.sh"
                         };
                     fi;
-                    mapfile -t _use_symbols < <(grep -w -I -x -E '\s+use .*|^use .*' "${_parsed_input}.sh" | awk '{$1=$1;print}' || true);
+                    mapfile -t _use_symbols < <(grep -w -I -x -E '\s+use .*;$|^use .*;$' "${_parsed_input}.sh" | awk '{$1=$1;print}' || true);
                     : ${_last_parsed_input:="${_parsed_input}"};
                     if test "$_arg_verbose" == "on"; then
                         { 
@@ -1758,4 +1758,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%5443 "$@"
+main@bashbox%4303 "$@"

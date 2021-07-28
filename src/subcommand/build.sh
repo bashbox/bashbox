@@ -128,7 +128,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 					echo -e "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
 				} fi
 
-				mapfile -t _use_symbols < <(grep -w -I -x -E '\s+use .*|^use .*' "${_parsed_input}.sh" | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
+				mapfile -t _use_symbols < <(grep -w -I -x -E '\s+use .*;$|^use .*;$' "${_parsed_input}.sh" | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
 
 				# Cycle through main.sh symbols and so on.
 				# local _last_parsed_input;
