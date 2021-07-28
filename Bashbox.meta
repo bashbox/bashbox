@@ -1,8 +1,10 @@
-NAME="bashbox"
+NAME="BashBox"
+CODENAME="bashbox"
 AUTHORS=("AXON <axonasif@gmail.com>")
-VERSION="0.1.5"
+VERSION="0.1.8"
 DEPENDENCIES=(
 	"std::0.1.4"
 	"argbash::0.1.0"
 )
 REPOSITORY="https://github.com/axonasif/bashbox"
+BASHBOX_COMPAT="0.1.8~"

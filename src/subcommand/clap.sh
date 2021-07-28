@@ -157,8 +157,43 @@ case "$FUNCNAME" in
 		rsync -a --delete "$_src_dir/" "$_target_workdir";
 		echo > "$_used_symbols_statfile";
 
-		# Resolve dependencies
+		# Load metadata
 		source "$_bashbox_meta";
+
+		# Check compatibility with bashbox
+		if test -v "$_bashbox_compat_var_name"; then {
+			local MIN MAX VAR_REF;
+			VAR_REF="${!_bashbox_compat_var_name}";
+			read -r -d '\n' MIN MAX < <(echo -e "${VAR_REF//\~/\\n}") || true;
+
+			# Check mandetory MIN version
+			if test -n "$MIN"; then {
+				if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) \
+				|| (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then {
+					true;
+				} else {
+					println::error "$NAME requires at least bashbox $MIN" 1;
+				} fi
+			} else {
+				println::error "MIN version is missing from $_bashbox_compat_var_name in "
+			} fi
+
+			# Check optional MAX version
+			if test -n "$MAX"; then {
+				if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) \
+				|| (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then {
+					true;
+				} else {
+					println::error "$NAME supports bashbox upto $MAX" 1;
+				} fi			
+			} fi
+			
+			unset MIN MAX VAR_REF;
+		} else {
+			println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1;
+		} fi
+
+		# Resolve dependencies
 		for _box in "${DEPENDENCIES[@]}"; do {
 			EXPORT_USEMOL="true" subcommand::install "$_box";
 		} done

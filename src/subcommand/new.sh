@@ -160,6 +160,7 @@ AUTHORS=("AXON <axonasif@gmail.com>")
 VERSION="1.0"
 DEPENDENCIES=()
 REPOSITORY=""
+BASHBOX_COMPAT="${VERSION}~"
 EOF
 
 # 	rsync -a --exclude='.git' --exclude='.keep' "$TEMPLATES_DIR/$_arg_template/" "$PROJECTS_DIR/$_arg_codename" || exit

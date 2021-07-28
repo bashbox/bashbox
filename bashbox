@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%9049 () 
+main@bashbox%19485 () 
 { 
     \command \unalias -a;
     set -o pipefail;
@@ -25,12 +25,14 @@ main@bashbox%9049 ()
         esac
     };
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%9049";
-    NAME="bashbox";
+    ___MAIN_FUNCNAME="main@bashbox%19485";
+    NAME="BashBox";
+    CODENAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
-    VERSION="0.1.5";
-    DEPENDENCIES=("std::ab0607d" "argbash::0.1.0");
+    VERSION="0.1.8";
+    DEPENDENCIES=("std::0.1.4" "argbash::0.1.0");
     REPOSITORY="https://github.com/axonasif/bashbox";
+    BASHBOX_COMPAT="0.1.8~";
     function bb_bootstrap_header () 
     { 
         \command \unalias -a;
@@ -48,6 +50,7 @@ main@bashbox%9049 ()
     readonly _bashbox_bindir="$_bashbox_home/bin" && mkdir -p "$_bashbox_bindir";
     readonly _bashbox_posix_envfile="$_bashbox_home/env";
     readonly _bashbox_fish_envfile="$_bashbox_home/env.fish";
+    readonly _bashbox_compat_var_name="BASHBOX_COMPAT";
     readonly SUBCOMMANDS_DESC=("" "Create a new bashbox project" "Directly run a bashbox project" "Compile a bashbox project" "Cleanup target/ directories" "Install a bashbox project from repo" "Install bashbox into PATH");
     _var_exports=(_bashbox_registrydir);
     for _var in "${_var_exports[@]}";
@@ -377,6 +380,7 @@ AUTHORS=("AXON <axonasif@gmail.com>")
 VERSION="1.0"
 DEPENDENCIES=()
 REPOSITORY=""
+BASHBOX_COMPAT="${VERSION}~"
 EOF
 
         println::info "Initializing git version control for your project";
@@ -739,6 +743,48 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                 rsync -a --delete "$_src_dir/" "$_target_workdir";
                 echo > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
+                if test -v "$_bashbox_compat_var_name"; then
+                    { 
+                        local MIN MAX VAR_REF;
+                        VAR_REF="${!_bashbox_compat_var_name}";
+                        read -r -d '\n' MIN MAX < <(echo -e "${VAR_REF//\~/\\n}") || true;
+                        if test -n "$MIN"; then
+                            { 
+                                if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then
+                                    { 
+                                        true
+                                    };
+                                else
+                                    { 
+                                        println::error "$NAME requires at least bashbox $MIN" 1
+                                    };
+                                fi
+                            };
+                        else
+                            { 
+                                println::error "MIN version is missing from $_bashbox_compat_var_name in "
+                            };
+                        fi;
+                        if test -n "$MAX"; then
+                            { 
+                                if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then
+                                    { 
+                                        true
+                                    };
+                                else
+                                    { 
+                                        println::error "$NAME supports bashbox upto $MAX" 1
+                                    };
+                                fi
+                            };
+                        fi;
+                        unset MIN MAX VAR_REF
+                    };
+                else
+                    { 
+                        println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1
+                    };
+                fi;
                 for _box in "${DEPENDENCIES[@]}";
                 do
                     { 
@@ -1291,6 +1337,48 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                 rsync -a --delete "$_src_dir/" "$_target_workdir";
                 echo > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
+                if test -v "$_bashbox_compat_var_name"; then
+                    { 
+                        local MIN MAX VAR_REF;
+                        VAR_REF="${!_bashbox_compat_var_name}";
+                        read -r -d '\n' MIN MAX < <(echo -e "${VAR_REF//\~/\\n}") || true;
+                        if test -n "$MIN"; then
+                            { 
+                                if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then
+                                    { 
+                                        true
+                                    };
+                                else
+                                    { 
+                                        println::error "$NAME requires at least bashbox $MIN" 1
+                                    };
+                                fi
+                            };
+                        else
+                            { 
+                                println::error "MIN version is missing from $_bashbox_compat_var_name in "
+                            };
+                        fi;
+                        if test -n "$MAX"; then
+                            { 
+                                if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then
+                                    { 
+                                        true
+                                    };
+                                else
+                                    { 
+                                        println::error "$NAME supports bashbox upto $MAX" 1
+                                    };
+                                fi
+                            };
+                        fi;
+                        unset MIN MAX VAR_REF
+                    };
+                else
+                    { 
+                        println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1
+                    };
+                fi;
                 for _box in "${DEPENDENCIES[@]}";
                 do
                     { 
@@ -1550,6 +1638,48 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                 rsync -a --delete "$_src_dir/" "$_target_workdir";
                 echo > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
+                if test -v "$_bashbox_compat_var_name"; then
+                    { 
+                        local MIN MAX VAR_REF;
+                        VAR_REF="${!_bashbox_compat_var_name}";
+                        read -r -d '\n' MIN MAX < <(echo -e "${VAR_REF//\~/\\n}") || true;
+                        if test -n "$MIN"; then
+                            { 
+                                if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then
+                                    { 
+                                        true
+                                    };
+                                else
+                                    { 
+                                        println::error "$NAME requires at least bashbox $MIN" 1
+                                    };
+                                fi
+                            };
+                        else
+                            { 
+                                println::error "MIN version is missing from $_bashbox_compat_var_name in "
+                            };
+                        fi;
+                        if test -n "$MAX"; then
+                            { 
+                                if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then
+                                    { 
+                                        true
+                                    };
+                                else
+                                    { 
+                                        println::error "$NAME supports bashbox upto $MAX" 1
+                                    };
+                                fi
+                            };
+                        fi;
+                        unset MIN MAX VAR_REF
+                    };
+                else
+                    { 
+                        println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1
+                    };
+                fi;
                 for _box in "${DEPENDENCIES[@]}";
                 do
                     { 
@@ -1628,4 +1758,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%9049 "$@"
+main@bashbox%19485 "$@"

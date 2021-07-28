@@ -6,6 +6,7 @@ readonly _bashbox_registrydir="$_bashbox_home/registry" && mkdir -p "$_bashbox_r
 readonly _bashbox_bindir="$_bashbox_home/bin" && mkdir -p "$_bashbox_bindir";
 readonly _bashbox_posix_envfile="$_bashbox_home/env";
 readonly _bashbox_fish_envfile="$_bashbox_home/env.fish";
+readonly _bashbox_compat_var_name="BASHBOX_COMPAT";
 readonly SUBCOMMANDS_DESC=(
 	""
 	"Create a new bashbox project"
