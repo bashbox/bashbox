@@ -197,7 +197,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 	echo "$_shebang" > "$_tmp_target_workfile"; # Place shebang
 	echo "function ${_main_funcname}() {" >> "$_tmp_target_workfile"; # Create main function
 	echo "${_bb_bootstrap}"	>> "$_tmp_target_workfile"; # Concat bootstrap
-	declare -f 'log::error'	>> "$_tmp_target_workfile"; # Concat log::error # TODO: Needs review
+	# declare -f 'log::error'	>> "$_tmp_target_workfile"; # Concat log::error # TODO: Needs review
 	
 	# Add API variables
 	# TODO: Add ___self_project_root

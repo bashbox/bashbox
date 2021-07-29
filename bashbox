@@ -1,47 +1,45 @@
 #!/usr/bin/env bash
-main@bashbox%6490 () 
+main@bashbox%18269 () 
 { 
+    function log::error () 
+    { 
+        local _retcode="${2:-$?}";
+        local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
+        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
+        return "$_retcode"
+    };
+    \command \trap 'log::error "$BASH_COMMAND" || exit' ERR;
     \command \unalias -a;
     set -o pipefail;
     set -o errexit;
     set -o errtrace;
     set -o nounset;
     shopt -s expand_aliases;
-    trap 'log::error "$BASH_COMMAND" || exit' ERR;
-    function println::error () 
-    { 
-        local _return_code=${2:-$?};
-        local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
-        local _command="$1";
-        test "${_PRINT_HELP:-no}" == yes && print_help 1>&2;
-        echo -e "[!!!] \033[1;31mERROR\033[0m[$_return_code]: $_source[$BASH_LINENO]: $_command";
-        case "${JOB:-"exit"}" in 
-            exit)
-                exit $_return_code
-            ;;
-            kill)
-                kill -9 "$BASHPID"
-            ;;
-        esac
-    };
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%6490";
+    ___MAIN_FUNCNAME="main@bashbox%18269";
     NAME="BashBox";
     CODENAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
-    VERSION="0.1.8";
+    VERSION="0.1.9";
     DEPENDENCIES=("std::7f09720" "argbash::0.1.0");
     REPOSITORY="https://github.com/axonasif/bashbox";
     BASHBOX_COMPAT="0.1.8~";
     function bb_bootstrap_header () 
     { 
+        function log::error () 
+        { 
+            local _retcode="${2:-$?}";
+            local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
+            echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
+            return "$_retcode"
+        };
+        \command \trap 'log::error "$BASH_COMMAND" || exit' ERR;
         \command \unalias -a;
         set -o pipefail;
         set -o errexit;
         set -o errtrace;
         set -o nounset;
-        shopt -s expand_aliases;
-        trap 'log::error "$BASH_COMMAND" || exit' ERR
+        shopt -s expand_aliases
     };
     readonly _bashbox_meta_name="Bashbox.meta";
     readonly _src_dir_name="src";
@@ -82,13 +80,6 @@ main@bashbox%6490 ()
     function log::warn () 
     { 
         echo -e "[***] \033[1;37mwarn\033[0m: $@"
-    };
-    function log::error () 
-    { 
-        local _retcode="${2:-$?}";
-        local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
-        return "$_retcode"
     };
     function println::helpgen () 
     { 
@@ -294,7 +285,7 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
                 _key="$1";
                 case "$_key" in 
                     --codename | -c)
-                        test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1;
+                        test $# -lt 2 && log::error "Missing value for the optional argument '$_key'." 1 || exit;
                         _arg_codename="$2";
                         shift
                     ;;
@@ -321,8 +312,8 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
         function handle_passed_args_count () 
         { 
             local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+            test "${_positionals_count}" -ge 1 || log::error "Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1 || exit;
+            test "${_positionals_count}" -le 1 || log::error "There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1 || exit
         };
         function assign_positional_args () 
         { 
@@ -332,7 +323,7 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
             for _positional_name in ${_positional_names};
             do
                 test $# -gt 0 || break;
-                eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1;
+                eval "$_positional_name=\${1}" || log::error "Error during argument parsing." 1 || exit;
                 shift;
             done
         };
@@ -343,10 +334,10 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
         : "${_arg_codename:="$_path_codename"}";
         _arg_codename="$(tr -d '[:space:]' <<<"${_arg_codename,,}")";
         if test -e "$_arg_path"; then
-            println::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1;
+            log::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1 || exit;
         fi;
         println::info "Setting up project at \`$_arg_path\`";
-        mkdir -p "$_arg_path" || println::error "Failed to initialize the project directory";
+        mkdir -p "$_arg_path" || log::error "Failed to initialize the project directory" 1 || exit;
         mkdir -p "$_arg_path/$_src_dir_name";
         cat <<'EOF' > "$_arg_path/$_src_dir_name/main.sh"
 function main() {
@@ -370,12 +361,12 @@ EOF
             git init "$_arg_path" > /dev/null || { 
                 _r=$?;
                 rm -r "$_arg_path";
-                println::error "Failed to initialize git at \`$_arg_path\`" $_r
+                log::error "Failed to initialize git at \`$_arg_path\`" $_r || exit
             };
             echo -e '/target' > "$_arg_path/.gitignore";
         else
             rm -r "$_arg_path";
-            println::error "git does not seem to be available, please install it" 1;
+            log::error "git does not seem to be available, please install it" 1 || exit;
         fi
     };
     function subcommand::install () 
@@ -476,10 +467,14 @@ EOF
                     };
                 fi;
                 read -r -d '\n' _repo_name _tag_name < <(echo -e "${_box//::/\\n}") || true;
-                _repo_root_link="$(grep ".*/$_repo_name" "$_registry_meta_file")" || println::error "No such box as $_repo_name was found" 1;
+                _repo_root_link="$(grep ".*/$_repo_name" "$_registry_meta_file")" || { 
+                    log::error "No such box as $_repo_name was found" 1 || exit
+                };
                 if [ -z "$_tag_name" ]; then
                     { 
-                        _tag_name="$(curl --silent 					"${_github_api_root}/repos/${_repo_root_link##http*github.com\/}/tags" 						| head -n3 						| grep -m 1 -Po '"name": "\K.*?(?=")')" || println::error "Failed to fetch latest version tag of $_repo_name"
+                        _tag_name="$(curl --silent 					"${_github_api_root}/repos/${_repo_root_link##http*github.com\/}/tags" 						| head -n3 						| grep -m 1 -Po '"name": "\K.*?(?=")')" || { 
+                            log::error "Failed to fetch latest version tag of $_repo_name" 1 || exit
+                        }
                     };
                 fi;
                 _box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
@@ -525,7 +520,7 @@ EOF
                     { 
                         println::info "Compiling $_box in release mode";
                         subcommand::build --release "$_box_dir" 2>&1 || { 
-                            println::error "Errors were found while compiling $_box, operation failed" 1
+                            log::error "Errors were found while compiling $_box, operation failed" 1 || exit
                         };
                         source "$_box_dir/$_bashbox_meta_name";
                         _built_executable="$_box_dir/target/release/$NAME";
@@ -602,8 +597,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
         function handle_passed_args_count () 
         { 
             local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+            test "${_positionals_count}" -ge 1 || log::error "Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1 || exit;
+            test "${_positionals_count}" -le 1 || log::error "There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1 || exit
         };
         function assign_positional_args () 
         { 
@@ -614,7 +609,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
             do
                 { 
                     test $# -gt 0 || break;
-                    eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+                    eval "$_positional_name=\${1}" || log::error "Error during argument parsing, possibly an Argbash bug." 1 || exit;
                     shift
                 };
             done
@@ -691,7 +686,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                     };
                 else
                     { 
-                        println::error "$_arg_path is not a valid bashbox project" 1
+                        log::error "$_arg_path is not a valid bashbox project" 1 || exit
                     };
                 fi
             };
@@ -738,13 +733,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                                     };
                                 else
                                     { 
-                                        println::error "$NAME requires at least bashbox $MIN" 1
+                                        log::error "$NAME requires at least bashbox $MIN" 1 || exit
                                     };
                                 fi
                             };
                         else
                             { 
-                                println::error "MIN version is missing from $_bashbox_compat_var_name in "
+                                log::error "MIN version is missing from $_bashbox_compat_var_name in $_bashbox_meta_name" 1 || exit
                             };
                         fi;
                         if test -n "$MAX"; then
@@ -755,7 +750,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                                     };
                                 else
                                     { 
-                                        println::error "$NAME supports bashbox upto $MAX" 1
+                                        log::error "$NAME supports bashbox upto $MAX" 1 || exit
                                     };
                                 fi
                             };
@@ -764,7 +759,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                     };
                 else
                     { 
-                        println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1
+                        log::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1 || exit
                     };
                 fi;
                 for _box in "${DEPENDENCIES[@]}";
@@ -852,7 +847,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                 { 
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
                         { 
-                            println::error "$_input is missing" 1
+                            log::error "$_input is missing" 1 || exit
                         };
                     fi;
                     if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
@@ -934,7 +929,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
         echo "$_shebang" > "$_tmp_target_workfile";
         echo "function ${_main_funcname}() {" >> "$_tmp_target_workfile";
         echo "${_bb_bootstrap}" >> "$_tmp_target_workfile";
-        declare -f 'println::error' >> "$_tmp_target_workfile";
         cat <<EOF >> "$_tmp_target_workfile"
 ___self="\$0";
 ___MAIN_FUNCNAME="$_main_funcname";
@@ -981,7 +975,7 @@ EOF
     };
     function subcommand::run () 
     { 
-        println::error "This command is temporarily unavailable, under a rewrite, use \`build --run\` for now" 1;
+        log::error "This command is temporarily unavailable, under a rewrite, use \`build --run\` for now" 1 || exit;
         function print_help () 
         { 
             println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[2]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "--release<^>Run in release mode
@@ -1034,10 +1028,10 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                         function source_call () 
                         { 
                             builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || { 
-                                println::error "Syntax/internal errors were detected in $_mod"
+                                log::error "Syntax/internal errors were detected in $_mod" || exit
                             };
                             echo "$_mod" >> "$_used_symbols_statfile" || { 
-                                println::error "Failed to register $_mod in log"
+                                log::error "Failed to register $_mod in log" || exit
                             }
                         };
                         if test "${_modname::1}" == "_"; then
@@ -1139,14 +1133,14 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                                                 };
                                             else
                                                 { 
-                                                    println::error "No such module tree as $_input was found"
+                                                    log::error "No such module tree as $_input was found" || exit
                                                 };
                                             fi;
                                         fi
                                     };
                                 else
                                     { 
-                                        println::error "No such module as $_input was found"
+                                        log::error "No such module as $_input was found" || exit
                                     };
                                 fi;
                             fi;
@@ -1196,8 +1190,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
         function handle_passed_args_count () 
         { 
             local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+            test "${_positionals_count}" -ge 1 || log::error "Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1 || exit;
+            test "${_positionals_count}" -le 1 || log::error "There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1 || exit
         };
         function assign_positional_args () 
         { 
@@ -1208,7 +1202,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
             do
                 { 
                     test $# -gt 0 || break;
-                    eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+                    eval "$_positional_name=\${1}" || log::error "Error during argument parsing, possibly an Argbash bug." 1 || exit;
                     shift
                 };
             done
@@ -1285,7 +1279,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                     };
                 else
                     { 
-                        println::error "$_arg_path is not a valid bashbox project" 1
+                        log::error "$_arg_path is not a valid bashbox project" 1 || exit
                     };
                 fi
             };
@@ -1332,13 +1326,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                                     };
                                 else
                                     { 
-                                        println::error "$NAME requires at least bashbox $MIN" 1
+                                        log::error "$NAME requires at least bashbox $MIN" 1 || exit
                                     };
                                 fi
                             };
                         else
                             { 
-                                println::error "MIN version is missing from $_bashbox_compat_var_name in "
+                                log::error "MIN version is missing from $_bashbox_compat_var_name in $_bashbox_meta_name" 1 || exit
                             };
                         fi;
                         if test -n "$MAX"; then
@@ -1349,7 +1343,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                                     };
                                 else
                                     { 
-                                        println::error "$NAME supports bashbox upto $MAX" 1
+                                        log::error "$NAME supports bashbox upto $MAX" 1 || exit
                                     };
                                 fi
                             };
@@ -1358,7 +1352,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                     };
                 else
                     { 
-                        println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1
+                        log::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1 || exit
                     };
                 fi;
                 for _box in "${DEPENDENCIES[@]}";
@@ -1382,7 +1376,7 @@ EOF
 	_used_symbols_statfile="$_main_src_dir/.used_symbols";
 EOF
 
-        declare -f 'println::error' >> "$_target_workfile";
+        declare -f 'log::error' >> "$_target_workfile";
         declare -f __use_func >> "$_target_workfile";
         cat "$_target_workdir/main.sh" >> "$_target_workfile";
         echo -e "\nmain \"\$@\";" >> "$_target_workfile";
@@ -1405,7 +1399,7 @@ EOF
         done < <(echo -e "${PATH//:/\\n}");
         if ! test -v _target_install_dir; then
             { 
-                println::error "Failed to retrieve a usable PATH directory" 1
+                log::error "Failed to retrieve a usable PATH directory" 1 || exit
             };
         fi;
         function check_shellrc_key () 
@@ -1497,8 +1491,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
         function handle_passed_args_count () 
         { 
             local _required_args_string="'path'";
-            test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-            test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+            test "${_positionals_count}" -ge 1 || log::error "Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1 || exit;
+            test "${_positionals_count}" -le 1 || log::error "There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1 || exit
         };
         function assign_positional_args () 
         { 
@@ -1509,7 +1503,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
             do
                 { 
                     test $# -gt 0 || break;
-                    eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+                    eval "$_positional_name=\${1}" || log::error "Error during argument parsing, possibly an Argbash bug." 1 || exit;
                     shift
                 };
             done
@@ -1586,7 +1580,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     };
                 else
                     { 
-                        println::error "$_arg_path is not a valid bashbox project" 1
+                        log::error "$_arg_path is not a valid bashbox project" 1 || exit
                     };
                 fi
             };
@@ -1633,13 +1627,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                                     };
                                 else
                                     { 
-                                        println::error "$NAME requires at least bashbox $MIN" 1
+                                        log::error "$NAME requires at least bashbox $MIN" 1 || exit
                                     };
                                 fi
                             };
                         else
                             { 
-                                println::error "MIN version is missing from $_bashbox_compat_var_name in "
+                                log::error "MIN version is missing from $_bashbox_compat_var_name in $_bashbox_meta_name" 1 || exit
                             };
                         fi;
                         if test -n "$MAX"; then
@@ -1650,7 +1644,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                                     };
                                 else
                                     { 
-                                        println::error "$NAME supports bashbox upto $MAX" 1
+                                        log::error "$NAME supports bashbox upto $MAX" 1 || exit
                                     };
                                 fi
                             };
@@ -1659,7 +1653,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     };
                 else
                     { 
-                        println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1
+                        log::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1 || exit
                     };
                 fi;
                 for _box in "${DEPENDENCIES[@]}";
@@ -1731,7 +1725,7 @@ For bugreports: $REPOSITORY"
                 subcommand::$_subcommand_argv "$@"
             ;;
             *)
-                test -n "$_subcommand_argv" && println::warn "Unknown subcommand: $_subcommand_argv";
+                test -n "$_subcommand_argv" && log::warn "Unknown subcommand: $_subcommand_argv";
                 print_help;
                 test -n "$_subcommand_argv" && exit 1 || exit 0
             ;;
@@ -1740,4 +1734,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%6490 "$@"
+main@bashbox%18269 "$@"

@@ -130,7 +130,7 @@ function main() {
 			subcommand::$_subcommand_argv "$@";
 			;;
 		*)
-			test -n "$_subcommand_argv" && println::warn "Unknown subcommand: $_subcommand_argv";
+			test -n "$_subcommand_argv" && log::warn "Unknown subcommand: $_subcommand_argv";
 			print_help;
 			test -n "$_subcommand_argv" && exit 1 || exit 0;
 			;;
