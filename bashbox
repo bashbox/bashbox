@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%2090 () 
+main@bashbox%5896 () 
 { 
     function log::error () 
     { 
@@ -16,12 +16,12 @@ main@bashbox%2090 ()
     set -o nounset;
     shopt -s expand_aliases;
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%2090";
+    ___MAIN_FUNCNAME="main@bashbox%5896";
     NAME="BashBox";
     CODENAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
     VERSION="0.1.9";
-    DEPENDENCIES=("std::7f09720" "argbash::0.1.0");
+    DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     REPOSITORY="https://github.com/axonasif/bashbox";
     BASHBOX_COMPAT="0.1.8~";
     function bb_bootstrap_header () 
@@ -1734,4 +1734,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%2090 "$@";
+main@bashbox%5896 "$@";
