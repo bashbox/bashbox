@@ -218,7 +218,7 @@ EOF
 	} fi
 
 	# Concat main execution call
-	echo "${_main_funcname} \"\$@\"" >> "$_target_workfile";
+	echo "${_main_funcname} \"\$@\";" >> "$_target_workfile";
 
 	# Run build.sh after actions
 	if declare -f bashbox_after_build | head -n0; then { # Will fail without pipefail
