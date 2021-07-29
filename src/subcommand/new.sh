@@ -55,21 +55,13 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 			_key="$1"
 			case "$_key" in
 				--codename|-c)
-					test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
+					test $# -lt 2 && log::error "Missing value for the optional argument '$_key'." 1 || exit;
 					_arg_codename="$2"
 					shift
 					;;
 				--codename=*)
 					_arg_codename="${_key##--codename=}"
 					;;
-				# --template|-t)
-				# 	test $# -lt 2 && println::error "Missing value for the optional argument '$_key'." 1
-				# 	_arg_template="$2"
-				# 	shift
-				# 	;;
-				# --template=*)
-				# 	_arg_template="${_key##--template=}"
-				# 	;;
 				-h|--help)
 					print_help
 					exit 0
@@ -92,8 +84,8 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 	handle_passed_args_count()
 	{
 		local _required_args_string="'path'"
-		test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1
-		test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1
+		test "${_positionals_count}" -ge 1 || log::error "Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1 || exit;
+		test "${_positionals_count}" -le 1 || log::error "There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1 || exit;
 	}
 
 
@@ -106,7 +98,7 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 		for _positional_name in ${_positional_names}
 		do
 			test $# -gt 0 || break
-			eval "$_positional_name=\${1}" || println::error "Error during argument parsing." 1
+			eval "$_positional_name=\${1}" || log::error "Error during argument parsing." 1 || exit;
 			shift
 		done
 	}
@@ -116,7 +108,7 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 	assign_positional_args 1 "${_positionals[@]}"
 
 # # 	: "${_arg_directory:="$PWD"}"
-# # 	test ! -e "$_arg_directory" && println::error "$_arg_directory directory does not exist" 1
+# # 	test ! -e "$_arg_directory" && log::error "$_arg_directory directory does not exist" 1
 	
 # # 	## When no codename is specified
 # # 	if test -z "$_arg_codename"; then
@@ -132,17 +124,17 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 
 	## When the codename dir already exists
 	if test -e "$_arg_path"; then
-		println::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1
+		log::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1 || exit;
 	fi
 
 	# ## Check if the $_arg_template is valid
 	# if ! echo "$_arg_template" | grep -E 'core|mesa|kernel' 1>/dev/null; then {
-	# 	println::error "$_arg_template is not a valid template.\n\t  core, kernel and mesa are the valid ones, so try again." 1
+	# 	log::error "$_arg_template is not a valid template.\n\t  core, kernel and mesa are the valid ones, so try again." 1
 	# } fi
 
 	## Finally setup the template as per inputs
 	println::info "Setting up project at \`$_arg_path\`"
-	mkdir -p "$_arg_path" || println::error "Failed to initialize the project directory"
+	mkdir -p "$_arg_path" || log::error "Failed to initialize the project directory" 1 || exit;
 
 	# Create src dir and main.sh
 	mkdir -p "$_arg_path/$_src_dir_name";
@@ -167,17 +159,17 @@ EOF
 
 	# println::info "Resetting CODENAME metadata to $_arg_codename on $_bashbox_meta_name"
 	# sed -i "s|\bCODENAME=\".*\"|CODENAME=\"$_arg_codename\"|g" "$_arg_path/$_bashbox_meta_name" \
-	# 	|| { rm -r "$_arg_path"; println::error "Failed to reset CODENAME metadata on $_bashbox_meta_name"; }
+	# 	|| { rm -r "$_arg_path"; log::error "Failed to reset CODENAME metadata on $_bashbox_meta_name"; }
 
 	println::info "Initializing git version control for your project"
 	if command -v git 1>/dev/null; then
-		git init "$_arg_path" 1>/dev/null || { _r=$?; rm -r "$_arg_path"; println::error "Failed to initialize git at \`$_arg_path\`" $_r; }
+		git init "$_arg_path" 1>/dev/null || { _r=$?; rm -r "$_arg_path"; log::error "Failed to initialize git at \`$_arg_path\`" $_r || exit; }
 
 		# Create .gitignore
 		echo -e '/target' > "$_arg_path/.gitignore";
 
 	else
 		rm -r "$_arg_path"
-		println::error "git does not seem to be available, please install it" 1
+		log::error "git does not seem to be available, please install it" 1 || exit;
 	fi
 }

@@ -95,15 +95,17 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 		} else {
 			echo -e "---------- $_modname"; # DEBUG
 		} fi
+
+		# TODO: Detect whether a module is being isolated inside a function
+		# if yes then we reimport it on a future call from a different module instead of blindly ignoring it.
 		if test "${_modname::1}" == "_" \
 		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile" 1>/dev/null; then {
 			
-
 				# Handle missing symbols
 				# echo "Parsed_input: $_parsed_input"; # DEBUG
 				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
 					# echo "$PWD"
-					println::error "$_input is missing" 1;
+					log::error "$_input is missing" 1 || exit;
 				} fi
 
 				# Handle wildcard symbol loading
@@ -195,7 +197,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 	echo "$_shebang" > "$_tmp_target_workfile"; # Place shebang
 	echo "function ${_main_funcname}() {" >> "$_tmp_target_workfile"; # Create main function
 	echo "${_bb_bootstrap}"	>> "$_tmp_target_workfile"; # Concat bootstrap
-	declare -f 'println::error'	>> "$_tmp_target_workfile"; # Concat println::error
+	declare -f 'log::error'	>> "$_tmp_target_workfile"; # Concat log::error # TODO: Needs review
 	
 	# Add API variables
 	# TODO: Add ___self_project_root

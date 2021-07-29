@@ -80,14 +80,14 @@ function subcommand::install() {
 
 		read -r -d '\n' _repo_name _tag_name < <(echo -e "${_box//::/\\n}") || true; # It might fail
 		# _repo_name="${_box%%::*}";
-		_repo_root_link="$(grep ".*/$_repo_name" "$_registry_meta_file")" || println::error "No such box as $_repo_name was found" 1;
+		_repo_root_link="$(grep ".*/$_repo_name" "$_registry_meta_file")" || { log::error "No such box as $_repo_name was found" 1 || exit; }
 		# _branch_name="${_box%::*}" && _branch_name="${_branch_name##*::}";
 		# _tag_name="${_box##*::}" && {
 			if [ -z "$_tag_name" ]; then {
 				_tag_name="$(curl --silent \
 					"${_github_api_root}/repos/${_repo_root_link##http*github.com\/}/tags" \
 						| head -n3 \
-						| grep -m 1 -Po '"name": "\K.*?(?=")')" || println::error "Failed to fetch latest version tag of $_repo_name";
+						| grep -m 1 -Po '"name": "\K.*?(?=")')" || { log::error "Failed to fetch latest version tag of $_repo_name" 1 || exit; }
 			} fi
 		# }
 		_box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
@@ -150,7 +150,7 @@ function subcommand::install() {
 			println::info "Compiling $_box in release mode";
 			subcommand::build --release "$_box_dir" 2>&1 \
 				|| {
-					println::error "Errors were found while compiling $_box, operation failed" 1;
+					log::error "Errors were found while compiling $_box, operation failed" 1 || exit;
 				};
 
 			source "$_box_dir/$_bashbox_meta_name";

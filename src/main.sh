@@ -4,8 +4,9 @@ use header;
 ### Public functions
 #####################
 use variables;
-use utils;
-use std::term::print::*;
+# use utils;
+use std::print::log;
+use std::print::helpgen;
 use std::term::colors;
 use std::io::file::check_newline;
 use argbash::common;

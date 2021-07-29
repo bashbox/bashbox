@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%4303 () 
+main@bashbox%6490 () 
 { 
     \command \unalias -a;
     set -o pipefail;
@@ -7,7 +7,7 @@ main@bashbox%4303 ()
     set -o errtrace;
     set -o nounset;
     shopt -s expand_aliases;
-    trap '____r=$?; BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $____r; exit $____r' ERR;
+    trap 'log::error "$BASH_COMMAND" || exit' ERR;
     function println::error () 
     { 
         local _return_code=${2:-$?};
@@ -25,12 +25,12 @@ main@bashbox%4303 ()
         esac
     };
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%4303";
+    ___MAIN_FUNCNAME="main@bashbox%6490";
     NAME="BashBox";
     CODENAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
     VERSION="0.1.8";
-    DEPENDENCIES=("std::0.1.4" "argbash::0.1.0");
+    DEPENDENCIES=("std::7f09720" "argbash::0.1.0");
     REPOSITORY="https://github.com/axonasif/bashbox";
     BASHBOX_COMPAT="0.1.8~";
     function bb_bootstrap_header () 
@@ -41,7 +41,7 @@ main@bashbox%4303 ()
         set -o errtrace;
         set -o nounset;
         shopt -s expand_aliases;
-        trap '____r=$?; BB_ERR_SOURCE="${BASH_SOURCE[0]}" println::error "$BASH_COMMAND" $____r; exit $____r' ERR
+        trap 'log::error "$BASH_COMMAND" || exit' ERR
     };
     readonly _bashbox_meta_name="Bashbox.meta";
     readonly _src_dir_name="src";
@@ -75,14 +75,20 @@ main@bashbox%4303 ()
                 };
             fi
         };
-    done ) & function coming_soon () 
+    done ) & function log::info () 
     { 
-        println::error "In progress, coming in one of the future updates, try again later";
-        echo "nah"
+        echo -e "[%%%] \033[1;37minfo\033[0m: $@"
     };
-    function geco () 
+    function log::warn () 
     { 
-        echo -e "$@"
+        echo -e "[***] \033[1;37mwarn\033[0m: $@"
+    };
+    function log::error () 
+    { 
+        local _retcode="${2:-$?}";
+        local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
+        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
+        return "$_retcode"
     };
     function println::helpgen () 
     { 
@@ -239,30 +245,6 @@ main@bashbox%4303 ()
         if test -n "$_arg_footer_msg"; then
             echo -e "$_arg_footer_msg\n";
         fi
-    };
-    function println::info () 
-    { 
-        test "$_arg_quiet" == "off" && echo -e "[%%%] ${WHITE}info${RC}: $@"
-    };
-    function println::warn () 
-    { 
-        test "$_arg_quiet" == "off" && echo -e "[***] ${YELLOW}warn${RC}: $@"
-    };
-    function println::error () 
-    { 
-        local _return_code=${2:-$?};
-        local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[0]}"}";
-        local _command="$1";
-        test "${_PRINT_HELP:-no}" == yes && print_help 1>&2;
-        echo -e "[!!!] \033[1;31mERROR\033[0m[$_return_code]: $_source[$BASH_LINENO]: $_command";
-        case "${JOB:-"exit"}" in 
-            exit)
-                exit $_return_code
-            ;;
-            kill)
-                kill -9 "$BASHPID"
-            ;;
-        esac
     };
     readonly RC='\033[0m' RED='\033[0;31m' BRED='\033[1;31m' GRAY='\033[1;30m';
     readonly BLUE='\033[0;34m' BBLUE='\033[1;34m' CYAN='\033[0;34m' BCYAN='\033[1;34m';
@@ -1758,4 +1740,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%4303 "$@"
+main@bashbox%6490 "$@"

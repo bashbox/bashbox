@@ -12,7 +12,7 @@ function subcommand::selfinstall() {
 
 	# Check if we were able to fetch a usable installation path
 	if ! test -v _target_install_dir; then {
-		println::error "Failed to retrieve a usable PATH directory" 1;
+		log::error "Failed to retrieve a usable PATH directory" 1 || exit;
 	} fi
 
 	# At this stage we are good to go

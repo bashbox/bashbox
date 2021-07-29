@@ -1,6 +1,6 @@
 
 function subcommand::run() {
-	println::error "This command is temporarily unavailable, under a rewrite, use \`build --run\` for now" 1;
+	log::error "This command is temporarily unavailable, under a rewrite, use \`build --run\` for now" 1 || exit;
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
@@ -68,11 +68,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
 
 				function source_call() {
 					builtin source "${_mod}.sh" "${BB_USE_ARGS[@]}" || {
-						println::error "Syntax/internal errors were detected in $_mod";
+						log::error "Syntax/internal errors were detected in $_mod" || exit;
 					}
 
 					echo "$_mod" >> "$_used_symbols_statfile" || {
-						println::error "Failed to register $_mod in log";
+						log::error "Failed to register $_mod in log" || exit;
 					}
 				}
 
@@ -145,11 +145,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
 				# 	true
 
 				} else {
-					println::error "No such module tree as $_input was found";
+					log::error "No such module tree as $_input was found" || exit;
 				} fi
 
 			} else {
-				println::error "No such module as $_input was found";
+				log::error "No such module as $_input was found" || exit;
 			} fi
 
 		} done
@@ -169,7 +169,7 @@ EOF
 	_main_src_dir="$(dirname "$(readlink -f "$0")")";
 	_used_symbols_statfile="$_main_src_dir/.used_symbols";
 EOF
-	declare -f 'println::error' >> "$_target_workfile";
+	declare -f 'log::error' >> "$_target_workfile";
 	declare -f __use_func >> "$_target_workfile";
 	cat "$_target_workdir/main.sh" >> "$_target_workfile";
 	echo -e "\nmain \"\$@\";" >> "$_target_workfile";

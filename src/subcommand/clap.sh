@@ -41,8 +41,8 @@ parse_commandline()
 handle_passed_args_count()
 {
 	local _required_args_string="'path'";
-	test "${_positionals_count}" -ge 1 || _PRINT_HELP=yes println::error "FATAL ERROR: Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1;
-	test "${_positionals_count}" -le 1 || _PRINT_HELP=yes println::error "FATAL ERROR: There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1;
+	test "${_positionals_count}" -ge 1 || log::error "Not enough positional arguments - we require exactly 1 (namely: $_required_args_string), but got only ${_positionals_count}." 1 || exit;
+	test "${_positionals_count}" -le 1 || log::error "There were spurious positional arguments --- we expect exactly 1 (namely: $_required_args_string), but got ${_positionals_count} (the last one was: '${_last_positional}')." 1 || exit;
 }
 
 
@@ -54,7 +54,7 @@ assign_positional_args()
 	shift "$_shift_for";
 	for _positional_name in ${_positional_names}; do {
 		test $# -gt 0 || break;
-		eval "$_positional_name=\${1}" || println::error "Error during argument parsing, possibly an Argbash bug." 1;
+		eval "$_positional_name=\${1}" || log::error "Error during argument parsing, possibly an Argbash bug." 1 || exit;
 		shift;
 	} done
 }
@@ -116,7 +116,7 @@ if test ! -d "$_arg_path/$_src_dir_name" || test ! -e "$_arg_path/$_bashbox_meta
 		_arg_path="$_top";
 		unset _top;
 	} else {
-		println::error "$_arg_path is not a valid bashbox project" 1
+		log::error "$_arg_path is not a valid bashbox project" 1 || exit;
 	} fi
 } fi
 
@@ -172,10 +172,10 @@ case "$FUNCNAME" in
 				|| (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then {
 					true;
 				} else {
-					println::error "$NAME requires at least bashbox $MIN" 1;
+					log::error "$NAME requires at least bashbox $MIN" 1 || exit;
 				} fi
 			} else {
-				println::error "MIN version is missing from $_bashbox_compat_var_name in "
+				log::error "MIN version is missing from $_bashbox_compat_var_name in $_bashbox_meta_name" 1 || exit;
 			} fi
 
 			# Check optional MAX version
@@ -184,13 +184,13 @@ case "$FUNCNAME" in
 				|| (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then {
 					true;
 				} else {
-					println::error "$NAME supports bashbox upto $MAX" 1;
+					log::error "$NAME supports bashbox upto $MAX" 1 || exit;
 				} fi			
 			} fi
 			
 			unset MIN MAX VAR_REF;
 		} else {
-			println::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1;
+			log::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1 || exit;
 		} fi
 
 		# Resolve dependencies
