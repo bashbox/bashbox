@@ -172,7 +172,7 @@ case "$FUNCNAME" in
 				|| (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then {
 					true;
 				} else {
-					log::error "$NAME requires at least bashbox $MIN" 1 || exit;
+					log::error "$CODENAME requires at least bashbox $MIN" 1 || exit;
 				} fi
 			} else {
 				log::error "MIN version is missing from $_bashbox_compat_var_name in $_bashbox_meta_name" 1 || exit;
@@ -184,7 +184,7 @@ case "$FUNCNAME" in
 				|| (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then {
 					true;
 				} else {
-					log::error "$NAME supports bashbox upto $MAX" 1 || exit;
+					log::error "$CODENAME supports bashbox upto $MAX" 1 || exit;
 				} fi			
 			} fi
 			
@@ -198,7 +198,7 @@ case "$FUNCNAME" in
 			EXPORT_USEMOL="true" subcommand::install "$_box";
 		} done
 
-		readonly _target_workfile="$_target_workdir/$NAME";
+		readonly _target_workfile="$_target_workdir/$CODENAME";
 		# readonly _usemols_meta="$_target_workdir/$_usemols_meta_name";
 			
 		# # Now lets load the usemols in RAM

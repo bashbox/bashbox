@@ -23,7 +23,7 @@ function subcommand::install() {
 				echo "$_date" > "$_lock_file";
 
 				# Check if the registry was updated
-				println::info "Syncing repository metadata";
+				log::info "Syncing repository metadata";
 				local _local_sha _remote_sha;
 				_local_sha="$(< "$_registry_lastsync_file")";
 				_remote_sha="$(curl --silent "${_github_api_root}/repos/${_user_repo}/contents/${_check_file}?ref=${_branch}" \
@@ -31,7 +31,7 @@ function subcommand::install() {
 				readonly _local_sha _remote_sha;
 				
 				if test "$_arg_syncmeta" == "on" || test "$_local_sha" != "$_remote_sha"; then {
-					println::info "Updating registry.meta";
+					log::info "Updating registry.meta";
 					curl --silent -o "$_registry_meta_file" -L "$_registry_meta_url";
 					echo "$_remote_sha" > "$_registry_lastsync_file";
 				} fi
@@ -110,14 +110,14 @@ function subcommand::install() {
 		
 		mkdir -p "$_box_dir";
 		
-		println::info "Downloading box $_repo_name $_tag_name";
+		log::info "Downloading box $_repo_name $_tag_name";
 		curl --silent -L "${_repo_root_link}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
 
 		# Now resolve submodules if necessary
 		_gitmod_file="$_box_dir/.gitmodules";
 
 		if test -e "$_gitmod_file"; then {
-			println::info "Resolving submodules";
+			log::info "Resolving submodules";
 
 			while read -r _line; do {
 				_line="${_line%%:*}";
@@ -130,7 +130,7 @@ function subcommand::install() {
 
 				_install_path="${_box_dir}/${_path}";
 
-				println::info "Downloading submodule: $_path";
+				log::info "Downloading submodule: $_path";
 				# echo "Url: $_url";
 				# echo -e '---'
 				
@@ -147,22 +147,22 @@ function subcommand::install() {
 
 		# Check whether a library package or executable program
 		if test -e "$_box_dir/$_src_dir_name/main.sh"; then {
-			println::info "Compiling $_box in release mode";
+			log::info "Compiling $_box in release mode";
 			subcommand::build --release "$_box_dir" 2>&1 \
 				|| {
 					log::error "Errors were found while compiling $_box, operation failed" 1 || exit;
 				};
 
 			source "$_box_dir/$_bashbox_meta_name";
-			_built_executable="$_box_dir/target/release/$NAME";
-			_install_executable="$_bashbox_bindir/$NAME";
+			_built_executable="$_box_dir/target/release/$CODENAME";
+			_install_executable="$_bashbox_bindir/$CODENAME";
 
 			chmod +x "$_built_executable";
 			ln -srf "$_built_executable" "$_install_executable";
 			chmod +x "$_install_executable";
-			println::info "$_box was successfully installed as $NAME";
+			log::info "$_box was successfully installed as $CODENAME";
 		} else {
-			println::info "$_box was installed as a library";
+			log::info "$_box was installed as a library";
 		} fi
 	
 

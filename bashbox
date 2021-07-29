@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%18269 () 
+main@bashbox%17627 () 
 { 
     function log::error () 
     { 
@@ -16,7 +16,7 @@ main@bashbox%18269 ()
     set -o nounset;
     shopt -s expand_aliases;
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%18269";
+    ___MAIN_FUNCNAME="main@bashbox%17627";
     NAME="BashBox";
     CODENAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
@@ -336,7 +336,7 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
         if test -e "$_arg_path"; then
             log::error "Destination \`$_arg_path\` already exists.\n\t  You may either remove that project dir or use a different path for setup." 1 || exit;
         fi;
-        println::info "Setting up project at \`$_arg_path\`";
+        log::info "Setting up project at \`$_arg_path\`";
         mkdir -p "$_arg_path" || log::error "Failed to initialize the project directory" 1 || exit;
         mkdir -p "$_arg_path/$_src_dir_name";
         cat <<'EOF' > "$_arg_path/$_src_dir_name/main.sh"
@@ -356,7 +356,7 @@ REPOSITORY=""
 BASHBOX_COMPAT="${VERSION}~"
 EOF
 
-        println::info "Initializing git version control for your project";
+        log::info "Initializing git version control for your project";
         if command -v git > /dev/null; then
             git init "$_arg_path" > /dev/null || { 
                 _r=$?;
@@ -420,14 +420,14 @@ EOF
                     if [ "$_arg_syncmeta" == "on" ] || [ "$(< "$_lock_file")" != "$_date" ]; then
                         { 
                             echo "$_date" > "$_lock_file";
-                            println::info "Syncing repository metadata";
+                            log::info "Syncing repository metadata";
                             local _local_sha _remote_sha;
                             _local_sha="$(< "$_registry_lastsync_file")";
                             _remote_sha="$(curl --silent "${_github_api_root}/repos/${_user_repo}/contents/${_check_file}?ref=${_branch}" 								| head -n4 | grep -I '"sha":' | sed -E 's/.*"([^"]+)".*/\1/')";
                             readonly _local_sha _remote_sha;
                             if test "$_arg_syncmeta" == "on" || test "$_local_sha" != "$_remote_sha"; then
                                 { 
-                                    println::info "Updating registry.meta";
+                                    log::info "Updating registry.meta";
                                     curl --silent -o "$_registry_meta_file" -L "$_registry_meta_url";
                                     echo "$_remote_sha" > "$_registry_lastsync_file"
                                 };
@@ -497,19 +497,19 @@ EOF
                     };
                 fi;
                 mkdir -p "$_box_dir";
-                println::info "Downloading box $_repo_name $_tag_name";
+                log::info "Downloading box $_repo_name $_tag_name";
                 curl --silent -L "${_repo_root_link}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
                 _gitmod_file="$_box_dir/.gitmodules";
                 if test -e "$_gitmod_file"; then
                     { 
-                        println::info "Resolving submodules";
+                        log::info "Resolving submodules";
                         while read -r _line; do
                             { 
                                 _line="${_line%%:*}";
                                 _path="$(sed "${_line}q;d" "$_gitmod_file" 					| cut -d '=' -f2 | trim_leading_trailing)";
                                 _url="$(sed "$(( _line + 1 ))q;d" "$_gitmod_file" 					| cut -d '=' -f2 | trim_leading_trailing)";
                                 _install_path="${_box_dir}/${_path}";
-                                println::info "Downloading submodule: $_path";
+                                log::info "Downloading submodule: $_path";
                                 mkdir -p "$_install_path";
                                 curl --silent -L "${_url}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -
                             };
@@ -518,21 +518,21 @@ EOF
                 fi;
                 if test -e "$_box_dir/$_src_dir_name/main.sh"; then
                     { 
-                        println::info "Compiling $_box in release mode";
+                        log::info "Compiling $_box in release mode";
                         subcommand::build --release "$_box_dir" 2>&1 || { 
                             log::error "Errors were found while compiling $_box, operation failed" 1 || exit
                         };
                         source "$_box_dir/$_bashbox_meta_name";
-                        _built_executable="$_box_dir/target/release/$NAME";
-                        _install_executable="$_bashbox_bindir/$NAME";
+                        _built_executable="$_box_dir/target/release/$CODENAME";
+                        _install_executable="$_bashbox_bindir/$CODENAME";
                         chmod +x "$_built_executable";
                         ln -srf "$_built_executable" "$_install_executable";
                         chmod +x "$_install_executable";
-                        println::info "$_box was successfully installed as $NAME"
+                        log::info "$_box was successfully installed as $CODENAME"
                     };
                 else
                     { 
-                        println::info "$_box was installed as a library"
+                        log::info "$_box was installed as a library"
                     };
                 fi
             };
@@ -733,7 +733,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                                     };
                                 else
                                     { 
-                                        log::error "$NAME requires at least bashbox $MIN" 1 || exit
+                                        log::error "$CODENAME requires at least bashbox $MIN" 1 || exit
                                     };
                                 fi
                             };
@@ -750,7 +750,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                                     };
                                 else
                                     { 
-                                        log::error "$NAME supports bashbox upto $MAX" 1 || exit
+                                        log::error "$CODENAME supports bashbox upto $MAX" 1 || exit
                                     };
                                 fi
                             };
@@ -768,7 +768,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                         EXPORT_USEMOL="true" subcommand::install "$_box"
                     };
                 done;
-                readonly _target_workfile="$_target_workdir/$NAME"
+                readonly _target_workfile="$_target_workdir/$CODENAME"
             ;;
         esac;
         function Resolve::Colons () 
@@ -1326,7 +1326,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                                     };
                                 else
                                     { 
-                                        log::error "$NAME requires at least bashbox $MIN" 1 || exit
+                                        log::error "$CODENAME requires at least bashbox $MIN" 1 || exit
                                     };
                                 fi
                             };
@@ -1343,7 +1343,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                                     };
                                 else
                                     { 
-                                        log::error "$NAME supports bashbox upto $MAX" 1 || exit
+                                        log::error "$CODENAME supports bashbox upto $MAX" 1 || exit
                                     };
                                 fi
                             };
@@ -1361,7 +1361,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                         EXPORT_USEMOL="true" subcommand::install "$_box"
                     };
                 done;
-                readonly _target_workfile="$_target_workdir/$NAME"
+                readonly _target_workfile="$_target_workdir/$CODENAME"
             ;;
         esac;
         cat <<'EOF' > "$_target_workfile"
@@ -1433,13 +1433,13 @@ EOF
                 fi
             };
         done;
-        println::info "Installing to $_target_install_dir";
-        local _target_full_path="$_target_install_dir/$NAME";
+        log::info "Installing to $_target_install_dir";
+        local _target_full_path="$_target_install_dir/$CODENAME";
         echo '#!/usr/bin/env bash' > "$_target_full_path";
         declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
         echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
         chmod +x "$_target_full_path";
-        println::info "Installation complete, now restart your shell and run \`$NAME --help\` to get started"
+        log::info "Installation complete, now restart your shell and run \`$CODENAME --help\` to get started"
     };
     function subcommand::clean () 
     { 
@@ -1627,7 +1627,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                                     };
                                 else
                                     { 
-                                        log::error "$NAME requires at least bashbox $MIN" 1 || exit
+                                        log::error "$CODENAME requires at least bashbox $MIN" 1 || exit
                                     };
                                 fi
                             };
@@ -1644,7 +1644,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                                     };
                                 else
                                     { 
-                                        log::error "$NAME supports bashbox upto $MAX" 1 || exit
+                                        log::error "$CODENAME supports bashbox upto $MAX" 1 || exit
                                     };
                                 fi
                             };
@@ -1662,7 +1662,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                         EXPORT_USEMOL="true" subcommand::install "$_box"
                     };
                 done;
-                readonly _target_workfile="$_target_workdir/$NAME"
+                readonly _target_workfile="$_target_workdir/$CODENAME"
             ;;
         esac;
         rm -rf "$_target_dir"
@@ -1734,4 +1734,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%18269 "$@"
+main@bashbox%17627 "$@"

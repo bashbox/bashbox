@@ -133,7 +133,7 @@ ${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
 	# } fi
 
 	## Finally setup the template as per inputs
-	println::info "Setting up project at \`$_arg_path\`"
+	log::info "Setting up project at \`$_arg_path\`"
 	mkdir -p "$_arg_path" || log::error "Failed to initialize the project directory" 1 || exit;
 
 	# Create src dir and main.sh
@@ -157,11 +157,11 @@ EOF
 
 # 	rsync -a --exclude='.git' --exclude='.keep' "$TEMPLATES_DIR/$_arg_template/" "$PROJECTS_DIR/$_arg_codename" || exit
 
-	# println::info "Resetting CODENAME metadata to $_arg_codename on $_bashbox_meta_name"
+	# log::info "Resetting CODENAME metadata to $_arg_codename on $_bashbox_meta_name"
 	# sed -i "s|\bCODENAME=\".*\"|CODENAME=\"$_arg_codename\"|g" "$_arg_path/$_bashbox_meta_name" \
 	# 	|| { rm -r "$_arg_path"; log::error "Failed to reset CODENAME metadata on $_bashbox_meta_name"; }
 
-	println::info "Initializing git version control for your project"
+	log::info "Initializing git version control for your project"
 	if command -v git 1>/dev/null; then
 		git init "$_arg_path" 1>/dev/null || { _r=$?; rm -r "$_arg_path"; log::error "Failed to initialize git at \`$_arg_path\`" $_r || exit; }
 
