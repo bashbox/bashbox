@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%548 () 
+main@bashbox%32756 () 
 { 
     function log::error () 
     { 
@@ -19,14 +19,14 @@ main@bashbox%548 ()
     shopt -s expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%548";
+    ___MAIN_FUNCNAME="main@bashbox%32756";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.2.2";
+    ___self_VERSION="0.2.3";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
-    ___self_BASHBOX_COMPAT="0.2.2~";
+    ___self_BASHBOX_COMPAT="0.2.3~";
     function bb_bootstrap_header () 
     { 
         function log::error () 
@@ -1452,12 +1452,12 @@ EOF
             };
         done;
         log::info "Installing to $_target_install_dir";
-        local _target_full_path="$_target_install_dir/$CODENAME";
+        local _target_full_path="$_target_install_dir/$___self_CODENAME";
         echo '#!/usr/bin/env bash' > "$_target_full_path";
         declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
         echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
         chmod +x "$_target_full_path";
-        log::info "Installation complete, now restart your shell and run \`$CODENAME --help\` to get started"
+        log::info "Installation complete, now restart your shell and run \`$___self_CODENAME --help\` to get started"
     };
     function subcommand::clean () 
     { 
@@ -1696,7 +1696,7 @@ build<^>${SUBCOMMANDS_DESC[2]}
 clean<^>${SUBCOMMANDS_DESC[3]}
 install<^>${SUBCOMMANDS_DESC[4]}
 selfinstall<^>${SUBCOMMANDS_DESC[5]}" --footer-msg "Try '${_self_name} <subcommand> --help' for more information on a specific command.
-For bugreports: $REPOSITORY"
+For bugreports: $___self_REPOSITORY"
     };
     function main () 
     { 
@@ -1752,4 +1752,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%548 "$@";
+main@bashbox%32756 "$@";

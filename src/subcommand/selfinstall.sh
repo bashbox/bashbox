@@ -50,13 +50,13 @@ function subcommand::selfinstall() {
 
 	log::info "Installing to $_target_install_dir";
 
-	local _target_full_path="$_target_install_dir/$CODENAME";
+	local _target_full_path="$_target_install_dir/$___self_CODENAME";
 	echo '#!/usr/bin/env bash' > "$_target_full_path";
 	declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
 	echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
 	chmod +x "$_target_full_path";
 
-	log::info "Installation complete, now restart your shell and run \`$CODENAME --help\` to get started";
+	log::info "Installation complete, now restart your shell and run \`$___self_CODENAME --help\` to get started";
 # 	log::info "Note: You might need to restart your shell to take effect"
 
 }

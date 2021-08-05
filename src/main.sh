@@ -44,7 +44,7 @@ selfinstall<^>${SUBCOMMANDS_DESC[5]}\
 		\
 		--footer-msg "\
 Try '${_self_name} <subcommand> --help' for more information on a specific command.
-For bugreports: $REPOSITORY\
+For bugreports: $___self_REPOSITORY\
 ";
 
 }
