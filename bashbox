@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%22336 () 
+main@bashbox%548 () 
 { 
     function log::error () 
     { 
@@ -19,14 +19,14 @@ main@bashbox%22336 ()
     shopt -s expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%22336";
+    ___MAIN_FUNCNAME="main@bashbox%548";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.2.1";
+    ___self_VERSION="0.2.2";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
-    ___self_BASHBOX_COMPAT="0.2.0~";
+    ___self_BASHBOX_COMPAT="0.2.2~";
     function bb_bootstrap_header () 
     { 
         function log::error () 
@@ -1752,4 +1752,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%22336 "$@";
+main@bashbox%548 "$@";
