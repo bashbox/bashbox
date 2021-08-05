@@ -1,7 +1,7 @@
 NAME="BashBox"
 CODENAME="bashbox"
 AUTHORS=("AXON <axonasif@gmail.com>")
-VERSION="0.2.3"
+VERSION="0.2.4"
 DEPENDENCIES=(
 	"std::0.1.5"
 	"argbash::0.1.0"

@@ -7,7 +7,9 @@ function bb_bootstrap_header() {
 		return "$_retcode";
 	}
 	# TODO: Use `caller` builtin for stacktrace instead. (Check my saved meme notes)
-	\command \trap 'log::error "$BASH_COMMAND" || { exit || kill -9 "$___self_PID"; }' ERR;
+	\command \trap 'exit' USR1; # A workaround to properly catch error status from process substitution.
+								# Eg `while read -r _bruh; do echo bruh; done < <(false)`.
+	\command \trap 'log::error "$BASH_COMMAND" || { kill -USR1 "$___self_PID"; }' ERR;
 
 	\command \unalias -a; # To Make sure external aliases are not interfering.
 	set -o pipefail; # To grab the last return code from a pipe.
