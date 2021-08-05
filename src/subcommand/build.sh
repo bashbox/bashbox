@@ -203,6 +203,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 	# TODO: Add ___self_project_root
 	cat << EOF >> "$_tmp_target_workfile"
 ___self="\$0";
+___self_PID="\$\$";
 ___MAIN_FUNCNAME="$_main_funcname";
 EOF
 	cat "$_bashbox_meta" >> "$_tmp_target_workfile"; # Concat Bashbox.meta

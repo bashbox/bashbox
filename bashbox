@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%8061 () 
+main@bashbox%12453 () 
 { 
     function log::error () 
     { 
@@ -8,19 +8,22 @@ main@bashbox%8061 ()
         echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
         return "$_retcode"
     };
-    \command \trap 'log::error "$BASH_COMMAND" || exit' ERR;
+    \command \trap 'log::error "$BASH_COMMAND" || { exit || kill -9 "$___self_PID"; }' ERR;
     \command \unalias -a;
     set -o pipefail;
     set -o errexit;
     set -o errtrace;
     set -o nounset;
+    set -o functrace;
+    shopt -s inherit_errexit;
     shopt -s expand_aliases;
     ___self="$0";
-    ___MAIN_FUNCNAME="main@bashbox%8061";
+    ___self_PID="$$";
+    ___MAIN_FUNCNAME="main@bashbox%12453";
     NAME="BashBox";
     CODENAME="bashbox";
     AUTHORS=("AXON <axonasif@gmail.com>");
-    VERSION="0.2.0";
+    VERSION="0.2.1";
     DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     REPOSITORY="https://github.com/axonasif/bashbox";
     BASHBOX_COMPAT="0.2.0~";
@@ -33,12 +36,14 @@ main@bashbox%8061 ()
             echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
             return "$_retcode"
         };
-        \command \trap 'log::error "$BASH_COMMAND" || exit' ERR;
+        \command \trap 'log::error "$BASH_COMMAND" || { exit || kill -9 "$___self_PID"; }' ERR;
         \command \unalias -a;
         set -o pipefail;
         set -o errexit;
         set -o errtrace;
         set -o nounset;
+        set -o functrace;
+        shopt -s inherit_errexit;
         shopt -s expand_aliases
     };
     readonly _bashbox_meta_name="Bashbox.meta";
@@ -931,6 +936,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
         echo "${_bb_bootstrap}" >> "$_tmp_target_workfile";
         cat <<EOF >> "$_tmp_target_workfile"
 ___self="\$0";
+___self_PID="\$\$";
 ___MAIN_FUNCNAME="$_main_funcname";
 EOF
 
@@ -1734,4 +1740,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%8061 "$@";
+main@bashbox%12453 "$@";

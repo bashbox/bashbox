@@ -7,12 +7,14 @@ function bb_bootstrap_header() {
 		return "$_retcode";
 	}
 	# TODO: Use `caller` builtin for stacktrace instead. (Check my saved meme notes)
-	\command \trap 'log::error "$BASH_COMMAND" || exit' ERR;
+	\command \trap 'log::error "$BASH_COMMAND" || { exit || kill -9 "$___self_PID"; }' ERR;
 
 	\command \unalias -a; # To Make sure external aliases are not interfering.
 	set -o pipefail; # To grab the last return code from a pipe.
 	set -o errexit; # To exit immadiately after trapping ERR.
 	set -o errtrace; # To detect ERR on some bash builtin commands.
 	set -o nounset; # To avoid unexpected missing variables.
+	set -o functrace; # Trap functions.
+	shopt -s inherit_errexit; # To TRAP process substitution error codes in parent.
 	shopt -s expand_aliases; # To enable alias bash-builtin usage without interactive mode.
 }
