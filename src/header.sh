@@ -15,6 +15,6 @@ function bb_bootstrap_header() {
 	set -o errtrace; # To detect ERR on some bash builtin commands.
 	set -o nounset; # To avoid unexpected missing variables.
 	set -o functrace; # Trap functions.
-	shopt -s inherit_errexit; # To TRAP process substitution error codes in parent.
+	shopt -s inherit_errexit; # To TRAP process substitution error codes in parent. (Didnt work as I had thought...)
 	shopt -s expand_aliases; # To enable alias bash-builtin usage without interactive mode.
 }

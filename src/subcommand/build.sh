@@ -206,7 +206,15 @@ ___self="\$0";
 ___self_PID="\$\$";
 ___MAIN_FUNCNAME="$_main_funcname";
 EOF
-	cat "$_bashbox_meta" >> "$_tmp_target_workfile"; # Concat Bashbox.meta
+
+	# Structure Bashbox.meta variables
+	while read -r _line; do {
+		if [[ "$_line" =~ ^[A-Z].*= ]]; then {
+			echo "___self_${_line}" >> "$_tmp_target_workfile";
+		} else {
+			echo "$_line" >> "$_tmp_target_workfile";
+		} fi
+	} done < <(cat "$_bashbox_meta") && unset _line;
 	cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
 	echo "main \"\$@\";" >> "$_target_workfile"; # Add execution point for porject main function
 	rm "$_tmp_target_workfile";

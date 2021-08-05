@@ -84,7 +84,7 @@ function main() {
 					_arg_offline=on;
 					;;
 				--version | -V)
-					echo "$VERSION";
+					echo "$___self_VERSION";
 					exit 0;
 					;;
 				--help | -h*)

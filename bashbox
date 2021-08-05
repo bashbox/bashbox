@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%12453 () 
+main@bashbox%22336 () 
 { 
     function log::error () 
     { 
@@ -19,14 +19,14 @@ main@bashbox%12453 ()
     shopt -s expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%12453";
-    NAME="BashBox";
-    CODENAME="bashbox";
-    AUTHORS=("AXON <axonasif@gmail.com>");
-    VERSION="0.2.1";
-    DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
-    REPOSITORY="https://github.com/axonasif/bashbox";
-    BASHBOX_COMPAT="0.2.0~";
+    ___MAIN_FUNCNAME="main@bashbox%22336";
+    ___self_NAME="BashBox";
+    ___self_CODENAME="bashbox";
+    ___self_AUTHORS=("AXON <axonasif@gmail.com>");
+    ___self_VERSION="0.2.1";
+    ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
+    ___self_REPOSITORY="https://github.com/axonasif/bashbox";
+    ___self_BASHBOX_COMPAT="0.2.0~";
     function bb_bootstrap_header () 
     { 
         function log::error () 
@@ -358,7 +358,7 @@ AUTHORS=("AXON <axonasif@gmail.com>")
 VERSION="1.0"
 DEPENDENCIES=()
 REPOSITORY=""
-BASHBOX_COMPAT="${VERSION}~"
+BASHBOX_COMPAT="${___self_VERSION}~"
 EOF
 
         log::info "Initializing git version control for your project";
@@ -940,7 +940,19 @@ ___self_PID="\$\$";
 ___MAIN_FUNCNAME="$_main_funcname";
 EOF
 
-        cat "$_bashbox_meta" >> "$_tmp_target_workfile";
+        while read -r _line; do
+            { 
+                if [[ "$_line" =~ ^[A-Z].*= ]]; then
+                    { 
+                        echo "___self_${_line}" >> "$_tmp_target_workfile"
+                    };
+                else
+                    { 
+                        echo "$_line" >> "$_tmp_target_workfile"
+                    };
+                fi
+            };
+        done < <(cat "$_bashbox_meta") && unset _line;
         cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile";
         echo "main \"\$@\";" >> "$_target_workfile";
         rm "$_tmp_target_workfile";
@@ -1708,7 +1720,7 @@ For bugreports: $REPOSITORY"
                                 _arg_offline=on
                             ;;
                             --version | -V)
-                                echo "$VERSION";
+                                echo "$___self_VERSION";
                                 exit 0
                             ;;
                             --help | -h*)
@@ -1740,4 +1752,4 @@ For bugreports: $REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%12453 "$@";
+main@bashbox%22336 "$@";
