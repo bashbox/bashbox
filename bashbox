@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%13481 () 
+main@bashbox%19577 () 
 { 
     function log::error () 
     { 
@@ -11,16 +11,11 @@ main@bashbox%13481 ()
     \command \trap 'exit' USR1;
     \command \trap 'log::error "$BASH_COMMAND" || { kill -USR1 "$___self_PID"; }' ERR;
     \command \unalias -a;
-    set -o pipefail;
-    set -o errexit;
-    set -o errtrace;
-    set -o nounset;
-    set -o functrace;
-    shopt -s inherit_errexit;
-    shopt -s expand_aliases;
+    set -eEuT -o pipefail;
+    shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%13481";
+    ___MAIN_FUNCNAME="main@bashbox%19577";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -40,13 +35,8 @@ main@bashbox%13481 ()
         \command \trap 'exit' USR1;
         \command \trap 'log::error "$BASH_COMMAND" || { kill -USR1 "$___self_PID"; }' ERR;
         \command \unalias -a;
-        set -o pipefail;
-        set -o errexit;
-        set -o errtrace;
-        set -o nounset;
-        set -o functrace;
-        shopt -s inherit_errexit;
-        shopt -s expand_aliases
+        set -eEuT -o pipefail;
+        shopt -s inherit_errexit expand_aliases
     };
     readonly _bashbox_meta_name="Bashbox.meta";
     readonly _src_dir_name="src";
@@ -1754,4 +1744,4 @@ For bugreports: $___self_REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%13481 "$@";
+main@bashbox%19577 "$@";

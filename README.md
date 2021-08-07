@@ -78,3 +78,40 @@ It's simple, just run `./bashbox build --release` after cloning this repository 
 ## More things to write, this is incomplete at the moment
 
 Please note that this project is very experimental and needs more work.
+
+## Caveats
+
+Don't do the followings
+
+- Masking error:
+```bash
+if test "$(some_command --arg)" == "something"; then {
+	do_something;
+} fi
+
+# Here due to the if statement it's impossible in bash to automatically catch the error within "$(some_command --arg)" subshell, which is why we need to assign it separately.
+```
+> Solution:
+```bash
+local _var_foo;
+_var_foo="$(some_command --arg)";
+
+if test "$_var_foo" == "something"; then {
+	do_something;
+} fi
+```
+
+- Undefined default variable in substitution:
+```bash
+local _argv="${1}"; # Can fail # Imagine the user never passed any argument and thus undefined by nature.
+
+local _name_var="${SOME_ENV_VARIABLE}"; # Can fail # You're assuming that some environment variable is available but it might not be and thus undefined.
+```
+> Solution:
+```bash
+local _argv="${1:-}";
+
+local _name_var="${SOME_ENV_VARIABLE:-}";
+
+# We define a default value which is empty incase the variable was never defined just to make our program run. Later for safety all you should do is test whether your variable is empty or contains some data.
+```
