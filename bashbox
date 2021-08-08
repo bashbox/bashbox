@@ -1,39 +1,77 @@
 #!/usr/bin/env bash
-main@bashbox%19577 () 
+main@bashbox%8020 () 
 { 
     function log::error () 
     { 
-        local _retcode="${2:-$?}";
+        local _lasttoken="$_";
+        local _exception_line="${1}";
+        local _retcode="${2}";
+        local IFS=' 	
+';
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
+        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${STACK_TRACE:-"$_exception_line"}" 1>&2;
+        if test -v STACK_TRACE; then
+            { 
+                echo -e "STACK TRACE: (TOKEN: $_lasttoken) $_exception_line";
+                local -i _frame=0;
+                local _treestack='|--';
+                local _line _caller _source;
+                while read -r _line _caller _source < <(caller "$_frame"); do
+                    { 
+                        echo "$_treestack ${_caller} >> ${_source##*/}::${_line}";
+                        _frame+=1;
+                        _treestack+='--'
+                    };
+                done
+            };
+        fi;
         return "$_retcode"
     };
     \command \trap 'exit' USR1;
-    \command \trap 'log::error "$BASH_COMMAND" || { kill -USR1 "$___self_PID"; }' ERR;
+    \command \trap 'STACK_TRACE="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" $? || { kill -USR1 "$___self_PID"; }' ERR;
     \command \unalias -a;
     set -eEuT -o pipefail;
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%19577";
+    ___MAIN_FUNCNAME="main@bashbox%8020";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.2.4";
+    ___self_VERSION="0.2.6";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
-    ___self_BASHBOX_COMPAT="0.2.3~";
+    ___self_BASHBOX_COMPAT="0.2.6~";
     function bb_bootstrap_header () 
     { 
         function log::error () 
         { 
-            local _retcode="${2:-$?}";
+            local _lasttoken="$_";
+            local _exception_line="${1}";
+            local _retcode="${2}";
+            local IFS=' 	
+';
             local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-            echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: $1" 1>&2;
+            echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${STACK_TRACE:-"$_exception_line"}" 1>&2;
+            if test -v STACK_TRACE; then
+                { 
+                    echo -e "STACK TRACE: (TOKEN: $_lasttoken) $_exception_line";
+                    local -i _frame=0;
+                    local _treestack='|--';
+                    local _line _caller _source;
+                    while read -r _line _caller _source < <(caller "$_frame"); do
+                        { 
+                            echo "$_treestack ${_caller} >> ${_source##*/}::${_line}";
+                            _frame+=1;
+                            _treestack+='--'
+                        };
+                    done
+                };
+            fi;
             return "$_retcode"
         };
         \command \trap 'exit' USR1;
-        \command \trap 'log::error "$BASH_COMMAND" || { kill -USR1 "$___self_PID"; }' ERR;
+        \command \trap 'STACK_TRACE="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" $? || { kill -USR1 "$___self_PID"; }' ERR;
         \command \unalias -a;
         set -eEuT -o pipefail;
         shopt -s inherit_errexit expand_aliases
@@ -1744,4 +1782,4 @@ For bugreports: $___self_REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%19577 "$@";
+main@bashbox%8020 "$@";
