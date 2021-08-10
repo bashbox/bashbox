@@ -7,7 +7,7 @@ function bb_bootstrap_header() {
 		local _exception_line="$1";
 		local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
 
-		>&2 echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}";
+		>&2 echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}";
 
 		if test -v BB_ERR_MSG; then {
 			>&2 echo -e "STACK TRACE: (TOKEN: $_exception_line)";

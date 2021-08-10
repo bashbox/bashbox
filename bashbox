@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%7973 () 
+main@bashbox%29267 () 
 { 
     function process::self::exit () 
     { 
@@ -10,7 +10,7 @@ main@bashbox%7973 ()
         local _retcode="${2:-$?}";
         local _exception_line="$1";
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
+        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
         if test -v BB_ERR_MSG; then
             { 
                 echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
@@ -35,14 +35,14 @@ main@bashbox%7973 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%7973";
+    ___MAIN_FUNCNAME="main@bashbox%29267";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.2.9";
+    ___self_VERSION="0.3.0";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
-    ___self_BASHBOX_COMPAT="0.2.9~";
+    ___self_BASHBOX_COMPAT="0.3.0~";
     function bb_bootstrap_header () 
     { 
         function process::self::exit () 
@@ -54,7 +54,7 @@ main@bashbox%7973 ()
             local _retcode="${2:-$?}";
             local _exception_line="$1";
             local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-            echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
+            echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
             if test -v BB_ERR_MSG; then
                 { 
                     echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
@@ -1854,4 +1854,4 @@ For bugreports: $___self_REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%7973 "$@";
+main@bashbox%29267 "$@";
