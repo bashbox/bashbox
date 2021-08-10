@@ -1,5 +1,6 @@
 function subcommand::build()
 {
+
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
@@ -106,7 +107,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 				# echo "Parsed_input: $_parsed_input"; # DEBUG
 				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
 					# echo "$PWD"
-					log::error "$_input is missing" 1 || exit;
+					log::error "$_input is missing" 1 || process::self::exit;
 				} fi
 
 				# Handle wildcard symbol loading
