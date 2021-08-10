@@ -184,7 +184,7 @@ function subcommand::install() {
 		# Check whether a library package or executable program
 		if test -e "$_box_dir/$_src_dir_name/main.sh"; then {
 			log::info "Compiling $_box in release mode";
-			(subcommand::build --release "$_box_dir" 2>&1) \
+			"$___self" build --release "$_box_dir" 2>&1 \
 				|| {
 					log::error "Errors were found while compiling $_box, operation failed" 1 || process::self::exit;
 				};
