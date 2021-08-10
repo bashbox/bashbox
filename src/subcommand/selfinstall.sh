@@ -51,6 +51,7 @@ function subcommand::selfinstall() {
 	log::info "Installing to $_target_install_dir";
 
 	local _target_full_path="$_target_install_dir/$___self_CODENAME";
+	rm -f "$_target_full_path"; # Necessary, in case its originating from a dead symlink
 	echo '#!/usr/bin/env bash' > "$_target_full_path";
 	declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
 	echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
