@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%12055 () 
+main@bashbox%9836 () 
 { 
     function log::error () 
     { 
@@ -34,14 +34,14 @@ main@bashbox%12055 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%12055";
+    ___MAIN_FUNCNAME="main@bashbox%9836";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.2.7";
+    ___self_VERSION="0.2.8";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
-    ___self_BASHBOX_COMPAT="0.2.6~";
+    ___self_BASHBOX_COMPAT="0.2.8~";
     function bb_bootstrap_header () 
     { 
         function log::error () 
@@ -438,7 +438,54 @@ EOF
             : "${1//\'}";
             printf '%s\n' "${_//\"}"
         };
-        function sync_repometa () 
+        function string::matches () 
+        { 
+            local _string _match _arg;
+            local _print=false;
+            for _arg in "${@}";
+            do
+                { 
+                    case "$_arg" in 
+                        --print | -p)
+                            shift;
+                            _print=true
+                        ;;
+                    esac
+                };
+            done;
+            if [[ $1 =~ $2 ]]; then
+                { 
+                    if [ "$_print" == "true" ]; then
+                        { 
+                            echo "${BASH_REMATCH[@]}"
+                        };
+                    fi;
+                    return 0
+                };
+            else
+                { 
+                    return 1
+                };
+            fi
+        };
+        local _arg_force=off;
+        local _arg_syncmeta=off;
+        local _arg_eval;
+        for _arg_eval in "force" "syncmeta";
+        do
+            { 
+                case "$@" in 
+                    *${_arg_eval}*)
+                        eval "_arg_${_arg_eval}=on"
+                    ;;
+                esac
+            };
+        done;
+        unset _arg_eval;
+        local _github_api_root _registry_meta_file;
+        readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
+        readonly _github_api_root="https://api.github.com";
+        function box::syncmeta () 
         { 
             local _registry_meta_url _registry_lastsync_file;
             readonly _registry_meta_url="https://raw.githubusercontent.com/bashbox/registry/main/registry.meta";
@@ -472,27 +519,51 @@ EOF
                 };
             fi
         };
-        local _arg_force=off;
-        local _arg_syncmeta=off;
-        local _arg_eval;
-        for _arg_eval in "force" "syncmeta";
-        do
-            { 
-                case "$@" in 
-                    *${_arg_eval}*)
-                        eval "_arg_${_arg_eval}=on"
-                    ;;
-                esac
-            };
-        done;
-        unset _arg_eval;
-        local _github_api_root _registry_meta_file;
-        readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
-        readonly _github_api_root="https://api.github.com";
-        sync_repometa;
-        local _box _box_dir _repo_root_link _gitmod_file;
+        function box::parsemeta () 
+        { 
+            local _input="$1";
+            local _box_dir _box_name;
+            local _repo_source _repo_url _tag_name;
+            IFS='|' read -r _repo_source _tag_name <<< "${_input//::/|}";
+            if string::matches "$_repo_source" '^file://.*'; then
+                { 
+                    _box_dir="$_repo_source";
+                    if test ! -e "$_box_dir"; then
+                        { 
+                            log::error "$_box_dir does not exist" 1 || exit
+                        };
+                    fi;
+                    _arg_force=off;
+                    _repo_url=;
+                    _box_name="${_box_dir##*/}"
+                };
+            else
+                if string::matches "$_repo_source" '^.*://.*'; then
+                    { 
+                        local _repo_user _repo_name;
+                        _repo_url="$_repo_source";
+                        IFS='|' read -r _repo_user _repo_name < <(
+				_user="${_repo_source%/*}" && _user="${_user##*/}";
+				echo -e "${_user}|${_repo_source##*/}";
+			);
+                        _box_dir="$_bashbox_registrydir/${_repo_user}_${_repo_name}-${_tag_name}";
+                        _box_name="${_repo_name}"
+                    };
+                else
+                    if string::matches "$_repo_source" "[a-zA-Z0-9_]"; then
+                        { 
+                            _repo_url="$(grep ".*/${_repo_source}$" "$_registry_meta_file")" || log::error "No such box as $_repo_source was found in the registry" 1 || exit;
+                            _box_dir="$_bashbox_registrydir/${_repo_source}-${_tag_name}";
+                            _box_name="${_repo_source##*/}"
+                        };
+                    fi;
+                fi;
+            fi;
+            echo "${_box_name}|${_box_dir}|${_repo_url}|${_tag_name}"
+        };
+        box::syncmeta;
+        local _box _box_dir _gitmod_file;
         local _path _url _install_path _install_executable _built_executable;
-        local _repo_name _tag_name;
         for _box in "${@}";
         do
             { 
@@ -501,28 +572,19 @@ EOF
                         continue
                     };
                 fi;
-                read -r -d '\n' _repo_name _tag_name < <(echo -e "${_box//::/\\n}") || true;
-                _repo_root_link="$(grep ".*/$_repo_name" "$_registry_meta_file")" || { 
-                    log::error "No such box as $_repo_name was found" 1 || exit
-                };
-                if [ -z "$_tag_name" ]; then
-                    { 
-                        _tag_name="$(curl --silent 					"${_github_api_root}/repos/${_repo_root_link##http*github.com\/}/tags" 						| head -n3 						| grep -m 1 -Po '"name": "\K.*?(?=")')" || { 
-                            log::error "Failed to fetch latest version tag of $_repo_name" 1 || exit
-                        }
-                    };
-                fi;
-                _box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
+                local _box_name _box_dir _repo_url _tag_name;
+                IFS='|' read -r _box_name _box_dir _repo_url _tag_name <<< "$(box::parsemeta "$_box")";
+                : "${_tag_name:="HEAD"}";
                 if test "${EXPORT_USEMOL:-}" == "true"; then
                     { 
-                        export "_usemol_${_repo_name}=${_box_dir}/src"
+                        export "_usemol_${_box_name}=${_box_dir}/src"
                     };
                 fi;
                 if test -e "$_box_dir"; then
                     { 
                         if [ "$_arg_force" == "off" ] && [ -e "$_box_dir/$_bashbox_meta_name" ]; then
                             { 
-                                return 0
+                                continue
                             };
                         else
                             { 
@@ -532,21 +594,21 @@ EOF
                     };
                 fi;
                 mkdir -p "$_box_dir";
-                log::info "Downloading box $_repo_name $_tag_name";
-                curl --silent -L "${_repo_root_link}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
+                log::info "Downloading box $_box_name $_tag_name";
+                curl --silent -L "${_repo_url}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
                 _gitmod_file="$_box_dir/.gitmodules";
                 if test -e "$_gitmod_file"; then
                     { 
-                        log::info "Resolving submodules";
+                        log::info "Resolving git submodules";
                         while read -r _line; do
                             { 
                                 _line="${_line%%:*}";
                                 _path="$(sed "${_line}q;d" "$_gitmod_file" 					| cut -d '=' -f2 | trim_leading_trailing)";
                                 _url="$(sed "$(( _line + 1 ))q;d" "$_gitmod_file" 					| cut -d '=' -f2 | trim_leading_trailing)";
                                 _install_path="${_box_dir}/${_path}";
-                                log::info "Downloading submodule: $_path";
+                                log::info "Downloading git submodule: $_path";
                                 mkdir -p "$_install_path";
-                                curl --silent -L "${_url}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -
+                                curl --silent -L "${_url}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -
                             };
                         done < <(grep -n 'path.*=' "$_gitmod_file")
                     };
@@ -554,7 +616,7 @@ EOF
                 if test -e "$_box_dir/$_src_dir_name/main.sh"; then
                     { 
                         log::info "Compiling $_box in release mode";
-                        subcommand::build --release "$_box_dir" 2>&1 || { 
+                        ( subcommand::build --release "$_box_dir" 2>&1 ) || { 
                             log::error "Errors were found while compiling $_box, operation failed" 1 || exit
                         };
                         source "$_box_dir/$_bashbox_meta_name";
@@ -1787,4 +1849,4 @@ For bugreports: $___self_REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%12055 "$@";
+main@bashbox%9836 "$@";

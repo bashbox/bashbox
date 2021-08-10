@@ -1,8 +1,27 @@
 function subcommand::install() {
 	use std::string::trim;
+	use std::string::matches;
 	# use install.clap;
 
-	function sync_repometa() {
+	local _arg_force=off;
+	local _arg_syncmeta=off;
+
+	# Parse additional arguments in a fast wae
+	local _arg_eval;
+	for _arg_eval in "force" "syncmeta"; do {
+		case "$@" in
+			*${_arg_eval}*)
+				eval "_arg_${_arg_eval}=on";
+			;;
+		esac
+	} done
+	unset _arg_eval;
+	
+	local _github_api_root _registry_meta_file;
+	readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
+	readonly _github_api_root="https://api.github.com";
+
+	function box::syncmeta() {
 		local _registry_meta_url _registry_lastsync_file 
 		readonly _registry_meta_url="https://raw.githubusercontent.com/bashbox/registry/main/registry.meta";
 		readonly _registry_lastsync_file="${_bashbox_home}/.registry.lastsync" && touch "$_registry_lastsync_file";
@@ -41,68 +60,85 @@ function subcommand::install() {
 
 	}
 
-	local _arg_force=off;
-	local _arg_syncmeta=off;
+	function box::parsemeta() {
+		local _input="$1";
+		local _box_dir _box_name;
+		local _repo_source _repo_url _tag_name;
+		
+		## Parse hook metadata and declare stuff
+		IFS='|' read -r _repo_source _tag_name <<<"${_input//::/|}";
+		# || log::error "Lacking proper hook information for $_hook" 1 || exit; # It might fail
 
-	# Parse additional arguments in a fast wae
-	local _arg_eval;
-	for _arg_eval in "force" "syncmeta"; do {
-		case "$@" in
-			*${_arg_eval}*)
-				eval "_arg_${_arg_eval}=on";
-			;;
-		esac
-	} done
-	unset _arg_eval;
-	
-	local _github_api_root _registry_meta_file;
-	readonly _registry_meta_file="${_bashbox_home}/registry.meta" && touch "$_registry_meta_file";
-	readonly _github_api_root="https://api.github.com";
+		if string::matches "$_repo_source" '^file://.*'; then { # Local file path
+			_box_dir="$_repo_source";
+			if test ! -e "$_box_dir"; then {
+				log::error "$_box_dir does not exist" 1 || exit;
+			} fi
+			_arg_force=off; # Ignore --force arg
+			_repo_url=;
+			_box_name="${_box_dir##*/}";
+		} elif string::matches "$_repo_source" '^.*://.*'; then { # Custom git url
+			local _repo_user _repo_name;
+			_repo_url="$_repo_source";
+			IFS='|' read -r _repo_user _repo_name < <(
+				_user="${_repo_source%/*}" && _user="${_user##*/}";
+				echo -e "${_user}|${_repo_source##*/}";
+			);
+			_box_dir="$_bashbox_registrydir/${_repo_user}_${_repo_name}-${_tag_name}";
+			_box_name="${_repo_name}";
+		} elif string::matches "$_repo_source" "[a-zA-Z0-9_]"; then { # Short repo name for registered hooks
+			_repo_url="$(grep ".*/${_repo_source}$" "$_registry_meta_file")" \
+			|| log::error "No such box as $_repo_source was found in the registry" 1 || exit;
+			_box_dir="$_bashbox_registrydir/${_repo_source}-${_tag_name}";
+			_box_name="${_repo_source##*/}";
+		} fi
+
+		# Return value
+		echo "${_box_name}|${_box_dir}|${_repo_url}|${_tag_name}";
+	}
 
 	# Sync repometa file
-	sync_repometa;
+	box::syncmeta;
 
 
 	# Now fetch the project
-	local _box _box_dir _repo_root_link _gitmod_file;
+	local _box _box_dir _gitmod_file;
 	local _path _url _install_path _install_executable _built_executable;
-	local _repo_name _tag_name;
 	# local _branch_name;
 
 	for _box in "${@}"; do {	
-
-		# TODO: Support local path and full git url
-
-		# Ignore args
+		
 		if [[ "$_box" =~ ^-- ]]; then {
 			continue;
 		} fi
 
-		read -r -d '\n' _repo_name _tag_name < <(echo -e "${_box//::/\\n}") || true; # It might fail
-		# _repo_name="${_box%%::*}";
-		_repo_root_link="$(grep ".*/$_repo_name" "$_registry_meta_file")" || { log::error "No such box as $_repo_name was found" 1 || exit; }
-		# _branch_name="${_box%::*}" && _branch_name="${_branch_name##*::}";
-		# _tag_name="${_box##*::}" && {
-			if [ -z "$_tag_name" ]; then {
-				_tag_name="$(curl --silent \
-					"${_github_api_root}/repos/${_repo_root_link##http*github.com\/}/tags" \
-						| head -n3 \
-						| grep -m 1 -Po '"name": "\K.*?(?=")')" || { log::error "Failed to fetch latest version tag of $_repo_name" 1 || exit; }
-			} fi
+		local _box_name _box_dir _repo_url _tag_name;
+		IFS='|' read -r _box_name _box_dir _repo_url _tag_name <<<"$(box::parsemeta "$_box")";
+		
+		# Set defaults for _branch_name and _tag_name if empty
+		# : "${_branch_name:="main"}";
+		: "${_tag_name:="HEAD"}";
+
+
+		# if [ -z "$_tag_name" ]; then {
+		# 	_tag_name="$(curl --silent \
+		# 		"${_github_api_root}/repos/${_repo_root_link##http*github.com\/}/tags" \
+		# 			| head -n3 \
+		# 			| grep -m 1 -Po '"name": "\K.*?(?=")')" || { log::error "Failed to fetch latest version tag of $_repo_name" 1 || exit; }
+		# } fi
 		# }
-		_box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
+		# _box_dir="$_bashbox_registrydir/${_repo_name}-${_tag_name}";
 
 		# ~~Create~~ Export usemols.metas (INTERNAL-API)
 		if test "${EXPORT_USEMOL:-}" == "true"; then {
 			# echo "_usemol_${_repo_name}=${_box_dir}/src" >> "$USEMOLS_META_FILE";
-			export "_usemol_${_repo_name}=${_box_dir}/src";
-
+			export "_usemol_${_box_name}=${_box_dir}/src";
 		} fi
 
 		# Exit function if pre-existing
 		if test -e "$_box_dir"; then {
 			if [ "$_arg_force" == "off" ] && [ -e "$_box_dir/$_bashbox_meta_name" ]; then {
-				return 0;
+				continue;
 			} else {
 				rm -rf "$_box_dir";
 			} fi
@@ -110,14 +146,14 @@ function subcommand::install() {
 		
 		mkdir -p "$_box_dir";
 		
-		log::info "Downloading box $_repo_name $_tag_name";
-		curl --silent -L "${_repo_root_link}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
+		log::info "Downloading box $_box_name $_tag_name";
+		curl --silent -L "${_repo_url}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_box_dir" -xpzf -;
 
 		# Now resolve submodules if necessary
 		_gitmod_file="$_box_dir/.gitmodules";
 
 		if test -e "$_gitmod_file"; then {
-			log::info "Resolving submodules";
+			log::info "Resolving git submodules";
 
 			while read -r _line; do {
 				_line="${_line%%:*}";
@@ -130,7 +166,7 @@ function subcommand::install() {
 
 				_install_path="${_box_dir}/${_path}";
 
-				log::info "Downloading submodule: $_path";
+				log::info "Downloading git submodule: $_path";
 				# echo "Url: $_url";
 				# echo -e '---'
 				
@@ -140,7 +176,7 @@ function subcommand::install() {
 				# } fi
 				
 				# TODO: Instead of statically getting the main branch, get the default branch.
-				curl --silent -L "${_url}/archive/refs/heads/main.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -;
+				curl --silent -L "${_url}/archive/${_tag_name}.tar.gz" | tar --strip-components=1 -C "$_install_path" -xpzf -;
 
 			} done < <(grep -n 'path.*=' "$_gitmod_file")
 		} fi
@@ -148,7 +184,7 @@ function subcommand::install() {
 		# Check whether a library package or executable program
 		if test -e "$_box_dir/$_src_dir_name/main.sh"; then {
 			log::info "Compiling $_box in release mode";
-			subcommand::build --release "$_box_dir" 2>&1 \
+			(subcommand::build --release "$_box_dir" 2>&1) \
 				|| {
 					log::error "Errors were found while compiling $_box, operation failed" 1 || exit;
 				};
