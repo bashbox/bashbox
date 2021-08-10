@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%8020 () 
+main@bashbox%12055 () 
 { 
     function log::error () 
     { 
@@ -34,11 +34,11 @@ main@bashbox%8020 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%8020";
+    ___MAIN_FUNCNAME="main@bashbox%12055";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.2.6";
+    ___self_VERSION="0.2.7";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
     ___self_BASHBOX_COMPAT="0.2.6~";
@@ -869,17 +869,17 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                 fi;
                 _parsed_input="$_src/$_parsed_input"
             };
-            if test "$_arg_verbose" == "off"; then
+            if test "${_modname::1}" == "_" || grep -E '^\s+use' <<< "$_input" > /dev/null || ! grep "^${_parsed_input}.sh" "$_used_symbols_statfile" > /dev/null; then
                 { 
-                    echo -e "   ${BGREEN}Compiling${RC} $_modname"
-                };
-            else
-                { 
-                    echo -e "---------- $_modname"
-                };
-            fi;
-            if test "${_modname::1}" == "_" || ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile" > /dev/null; then
-                { 
+                    if test "$_arg_verbose" == "off"; then
+                        { 
+                            echo -e "   ${BGREEN}Compiling${RC} $_modname"
+                        };
+                    else
+                        { 
+                            echo -e "---------- $_modname"
+                        };
+                    fi;
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
                         { 
                             log::error "$_input is missing" 1 || exit
@@ -910,7 +910,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                             echo -e "${CYAN}File${RC}: ${_parsed_input}.sh"
                         };
                     fi;
-                    mapfile -t _use_symbols < <(grep -w -I -x -E '\s+use .*;$|^use .*;$' "${_parsed_input}.sh" | awk '{$1=$1;print}' || true);
+                    mapfile -t _use_symbols < <(grep -w -I -x -E '^\s+use .*;$|^use .*;$' "${_parsed_input}.sh" || true);
                     : ${_last_parsed_input:="${_parsed_input}"};
                     if test "$_arg_verbose" == "on"; then
                         { 
@@ -926,10 +926,14 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                         { 
                             io::file::check_newline "${_parsed_input}.sh";
                             bash -n "${_parsed_input}.sh";
-                            sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh"
+                            local _insert_stream _input_stream;
+                            _insert_stream=$(< "${_parsed_input}.sh");
+                            _input_stream=$(< "${_last_parsed_input}.sh");
+                            echo "${_input_stream/$_input/$_insert_stream}" > "${_last_parsed_input}.sh";
+                            unset _insert_stream _input_stream;
+                            echo "${_parsed_input}.sh" >> "$_used_symbols_statfile"
                         };
                     fi;
-                    echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
                     if test "$_arg_verbose" == "on"; then
                         { 
                             echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)"
@@ -982,7 +986,7 @@ EOF
                     };
                 fi
             };
-        done < <(cat "$_bashbox_meta") && unset _line;
+        done < "$_bashbox_meta" && unset _line;
         cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile";
         echo "main \"\$@\";" >> "$_target_workfile";
         rm "$_tmp_target_workfile";
@@ -995,6 +999,7 @@ EOF
             };
         fi;
         echo "${_main_funcname} \"\$@\";" >> "$_target_workfile";
+        sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";
         if declare -f bashbox_after_build | head -n0; then
             { 
                 bashbox_after_build
@@ -1782,4 +1787,4 @@ For bugreports: $___self_REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%8020 "$@";
+main@bashbox%12055 "$@";

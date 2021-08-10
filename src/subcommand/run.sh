@@ -155,7 +155,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
 		} done
 		unset BB_USE_ARGS;
 	}
-	use _clap;
+	use clap;
 
 	# Add some variables
 	cat << 'EOF' > "$_target_workfile"

@@ -32,7 +32,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 "
 
 	}
-	use _clap;
+	use clap;
 		
 	Resolve::Colons() {
 		 awk '{$1=$1;print}' <<<"$1" \
@@ -90,17 +90,18 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 			_parsed_input="$_src/$_parsed_input";
 		}
 
-		if test "$_arg_verbose" == "off"; then {
-			echo -e "   ${BGREEN}Compiling${RC} $_modname";
-		} else {
-			echo -e "---------- $_modname"; # DEBUG
-		} fi
 
 		# TODO: Detect whether a module is being isolated inside a function
 		# if yes then we reimport it on a future call from a different module instead of blindly ignoring it.
-		if test "${_modname::1}" == "_" \
-		|| ! grep "^${_parsed_input}.sh$" "$_used_symbols_statfile" 1>/dev/null; then {
+		if test "${_modname::1}" == "_" || grep -E '^\s+use' <<<"$_input" 1>/dev/null \
+		|| ! grep "^${_parsed_input}.sh" "$_used_symbols_statfile" 1>/dev/null; then {
 			
+				if test "$_arg_verbose" == "off"; then {
+					echo -e "   ${BGREEN}Compiling${RC} $_modname";
+				} else {
+					echo -e "---------- $_modname"; # DEBUG
+				} fi
+
 				# Handle missing symbols
 				# echo "Parsed_input: $_parsed_input"; # DEBUG
 				if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then {
@@ -122,7 +123,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 					_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
 				} fi
 
-
 				cd "$(dirname "$_parsed_input")";
 
 				if test "$_arg_verbose" == "on"; then {
@@ -130,8 +130,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 					echo -e "${CYAN}File${RC}: ${_parsed_input}.sh"; # DEBUG
 				} fi
 
-				mapfile -t _use_symbols < <(grep -w -I -x -E '\s+use .*;$|^use .*;$' "${_parsed_input}.sh" | awk '{$1=$1;print}' || true); # Grep might fail, which is why `|| true` is necessary
-
+				mapfile -t _use_symbols < <(grep -w -I -x -E '^\s+use .*;$|^use .*;$' "${_parsed_input}.sh" || true); # Grep might fail, which is why `|| true` is necessary
+				
 				# Cycle through main.sh symbols and so on.
 				# local _last_parsed_input;
 				: ${_last_parsed_input:="${_parsed_input}"};
@@ -144,6 +144,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 					(
 						_last_parsed_input="${_parsed_input}";
 						Resolve::UseSymbols "$_symbol";
+						
 					)
 				done
 			
@@ -152,11 +153,21 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
 				if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then {
 					io::file::check_newline "${_parsed_input}.sh";
 					bash -n "${_parsed_input}.sh"; # Check syntax
-					sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
+					local _insert_stream _input_stream;
+					_insert_stream=$(< "${_parsed_input}.sh");
+					_input_stream=$(< "${_last_parsed_input}.sh");
+					echo "${_input_stream/$_input/$_insert_stream}" > "${_last_parsed_input}.sh";
+					unset _insert_stream _input_stream;
+					# sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
 					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
 					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
+
+					# LOG symbol use
+					echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
 				} fi
-				echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
+				# if ! grep -E '\s+' <<<"$_input" 1>/dev/null; then {
+				# } fi
+
 				if test "$_arg_verbose" == "on"; then {
 					echo "$_parsed_input.sh ++ ${_last_parsed_input}.sh($_input)";
 				} fi
@@ -214,11 +225,12 @@ EOF
 		} else {
 			echo "$_line" >> "$_tmp_target_workfile";
 		} fi
-	} done < <(cat "$_bashbox_meta") && unset _line;
+	} done < "$_bashbox_meta" && unset _line;
 	cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
 	echo "main \"\$@\";" >> "$_target_workfile"; # Add execution point for porject main function
 	rm "$_tmp_target_workfile";
 	echo -e '}' >> "$_target_workfile"; # Add function closing bracket
+
 
 	if test "$_build_variant" == "release"; then {
 		source "$_target_workfile";
@@ -229,6 +241,9 @@ EOF
 	# Concat main execution call
 	echo "${_main_funcname} \"\$@\";" >> "$_target_workfile";
 
+	# Remove any unused `use` symbol calls
+	sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";
+	
 	# Run build.sh after actions
 	if declare -f bashbox_after_build | head -n0; then { # Will fail without pipefail
 		bashbox_after_build;
