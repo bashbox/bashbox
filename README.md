@@ -113,5 +113,5 @@ local _argv="${1:-}";
 
 local _name_var="${SOME_ENV_VARIABLE:-}";
 
-# We define a default value which is empty incase the variable was never defined just to make our program run. Later for safety all you should do is test whether your variable is empty or contains some data.
+# We declare a one-time default value which is empty incase the variable was never defined just to make our program run. Later for safety all you should do is test whether your variable is empty or contains some data.
 ```
