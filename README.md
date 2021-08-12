@@ -1,4 +1,4 @@
-ba## Introduction
+## Introduction
 
 Bashbox is a wannabe bash _compiler_ which aims to help create modular and maintainable bash projects.
 
