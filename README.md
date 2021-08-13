@@ -1,4 +1,4 @@
-ba## Introduction
+## Introduction
 
 Bashbox is a wannabe bash _compiler_ which aims to help create modular and maintainable bash projects.
 
@@ -14,7 +14,7 @@ Bashbox design is `cargo` inspired but _for the bash buddies_, so I hope that te
 
 Simply run the following command to install bashbox in your linux system:
 ```bash
-curl -L "https://git.io/Jc9bH" | bash -s -- selfinstall
+curl --proto '=https' --tlsv1.2 -sSfL "https://git.io/Jc9bH" | bash -s selfinstall
 ```
 
 Now you are all set for creating awesome bash projects with it:
@@ -113,5 +113,5 @@ local _argv="${1:-}";
 
 local _name_var="${SOME_ENV_VARIABLE:-}";
 
-# We define a default value which is empty incase the variable was never defined just to make our program run. Later for safety all you should do is test whether your variable is empty or contains some data.
+# We declare a one-time default value which is empty incase the variable was never defined just to make our program run. Later for safety all you should do is test whether your variable is empty or contains some data.
 ```
