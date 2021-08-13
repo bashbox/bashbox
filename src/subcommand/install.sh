@@ -182,7 +182,7 @@ function subcommand::install() {
 		} fi
 
 		# Check whether a library package or executable program
-		if test -e "$_box_dir/$_src_dir_name/main.sh"; then {
+		if test -e "$_box_dir/$_src_dir_name/main.sh" && test ! -v "EXPORT_USEMOL"; then {
 			log::info "Compiling $_box in release mode";
 			"$___self" build --release "$_box_dir" 2>&1 \
 				|| {
