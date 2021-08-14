@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
-main@bashbox%21349 () 
+main@bashbox%22130 () 
 { 
     function process::self::exit () 
     { 
         kill -USR1 "$___self_PID"
     };
+    function process::self::kill () 
+    { 
+        exec 2> /dev/null;
+        echo $xz12nfhakfjdjsnf
+    };
+    function process::self::forcekill () 
+    { 
+        exec 2> /dev/null;
+        kill -- -$___self_PID
+    };
     function log::error () 
     { 
         local _retcode="${2:-$?}";
+        if test -v HMM; then
+            return;
+        fi;
         local _exception_line="$1";
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
         echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
@@ -35,11 +48,11 @@ main@bashbox%21349 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%21349";
+    ___MAIN_FUNCNAME="main@bashbox%22130";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.3.3";
+    ___self_VERSION="0.3.4";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
     ___self_BASHBOX_COMPAT="0.3.3~";
@@ -49,9 +62,22 @@ main@bashbox%21349 ()
         { 
             kill -USR1 "$___self_PID"
         };
+        function process::self::kill () 
+        { 
+            exec 2> /dev/null;
+            echo $xz12nfhakfjdjsnf
+        };
+        function process::self::forcekill () 
+        { 
+            exec 2> /dev/null;
+            kill -- -$___self_PID
+        };
         function log::error () 
         { 
             local _retcode="${2:-$?}";
+            if test -v HMM; then
+                return;
+            fi;
             local _exception_line="$1";
             local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
             echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
@@ -946,7 +972,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                     fi;
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
                         { 
-                            log::error "$_input is missing" 1 || process::self::exit
+                            log::error "$_input is missing" 5 || process::self::forcekill
                         };
                     fi;
                     if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
@@ -1854,4 +1880,4 @@ For bugreports: $___self_REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%21349 "$@";
+main@bashbox%22130 "$@";

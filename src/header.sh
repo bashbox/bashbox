@@ -2,8 +2,33 @@ function bb_bootstrap_header() {
 	function process::self::exit() {
 		kill -USR1 "$___self_PID";
 	}
+	function process::self::kill() {
+		# r=$?
+		# exec 3>&2
+		exec 2>/dev/null
+		
+		# mapfile -t lol < /proc/$___self_PID/task/$___self_PID/children
+		# for _pid in "${lol[@]}"; do {
+			
+		# 	if test "$_pid" -ne "$___self_PID"; then {
+		# 		kill "$_pid";
+		# 	} fi
+		# } done
+		# # kill -- -$___self_PID
+		# #TODO: I have a weird idea, maybe we can recall
+		# trap "exit $r" ERR;
+		echo $xz12nfhakfjdjsnf;
+		# exit $r;
+	}
+
+	function process::self::forcekill() {
+		exec 2>/dev/null
+		kill -- -$___self_PID;
+	}
+
 	function log::error() {
 		local _retcode="${2:-$?}";
+		if test -v HMM; then return; fi
 		local _exception_line="$1";
 		local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
 
