@@ -1,42 +1,44 @@
 #!/usr/bin/env bash
-main@bashbox%22130 () 
+main@bashbox%28701 () 
 { 
     function process::self::exit () 
     { 
-        kill -USR1 "$___self_PID"
-    };
-    function process::self::kill () 
-    { 
-        exec 2> /dev/null;
-        echo $xz12nfhakfjdjsnf
+        local _r=$?;
+        kill -USR1 "$___self_PID";
+        exit $_r
     };
     function process::self::forcekill () 
     { 
         exec 2> /dev/null;
-        kill -- -$___self_PID
+        kill -9 "$___self_PID"
     };
     function log::error () 
     { 
         local _retcode="${2:-$?}";
-        if test -v HMM; then
-            return;
-        fi;
         local _exception_line="$1";
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-        echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
-        if test -v BB_ERR_MSG; then
+        if [[ ! "$_exception_line" == "("*")" ]]; then
             { 
-                echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
-                local -i _frame=0;
-                local _treestack='|--';
-                local _line _caller _source;
-                while read -r _line _caller _source < <(caller "$_frame"); do
+                echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
+                if test -v BB_ERR_MSG; then
                     { 
-                        echo "$_treestack ${_caller} >> ${_source##*/}::${_line}" 1>&2;
-                        _frame+=1;
-                        _treestack+='--'
+                        echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
+                        local -i _frame=0;
+                        local _treestack='|--';
+                        local _line _caller _source;
+                        while read -r _line _caller _source < <(caller "$_frame"); do
+                            { 
+                                echo "$_treestack ${_caller} >> ${_source##*/}::${_line}" 1>&2;
+                                _frame+=1;
+                                _treestack+='--'
+                            };
+                        done
                     };
-                done
+                fi
+            };
+        else
+            { 
+                echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: SUBSHELL EXITED WITH NON-ZERO STATUS" 1>&2
             };
         fi;
         return "$_retcode"
@@ -48,52 +50,54 @@ main@bashbox%22130 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%22130";
+    ___MAIN_FUNCNAME="main@bashbox%28701";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.3.4";
+    ___self_VERSION="0.3.5";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
-    ___self_BASHBOX_COMPAT="0.3.3~";
+    ___self_BASHBOX_COMPAT="0.3.5~";
     function bb_bootstrap_header () 
     { 
         function process::self::exit () 
         { 
-            kill -USR1 "$___self_PID"
-        };
-        function process::self::kill () 
-        { 
-            exec 2> /dev/null;
-            echo $xz12nfhakfjdjsnf
+            local _r=$?;
+            kill -USR1 "$___self_PID";
+            exit $_r
         };
         function process::self::forcekill () 
         { 
             exec 2> /dev/null;
-            kill -- -$___self_PID
+            kill -9 "$___self_PID"
         };
         function log::error () 
         { 
             local _retcode="${2:-$?}";
-            if test -v HMM; then
-                return;
-            fi;
             local _exception_line="$1";
             local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-            echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
-            if test -v BB_ERR_MSG; then
+            if [[ ! "$_exception_line" == "("*")" ]]; then
                 { 
-                    echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
-                    local -i _frame=0;
-                    local _treestack='|--';
-                    local _line _caller _source;
-                    while read -r _line _caller _source < <(caller "$_frame"); do
+                    echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
+                    if test -v BB_ERR_MSG; then
                         { 
-                            echo "$_treestack ${_caller} >> ${_source##*/}::${_line}" 1>&2;
-                            _frame+=1;
-                            _treestack+='--'
+                            echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
+                            local -i _frame=0;
+                            local _treestack='|--';
+                            local _line _caller _source;
+                            while read -r _line _caller _source < <(caller "$_frame"); do
+                                { 
+                                    echo "$_treestack ${_caller} >> ${_source##*/}::${_line}" 1>&2;
+                                    _frame+=1;
+                                    _treestack+='--'
+                                };
+                            done
                         };
-                    done
+                    fi
+                };
+            else
+                { 
+                    echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: SUBSHELL EXITED WITH NON-ZERO STATUS" 1>&2
                 };
             fi;
             return "$_retcode"
@@ -558,7 +562,7 @@ EOF
                     _box_dir="$_repo_source";
                     if test ! -e "$_box_dir"; then
                         { 
-                            log::error "$_box_dir does not exist" 1 || process::self::exit
+                            log::error "$_box_dir does not exist" 1 || exit
                         };
                     fi;
                     _arg_force=off;
@@ -580,7 +584,7 @@ EOF
                 else
                     if string::matches "$_repo_source" "[a-zA-Z0-9_]"; then
                         { 
-                            _repo_url="$(grep ".*/${_repo_source}$" "$_registry_meta_file")" || log::error "No such box as $_repo_source was found in the registry" 1 || process::self::exit;
+                            _repo_url="$(grep ".*/${_repo_source}$" "$_registry_meta_file")" || log::error "No such box as $_repo_source was found in the registry" 1 || exit;
                             _box_dir="$_bashbox_registrydir/${_repo_source}-${_tag_name}";
                             _box_name="${_repo_source##*/}"
                         };
@@ -645,7 +649,7 @@ EOF
                     { 
                         log::info "Compiling $_box in release mode";
                         "$___self" build --release "$_box_dir" 2>&1 || { 
-                            log::error "Errors were found while compiling $_box, operation failed" 1 || process::self::exit
+                            log::error "Errors were found while compiling $_box, operation failed" 1 || exit
                         };
                         source "$_box_dir/$_bashbox_meta_name";
                         _built_executable="$_box_dir/target/release/$CODENAME";
@@ -972,7 +976,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                     fi;
                     if test ! -e "${_parsed_input}.sh" && test ! -e "${_parsed_input}"; then
                         { 
-                            log::error "$_input is missing" 5 || process::self::forcekill
+                            log::error "$_input is missing" 5 || exit
                         };
                     fi;
                     if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
@@ -1880,4 +1884,4 @@ For bugreports: $___self_REPOSITORY"
     };
     main "$@"
 }
-main@bashbox%22130 "$@";
+main@bashbox%28701 "$@";

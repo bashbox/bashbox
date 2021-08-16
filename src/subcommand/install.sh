@@ -72,7 +72,7 @@ function subcommand::install() {
 		if string::matches "$_repo_source" '^file://.*'; then { # Local file path
 			_box_dir="$_repo_source";
 			if test ! -e "$_box_dir"; then {
-				log::error "$_box_dir does not exist" 1 || process::self::exit;
+				log::error "$_box_dir does not exist" 1 || exit;
 			} fi
 			_arg_force=off; # Ignore --force arg
 			_repo_url=;
@@ -88,7 +88,7 @@ function subcommand::install() {
 			_box_name="${_repo_name}";
 		} elif string::matches "$_repo_source" "[a-zA-Z0-9_]"; then { # Short repo name for registered hooks
 			_repo_url="$(grep ".*/${_repo_source}$" "$_registry_meta_file")" \
-			|| log::error "No such box as $_repo_source was found in the registry" 1 || process::self::exit;
+			|| log::error "No such box as $_repo_source was found in the registry" 1 || exit;
 			_box_dir="$_bashbox_registrydir/${_repo_source}-${_tag_name}";
 			_box_name="${_repo_source##*/}";
 		} fi
@@ -186,7 +186,7 @@ function subcommand::install() {
 			log::info "Compiling $_box in release mode";
 			"$___self" build --release "$_box_dir" 2>&1 \
 				|| {
-					log::error "Errors were found while compiling $_box, operation failed" 1 || process::self::exit;
+					log::error "Errors were found while compiling $_box, operation failed" 1 || exit;
 				};
 
 			source "$_box_dir/$_bashbox_meta_name";
