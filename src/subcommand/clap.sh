@@ -168,8 +168,8 @@ case "$FUNCNAME" in
 
 			# Check mandetory MIN version
 			if test -n "$MIN"; then {
-				if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) \
-				|| (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then {
+				if (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 == $2)}') )) \
+				|| (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 < $2)}') )); then {
 					true;
 				} else {
 					log::error "$CODENAME requires at least bashbox $MIN" 1 || exit;
@@ -180,8 +180,8 @@ case "$FUNCNAME" in
 
 			# Check optional MAX version
 			if test -n "$MAX"; then {
-				if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) \
-				|| (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then {
+				if (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 == $2)}') )) \
+				|| (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 > $2)}') )); then {
 					true;
 				} else {
 					log::error "$CODENAME supports bashbox upto $MAX" 1 || exit;

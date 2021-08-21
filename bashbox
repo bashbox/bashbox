@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%28354 () 
+main@bashbox%4995 () 
 { 
     function process::self::exit () 
     { 
@@ -50,11 +50,11 @@ main@bashbox%28354 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%28354";
+    ___MAIN_FUNCNAME="main@bashbox%4995";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.3.6";
+    ___self_VERSION="0.3.7";
     ___self_DEPENDENCIES=("std::0.1.5" "argbash::0.1.0");
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
     ___self_BASHBOX_COMPAT="0.3.6~";
@@ -856,7 +856,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                         read -r -d '\n' MIN MAX < <(echo -e "${VAR_REF//\~/\\n}") || true;
                         if test -n "$MIN"; then
                             { 
-                                if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then
+                                if (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 < $2)}') )); then
                                     { 
                                         true
                                     };
@@ -873,7 +873,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"st
                         fi;
                         if test -n "$MAX"; then
                             { 
-                                if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then
+                                if (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 > $2)}') )); then
                                     { 
                                         true
                                     };
@@ -1467,7 +1467,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                         read -r -d '\n' MIN MAX < <(echo -e "${VAR_REF//\~/\\n}") || true;
                         if test -n "$MIN"; then
                             { 
-                                if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then
+                                if (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 < $2)}') )); then
                                     { 
                                         true
                                     };
@@ -1484,7 +1484,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                         fi;
                         if test -n "$MAX"; then
                             { 
-                                if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then
+                                if (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 > $2)}') )); then
                                     { 
                                         true
                                     };
@@ -1771,7 +1771,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                         read -r -d '\n' MIN MAX < <(echo -e "${VAR_REF//\~/\\n}") || true;
                         if test -n "$MIN"; then
                             { 
-                                if (( $(echo "$MIN $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $VERSION" | awk '{print ($1 < $2)}') )); then
+                                if (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MIN $___self_VERSION" | awk '{print ($1 < $2)}') )); then
                                     { 
                                         true
                                     };
@@ -1788,7 +1788,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                         fi;
                         if test -n "$MAX"; then
                             { 
-                                if (( $(echo "$MAX $VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $VERSION" | awk '{print ($1 > $2)}') )); then
+                                if (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 == $2)}') )) || (( $(echo "$MAX $___self_VERSION" | awk '{print ($1 > $2)}') )); then
                                     { 
                                         true
                                     };
@@ -1885,4 +1885,4 @@ For bugreports: $___self_REPOSITORY"
     main "$@";
     exit
 }
-main@bashbox%28354 "$@";
+main@bashbox%4995 "$@";
