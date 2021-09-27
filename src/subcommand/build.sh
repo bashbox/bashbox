@@ -29,7 +29,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release${RC}
 ${YELLOW}${_self_name} ${_subcommand_argv} --release /home/me/awesome_project${RC}
 
 ### Pass arguments to the compiled executable and auto-run it after build
-${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"string arg\" and-so-on${RC}
+${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string arg\" and-so-on${RC}
 "
 
 	}
