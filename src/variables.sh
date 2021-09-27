@@ -10,7 +10,6 @@ readonly _bashbox_compat_var_name="BASHBOX_COMPAT";
 readonly SUBCOMMANDS_DESC=(
 	""
 	"Create a new bashbox project"
-	"Directly run a bashbox project"
 	"Compile a bashbox project"
 	"Cleanup target/ directories"
 	"Install a bashbox project from repo"
