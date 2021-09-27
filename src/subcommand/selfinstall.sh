@@ -52,7 +52,10 @@ function subcommand::selfinstall() {
 
 	local _target_full_path="$_target_install_dir/$___self_CODENAME";
 	rm -f "$_target_full_path"; # Necessary, in case its originating from a dead symlink
-	echo '#!/usr/bin/env bash' > "$_target_full_path";
+	local _shebang && {
+		_shebang='#!'"$(command -v env) bash";
+	}
+	echo "$_shebang" > "$_target_full_path";
 	declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
 	echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
 	chmod +x "$_target_full_path";
