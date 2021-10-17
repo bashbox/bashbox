@@ -20,7 +20,7 @@ function subcommand::selfinstall() {
 	## Add bashbox bindir to path
 	function check_shellrc_key() {
 		local _input_file="$1";
-		if grep "source.*\.bashbox/env" "$_input_file" 1>/dev/null; then {
+		if grep -q "source.*\.bashbox/env" "$_input_file" 2>/dev/null; then {
 			return 0
 		} else {
 			return 1
@@ -34,12 +34,13 @@ function subcommand::selfinstall() {
 	)
 	for _shellrc in "${_shellrcs[@]}"; do {
 
-		if test -e "$_shellrc" && ! check_shellrc_key "$_shellrc"; then {	
+		if ! check_shellrc_key "$_shellrc"; then {	
 			case "$_shellrc" in
 				"${_shellrcs[0]}" | "${_shellrcs[1]}" | "${_shellrcs[2]}") # bash, ksh, zsh
 					echo "source \"$_bashbox_posix_envfile\";" >> "$_shellrc";
 				;;
 				"${_shellrcs[3]}") # fish
+					mkdir -p "${_shellrc%/*}";
 					echo "source \"$_bashbox_fish_envfile\";" >> "$_shellrc";
 				;;
 			esac
