@@ -1,5 +1,5 @@
 #!/usr/sbin/env bash
-main@bashbox%8293 () 
+main@bashbox%31846 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%8293 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%8293";
+    ___MAIN_FUNCNAME="main@bashbox%31846";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -116,7 +116,7 @@ main@bashbox%8293 ()
     readonly _bashbox_posix_envfile="$_bashbox_home/env";
     readonly _bashbox_fish_envfile="$_bashbox_home/env.fish";
     readonly _bashbox_compat_var_name="BASHBOX_COMPAT";
-    readonly SUBCOMMANDS_DESC=("" "Create a new bashbox project" "Directly run a bashbox project" "Compile a bashbox project" "Cleanup target/ directories" "Install a bashbox project from repo" "Install bashbox into PATH");
+    readonly SUBCOMMANDS_DESC=("" "Create a new bashbox project" "Compile a bashbox project" "Cleanup target/ directories" "Install a bashbox project from repo" "Install bashbox into PATH");
     _var_exports=(_bashbox_registrydir);
     for _var in "${_var_exports[@]}";
     do
@@ -683,7 +683,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release${RC}
 ${YELLOW}${_self_name} ${_subcommand_argv} --release /home/me/awesome_project${RC}
 
 ### Pass arguments to the compiled executable and auto-run it after build
-${YELLOW}${_self_name} ${_subcommand_argv} --release --release -- arg1 arg2 \"string arg\" and-so-on${RC}
+${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string arg\" and-so-on${RC}
 "
         };
         _positionals=();
@@ -1584,7 +1584,10 @@ EOF
         log::info "Installing to $_target_install_dir";
         local _target_full_path="$_target_install_dir/$___self_CODENAME";
         rm -f "$_target_full_path";
-        echo '#!/usr/bin/env bash' > "$_target_full_path";
+        local _shebang && { 
+            _shebang='#!'"$(command -v env) bash"
+        };
+        echo "$_shebang" > "$_target_full_path";
         declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
         echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
         chmod +x "$_target_full_path";
@@ -1886,4 +1889,4 @@ For bugreports: $___self_REPOSITORY"
     main "$@";
     exit
 }
-main@bashbox%8293 "$@";
+main@bashbox%31846 "$@";
