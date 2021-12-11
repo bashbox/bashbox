@@ -1,5 +1,5 @@
-#!/usr/sbin/env bash
-main@bashbox%31846 () 
+#!/usr/bin/env bash
+main@bashbox%13319 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%31846 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%31846";
+    ___MAIN_FUNCNAME="main@bashbox%13319";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -1889,4 +1889,4 @@ For bugreports: $___self_REPOSITORY"
     main "$@";
     exit
 }
-main@bashbox%31846 "$@";
+main@bashbox%13319 "$@";

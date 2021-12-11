@@ -14,7 +14,7 @@ Bashbox design is `cargo` inspired but _for the bash buddies_, so I hope that te
 
 You can start developing on Gitpod right away! Just press the button below.
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#<your-project-url>)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/bashbox/bashbox)
 
 Or simply run the following command to install bashbox in your local system:
 ```bash
