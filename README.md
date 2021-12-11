@@ -12,7 +12,11 @@ Bashbox design is `cargo` inspired but _for the bash buddies_, so I hope that te
 
 ## Getting Started
 
-Simply run the following command to install bashbox in your linux system:
+You can start developing on Gitpod right away! Just press the button below.
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#<your-project-url>)
+
+Or simply run the following command to install bashbox in your local system:
 ```bash
 curl --proto '=https' --tlsv1.2 -sSfL "https://git.io/Jc9bH" | bash -s selfinstall
 ```
