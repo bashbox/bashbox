@@ -4,7 +4,7 @@ image:
 # List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
 tasks:
   - name: "Compile self" # runs during prebuild
-    init: "clear && bash bashbox build --release"
+    init: "bash bashbox build --release"
 
 vscode:
   extensions:
