@@ -4,7 +4,7 @@
 			"path": "."
 		},
 		{
-			"path": "../../../../../../home/axon/.bashbox/registry"
+			"path": "/home/gitpod/.bashbox/registry"
 		}
 	],
 	"settings": {

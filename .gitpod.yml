@@ -1,3 +1,4 @@
+
 image:
   file: .gitpod.Dockerfile
 
@@ -5,3 +6,9 @@ image:
 tasks:
   - name: "Compile self" # runs during prebuild
     init: "bash bashbox build --release"
+
+vscode:
+  extensions:
+    - timonwong.shellcheck
+    - mads-hartmann.bash-ide-vscode
+    - evgeniypeshkov.syntax-highlighter
