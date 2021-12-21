@@ -154,8 +154,14 @@ case "$FUNCNAME" in
 		io::file::check_newline "$_bashbox_meta";
 
 		# Merge old-new files
-		rsync -a --delete "$_src_dir/" "$_target_workdir";
-		echo > "$_used_symbols_statfile";
+		cp -r "$_src_dir/". "$_target_workdir/";
+		local _dest_file && while read -r _dest_file; do {
+			if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then {
+				rm -r "$_dest_file";
+			} fi
+		} done < <(find "$_target_workdir")
+		# rsync -a --delete "$_src_dir/" "$_target_workdir";
+		printf '' > "$_used_symbols_statfile";
 
 		# Load metadata
 		source "$_bashbox_meta";

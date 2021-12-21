@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%13319 () 
+main@bashbox%31683 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%13319 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%13319";
+    ___MAIN_FUNCNAME="main@bashbox%31683";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -846,8 +846,17 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                     };
                 done;
                 io::file::check_newline "$_bashbox_meta";
-                rsync -a --delete "$_src_dir/" "$_target_workdir";
-                echo > "$_used_symbols_statfile";
+                cp -r "$_src_dir/". "$_target_workdir/";
+                local _dest_file && while read -r _dest_file; do
+                    { 
+                        if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
+                            { 
+                                rm -r "$_dest_file"
+                            };
+                        fi
+                    };
+                done < <(find "$_target_workdir");
+                printf '' > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
                 if test -v "$_bashbox_compat_var_name"; then
                     { 
@@ -1457,8 +1466,17 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                     };
                 done;
                 io::file::check_newline "$_bashbox_meta";
-                rsync -a --delete "$_src_dir/" "$_target_workdir";
-                echo > "$_used_symbols_statfile";
+                cp -r "$_src_dir/". "$_target_workdir/";
+                local _dest_file && while read -r _dest_file; do
+                    { 
+                        if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
+                            { 
+                                rm -r "$_dest_file"
+                            };
+                        fi
+                    };
+                done < <(find "$_target_workdir");
+                printf '' > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
                 if test -v "$_bashbox_compat_var_name"; then
                     { 
@@ -1765,8 +1783,17 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     };
                 done;
                 io::file::check_newline "$_bashbox_meta";
-                rsync -a --delete "$_src_dir/" "$_target_workdir";
-                echo > "$_used_symbols_statfile";
+                cp -r "$_src_dir/". "$_target_workdir/";
+                local _dest_file && while read -r _dest_file; do
+                    { 
+                        if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
+                            { 
+                                rm -r "$_dest_file"
+                            };
+                        fi
+                    };
+                done < <(find "$_target_workdir");
+                printf '' > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
                 if test -v "$_bashbox_compat_var_name"; then
                     { 
@@ -1889,4 +1916,4 @@ For bugreports: $___self_REPOSITORY"
     main "$@";
     exit
 }
-main@bashbox%13319 "$@";
+main@bashbox%31683 "$@";
