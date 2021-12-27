@@ -177,12 +177,12 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 		} fi
 	}
 
-	# Source project build.sh
+	# Source project build.sh if available
 	if test -e "$_arg_path/build.sh"; then {
 		source "$_arg_path/build.sh";
-		if declare -f bashbox_before_build | head -n0; then { # Will fail without pipefail
-			bashbox_before_build;
-		} fi
+	} fi
+	if declare -f bashbox_before_build | head -n0; then { # Will fail without pipefail
+		bashbox_before_build;
 	} fi
 
 	### Main compile process

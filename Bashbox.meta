@@ -1,10 +1,19 @@
 NAME="BashBox"
 CODENAME="bashbox"
 AUTHORS=("AXON <axonasif@gmail.com>")
-VERSION="0.3.7"
+VERSION="0.3.8"
 DEPENDENCIES=(
-	"std::0.1.5"
-	"argbash::0.1.0"
+	std::0.1.5
+	argbash::0.1.0
 )
 REPOSITORY="https://github.com/axonasif/bashbox"
 BASHBOX_COMPAT="0.3.6~"
+
+bashbox_before_build() {
+	:;
+}
+
+bashbox_after_build() {
+	cp "$_target_workfile" "$_arg_path/$CODENAME";
+	chmod +x "$_arg_path/$CODENAME";
+}
