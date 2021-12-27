@@ -154,6 +154,7 @@ case "$FUNCNAME" in
 		io::file::check_newline "$_bashbox_meta";
 
 		# Merge old-new files
+		# TODO: Fails when specifying custom path. (i.e bashbox build some/dir --release)
 		cp -r "$_src_dir/". "$_target_workdir/";
 		local _dest_file && while read -r _dest_file; do {
 			if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then {
