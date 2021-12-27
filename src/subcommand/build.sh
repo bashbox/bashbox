@@ -34,7 +34,9 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 
 	}
 	use clap;
-		
+	
+	local _orig_PWD="$PWD";
+
 	Resolve::Colons() {
 		 awk '{$1=$1;print}' <<<"$1" \
 		 	| sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"; # Swap `::` with `/` and remove [`use `, `/*` `;`] keywords
@@ -271,6 +273,7 @@ EOF
 
 	# Run the executable if _arg_run is passed
 	if test "$_arg_run" == "on"; then {
+		cd "$_orig_PWD";
 		"$_target_workfile" "${_run_target_args[@]}";
 	} fi
 
