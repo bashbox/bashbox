@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%26303 () 
+main@bashbox%13607 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%26303 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%26303";
+    ___MAIN_FUNCNAME="main@bashbox%13607";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -860,11 +860,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                     { 
                         if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
                             { 
-                                rm -r "$_dest_file"
+                                rm -r "$_dest_file" || rm -rf "$_dest_file"
                             };
                         fi
                     };
-                done < <(find "$_target_workdir");
+                done < <(find "$_target_workdir" -type f; find "$_target_workdir" -type d -empty);
                 printf '' > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
                 if test -v "$_bashbox_compat_var_name"; then
@@ -1480,11 +1480,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                     { 
                         if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
                             { 
-                                rm -r "$_dest_file"
+                                rm -r "$_dest_file" || rm -rf "$_dest_file"
                             };
                         fi
                     };
-                done < <(find "$_target_workdir");
+                done < <(find "$_target_workdir" -type f; find "$_target_workdir" -type d -empty);
                 printf '' > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
                 if test -v "$_bashbox_compat_var_name"; then
@@ -1797,11 +1797,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     { 
                         if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
                             { 
-                                rm -r "$_dest_file"
+                                rm -r "$_dest_file" || rm -rf "$_dest_file"
                             };
                         fi
                     };
-                done < <(find "$_target_workdir");
+                done < <(find "$_target_workdir" -type f; find "$_target_workdir" -type d -empty);
                 printf '' > "$_used_symbols_statfile";
                 source "$_bashbox_meta";
                 if test -v "$_bashbox_compat_var_name"; then
@@ -1925,4 +1925,4 @@ For bugreports: $___self_REPOSITORY"
     main "$@";
     exit
 }
-main@bashbox%26303 "$@";
+main@bashbox%13607 "$@";

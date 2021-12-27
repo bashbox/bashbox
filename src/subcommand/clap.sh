@@ -154,13 +154,12 @@ case "$FUNCNAME" in
 		io::file::check_newline "$_bashbox_meta";
 
 		# Merge old-new files
-		# TODO: Fails when specifying custom path. (i.e bashbox build some/dir --release)
 		cp -r "$_src_dir/". "$_target_workdir/";
 		local _dest_file && while read -r _dest_file; do {
 			if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then {
-				rm -r "$_dest_file";
+				rm -r "$_dest_file" || rm -rf "$_dest_file";
 			} fi
-		} done < <(find "$_target_workdir")
+		} done < <(find "$_target_workdir" -type f; find "$_target_workdir" -type d -empty)
 		# rsync -a --delete "$_src_dir/" "$_target_workdir";
 		printf '' > "$_used_symbols_statfile";
 
