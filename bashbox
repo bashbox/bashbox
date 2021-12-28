@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%23553 () 
+main@bashbox%19647 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%23553 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%23553";
+    ___MAIN_FUNCNAME="main@bashbox%19647";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -1624,8 +1624,6 @@ EOF
     };
     function subcommand::clean () 
     { 
-        read -r bruh < <(false);
-        read;
         function print_help () 
         { 
             println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[4]}" --usage "${_self_name} $_subcommand_argv <path>" --examples "### The basic way:
@@ -1927,4 +1925,4 @@ For bugreports: $___self_REPOSITORY"
     main "$@";
     exit
 }
-main@bashbox%23553 "$@";
+main@bashbox%19647 "$@";

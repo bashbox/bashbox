@@ -1,10 +1,6 @@
 function subcommand::clean()
 {
 
-	read -r bruh < <(false);
-
-	read;
-	
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
