@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%13365 () 
+main@bashbox%21656 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%13365 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%13365";
+    ___MAIN_FUNCNAME="main@bashbox%21656";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -1136,7 +1136,7 @@ EOF
         if test "$_arg_run" == "on"; then
             { 
                 cd "$_orig_PWD";
-                "$_target_workfile" "${_run_target_args[@]}"
+                "$_target_workfile" "${_run_target_args[@]}" || log::warn "Target executable exited with error code $?"
             };
         fi
     };
@@ -1926,4 +1926,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%13365 "$@";
+main@bashbox%21656 "$@";

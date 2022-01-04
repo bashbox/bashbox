@@ -274,7 +274,7 @@ EOF
 	# Run the executable if _arg_run is passed
 	if test "$_arg_run" == "on"; then {
 		cd "$_orig_PWD";
-		"$_target_workfile" "${_run_target_args[@]}";
+		"$_target_workfile" "${_run_target_args[@]}" || log::warn "Target executable exited with error code $?";
 	} fi
 
 	# set -x
