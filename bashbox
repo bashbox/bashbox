@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%19647 () 
+main@bashbox%13365 () 
 { 
     function process::self::exit () 
     { 
@@ -50,14 +50,14 @@ main@bashbox%19647 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%19647";
+    ___MAIN_FUNCNAME="main@bashbox%13365";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.3.8";
+    ___self_VERSION="0.3.9";
     ___self_DEPENDENCIES=(std::0.1.5 argbash::0.1.0);
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
-    ___self_BASHBOX_COMPAT="0.3.6~";
+    ___self_BASHBOX_COMPAT="0.3.9~";
     function bashbox_before_build () 
     { 
         :
@@ -1101,7 +1101,7 @@ EOF
             };
         done < "$_bashbox_meta" && unset _line;
         cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile";
-        echo -e "main \"\$@\";\nexit;" >> "$_target_workfile";
+        printf '%s\n' "main \"\$@\";" "wait;" "exit;" >> "$_target_workfile";
         rm "$_tmp_target_workfile";
         echo -e '}' >> "$_target_workfile";
         if test "$_build_variant" == "release"; then
@@ -1923,6 +1923,7 @@ For bugreports: $___self_REPOSITORY"
         exit
     };
     main "$@";
+    wait;
     exit
 }
-main@bashbox%19647 "$@";
+main@bashbox%13365 "$@";

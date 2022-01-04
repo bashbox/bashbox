@@ -230,7 +230,7 @@ EOF
 		} fi
 	} done < "$_bashbox_meta" && unset _line;
 	cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
-	echo -e "main \"\$@\";\nexit;" >> "$_target_workfile"; # Add execution point for porject main function
+	printf '%s\n' "main \"\$@\";" "wait;" "exit;" >> "$_target_workfile"; # Add execution point for porject main function
 	rm "$_tmp_target_workfile";
 	echo -e '}' >> "$_target_workfile"; # Add function closing bracket
 
