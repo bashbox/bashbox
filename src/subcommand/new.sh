@@ -33,15 +33,7 @@ ${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>\
 ${YELLOW}${_self_name} ${_subcommand_argv} awesome_project${RC}
 
 ### Pre-setting project codename, avoiding directory-path as codename:
-${YELLOW}${_self_name} ${_subcommand_argv} --codename cake awesome_project${RC}
-
-### Using a specific template for project initialization(core is default):
-${YELLOW}${_self_name} ${_subcommand_argv} --template kernel awesome_project${RC}
-
-### Random usage EXAMPLES just for referrence:
-${YELLOW}${_self_name} ${_subcommand_argv} --template mesa graphics_lib
-${_self_name} ${_subcommand_argv} --template=kernel vanilla_kernel --codename vkernel
-${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}\
+${YELLOW}${_self_name} ${_subcommand_argv} --codename cake awesome_project${RC}\
 "
 
 	}
