@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%21656 () 
+main@bashbox%29881 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%21656 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%21656";
+    ___MAIN_FUNCNAME="main@bashbox%29881";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -344,15 +344,7 @@ main@bashbox%21656 ()
 ${YELLOW}${_self_name} ${_subcommand_argv} awesome_project${RC}
 
 ### Pre-setting project codename, avoiding directory-path as codename:
-${YELLOW}${_self_name} ${_subcommand_argv} --codename cake awesome_project${RC}
-
-### Using a specific template for project initialization(core is default):
-${YELLOW}${_self_name} ${_subcommand_argv} --template kernel awesome_project${RC}
-
-### Random usage EXAMPLES just for referrence:
-${YELLOW}${_self_name} ${_subcommand_argv} --template mesa graphics_lib
-${_self_name} ${_subcommand_argv} --template=kernel vanilla_kernel --codename vkernel
-${_self_name} ${_subcommand_argv} --codename=cakebaker foo/bakery${RC}"
+${YELLOW}${_self_name} ${_subcommand_argv} --codename cake awesome_project${RC}"
         };
         function parse_commandline () 
         { 
@@ -1142,7 +1134,8 @@ EOF
     };
     function subcommand::run () 
     { 
-        log::error "This command is temporarily unavailable, under a rewrite, use \`build --run\` for now" 1 || exit;
+        subcommand::build --run "$@";
+        return;
         function print_help () 
         { 
             println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[2]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "--release<^>Run in release mode
@@ -1926,4 +1919,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%21656 "$@";
+main@bashbox%29881 "$@";
