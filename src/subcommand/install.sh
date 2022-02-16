@@ -79,7 +79,8 @@ function subcommand::install() {
 			_box_name="${_box_dir##*/}";
 		} elif string::matches "$_repo_source" '^.*://.*'; then { # Custom git url
 			local _repo_user _repo_name;
-			_repo_url="$_repo_source";
+			_repo_source="${_repo_source%.git}";
+			_repo_url="${_repo_source}";
 			IFS='|' read -r _repo_user _repo_name < <(
 				_user="${_repo_source%/*}" && _user="${_user##*/}";
 				echo -e "${_user}|${_repo_source##*/}";
