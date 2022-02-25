@@ -63,6 +63,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 		} fi
 	}
 
+	perform_task() {
+		local _task="bashbox::$1";
+		if declare -f "$_task" | head -n0; then { # Will fail without pipefail
+			"$_task";
+		} fi
+	}
+
 	Resolve::UseSymbols() {
 		# TODO: Implement BASHBOX_LIB_PATH
 		# TODO: This is an absolute hell, needs a rewrite.
@@ -183,9 +190,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	if test -e "$_arg_path/build.sh"; then {
 		source "$_arg_path/build.sh";
 	} fi
-	if declare -f bashbox_before_build | head -n0; then { # Will fail without pipefail
-		bashbox_before_build;
-	} fi
+
+	perform_task "build::before";
 
 	### Main compile process
 	cd "$_target_workdir";
@@ -248,7 +254,9 @@ EOF
 	sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";
 	
 	# Run build.sh after actions
-	if declare -f bashbox_after_build | head -n0; then { # Will fail without pipefail
+	perform_task "build::after";
+	# Only keeping the below for backwards compatibility
+	if declare -f "bashbox_after_build" | head -n0; then { # Will fail without pipefail
 		bashbox_after_build;
 	} fi
 
@@ -273,8 +281,10 @@ EOF
 
 	# Run the executable if _arg_run is passed
 	if test "$_arg_run" == "on"; then {
+		perform_task "run::before";
 		cd "$_orig_PWD";
 		"$_target_workfile" "${_run_target_args[@]}" || log::warn "Target executable exited with error code $?";
+		perform_task "run::after";
 	} fi
 
 	# set -x

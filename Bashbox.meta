@@ -9,11 +9,7 @@ DEPENDENCIES=(
 REPOSITORY="https://github.com/axonasif/bashbox"
 BASHBOX_COMPAT="0.3.9~"
 
-bashbox_before_build() {
-	:;
-}
-
-bashbox_after_build() {
+bashbox::build::after() {
 	cp "$_target_workfile" "$_arg_path/$CODENAME";
 	chmod +x "$_arg_path/$CODENAME";
 }

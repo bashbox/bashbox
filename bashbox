@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%18184 () 
+main@bashbox%7686 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%18184 ()
     shopt -s inherit_errexit expand_aliases;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%18184";
+    ___MAIN_FUNCNAME="main@bashbox%7686";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -58,11 +58,7 @@ main@bashbox%18184 ()
     ___self_DEPENDENCIES=(https://github.com/bashbox/std.git argbash::0.1.0);
     ___self_REPOSITORY="https://github.com/axonasif/bashbox";
     ___self_BASHBOX_COMPAT="0.3.9~";
-    function bashbox_before_build () 
-    { 
-        :
-    };
-    function bashbox_after_build () 
+    function bashbox::build::after () 
     { 
         cp "$_target_workfile" "$_arg_path/$CODENAME";
         chmod +x "$_arg_path/$CODENAME"
@@ -941,6 +937,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                 };
             fi
         };
+        function perform_task () 
+        { 
+            local _task="bashbox::$1";
+            if declare -f "$_task" | head -n0; then
+                { 
+                    "$_task"
+                };
+            fi
+        };
         function Resolve::UseSymbols () 
         { 
             local _input="$1";
@@ -1053,11 +1058,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                 source "$_arg_path/build.sh"
             };
         fi;
-        if declare -f bashbox_before_build | head -n0; then
-            { 
-                bashbox_before_build
-            };
-        fi;
+        perform_task "build::before";
         cd "$_target_workdir";
         Resolve::UseSymbols "$_target_workdir/main";
         local _bb_bootstrap;
@@ -1106,7 +1107,8 @@ EOF
         fi;
         echo "${_main_funcname} \"\$@\";" >> "$_target_workfile";
         sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";
-        if declare -f bashbox_after_build | head -n0; then
+        perform_task "build::after";
+        if declare -f "bashbox_after_build" | head -n0; then
             { 
                 bashbox_after_build
             };
@@ -1128,8 +1130,10 @@ EOF
         fi;
         if test "$_arg_run" == "on"; then
             { 
+                perform_task "run::before";
                 cd "$_orig_PWD";
-                "$_target_workfile" "${_run_target_args[@]}" || log::warn "Target executable exited with error code $?"
+                "$_target_workfile" "${_run_target_args[@]}" || log::warn "Target executable exited with error code $?";
+                perform_task "run::after"
             };
         fi
     };
@@ -1920,4 +1924,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%18184 "$@";
+main@bashbox%7686 "$@";
