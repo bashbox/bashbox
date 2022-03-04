@@ -80,10 +80,6 @@ function bb_bootstrap_header() {
 	}
 
 	\command \unalias -a || exit; # To Make sure external aliases are not interfering.
-	trap 'exit' USR1; # A workaround to properly catch error status from process substitution.
-					  # Eg `while read -r _bruh; do echo bruh; done < <(false)`.
-					  # Also responds to `process::self::exit()`.
-	trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR;
 
 	# set -o pipefail; # To grab the last return code from a pipe.
 	# set -o errexit; # To exit immadiately after trapping ERR.
@@ -94,4 +90,9 @@ function bb_bootstrap_header() {
 	# shopt -s expand_aliases; # To enable alias bash-builtin usage without interactive mode.
 	set -eEuT -o pipefail;
     shopt -s inherit_errexit expand_aliases;
+	
+	trap 'exit' USR1; # A workaround to properly catch error status from process substitution.
+					  # Eg `while read -r _bruh; do echo bruh; done < <(false)`.
+					  # Also responds to `process::self::exit()`.
+	trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR;
 }
