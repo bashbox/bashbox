@@ -1,5 +1,7 @@
 # Bootstrap
 use header;
+# Unset self Bashbox.meta hooks
+unset -f bashbox::build::before bashbox::build::after bashbox::run::before bashbox::run::after;
 #####################
 ### Public functions
 #####################

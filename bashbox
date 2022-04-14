@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%6647 () 
+main@bashbox%15816 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%6647 ()
     trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%6647";
+    ___MAIN_FUNCNAME="main@bashbox%15816";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -113,6 +113,7 @@ main@bashbox%6647 ()
         trap 'exit' USR1;
         trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR
     };
+    unset -f bashbox::build::before bashbox::build::after bashbox::run::before bashbox::run::after;
     readonly _bashbox_meta_name="Bashbox.meta";
     readonly _src_dir_name="src";
     readonly _bashbox_home="${HOME:-"${0%/*}"}/.bashbox" && mkdir -p "$_bashbox_home";
@@ -1924,4 +1925,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%6647 "$@";
+main@bashbox%15816 "$@";
