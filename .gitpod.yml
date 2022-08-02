@@ -6,6 +6,9 @@ tasks:
       ./bashbox selfinstall
       source $HOME/.bashbox/env # This is not necessary for new terminals
 
+  - name: Show help
+    command: bashbox --help
+
 vscode:
   extensions:
     - timonwong.shellcheck
