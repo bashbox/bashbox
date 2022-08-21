@@ -65,7 +65,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 
 	perform_task() {
 		local _task="bashbox::$1";
-		if declare -f "$_task" | head -n0; then { # Will fail without pipefail
+		# if declare -f "$_task" | head -n0; then { # Will fail without pipefail
+		if declare -F "$_task" 1>/dev/null; then { # Will fail without pipefail
 			"$_task";
 		} fi
 	}
@@ -256,7 +257,7 @@ EOF
 	# Run build.sh after actions
 	perform_task "build::after";
 	# Only keeping the below for backwards compatibility
-	if declare -f "bashbox_after_build" | head -n0; then { # Will fail without pipefail
+	if declare -F "bashbox_after_build" 1>/dev/null; then { # Will fail without pipefail
 		bashbox_after_build;
 	} fi
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%29031 () 
+main@bashbox%5403 () 
 { 
     function process::self::exit () 
     { 
@@ -50,7 +50,7 @@ main@bashbox%29031 ()
     trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%29031";
+    ___MAIN_FUNCNAME="main@bashbox%5403";
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -941,7 +941,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         function perform_task () 
         { 
             local _task="bashbox::$1";
-            if declare -f "$_task" | head -n0; then
+            if declare -F "$_task" > /dev/null; then
                 { 
                     "$_task"
                 };
@@ -1109,7 +1109,7 @@ EOF
         echo "${_main_funcname} \"\$@\";" >> "$_target_workfile";
         sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";
         perform_task "build::after";
-        if declare -f "bashbox_after_build" | head -n0; then
+        if declare -F "bashbox_after_build" > /dev/null; then
             { 
                 bashbox_after_build
             };
@@ -1925,4 +1925,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%29031 "$@";
+main@bashbox%5403 "$@";
