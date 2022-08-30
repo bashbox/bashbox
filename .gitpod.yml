@@ -10,7 +10,8 @@ tasks:
     command: bashbox --help
 
 additionalRepositories:
-  - url: https://github.com/bashbox/std.git
+  - url: https://github.com/bashbox/std
+    checkoutLocation: std
 
 vscode:
   extensions:
