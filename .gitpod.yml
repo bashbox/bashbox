@@ -9,6 +9,9 @@ tasks:
   - name: Show help
     command: bashbox --help
 
+additionalRepositories:
+  - url: https://github.com/bashbox/std.git
+
 vscode:
   extensions:
     - timonwong.shellcheck

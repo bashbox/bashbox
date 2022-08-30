@@ -71,7 +71,7 @@ function main() {
 	# TODO: Needs review and improvement
 	for _arg in "${@}"; do {
 		# Doesnt contain `--`` and is a whole word with leading `-`
-		if test "$_arg" != "--" && grep -E '\-\w+' <<<"$_arg" 1>/dev/null; then {
+		if test "$_arg" != "--" && [[ "$_arg" =~ -[a-z]+ ]]; then {
 			case "$_arg" in
 				# --)
 				# 	break;
@@ -90,7 +90,7 @@ function main() {
 					exit 0;
 					;;
 				--help | -h*)
-					print_help && exit 0;
+					print_help; exit 0;
 					;;
 			esac
 			shift;
