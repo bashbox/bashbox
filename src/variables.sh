@@ -1,4 +1,4 @@
-readonly _bashbox_meta_name="Bashbox.meta";
+readonly _bashbox_meta_name="Bashbox.sh";
 # readonly _usemols_meta_name="Usemols.meta"
 readonly _src_dir_name="src";
 readonly _bashbox_home="${HOME:-"${0%/*}"}/.bashbox" && mkdir -p "$_bashbox_home";

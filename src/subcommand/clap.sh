@@ -66,8 +66,7 @@ parse_runargs()
 			shift;
 		} else {
 			shift; # Escapes the `--` itself.
-			_run_target_args=("$@");
-			readonly _run_target_args;
+			declare -r _run_target_args=("$@");
 			break;
 		} fi
 	} done
@@ -88,22 +87,20 @@ function gettop() {
     if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then {
         # The following circumlocution ensures we remove symlinks from TOP.
         (cd "$TOP"; echo "$PWD");
-    } else {
-        if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then {
+    } elif [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then {
             # The following circumlocution (repeated below as well) ensures
             # that we record the true directory name and not one that is
             # faked up with symlink names.
             echo "$PWD";
-		} else {
-            local HERE="$PWD";
-            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do {
-                \cd ..;
-                T="$(readlink -f "$PWD")";
-			} done
-            \cd "$HERE";
-            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then {
-                echo "$T";
-			} fi
+	} else {
+		local HERE="$PWD";
+		while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do {
+			cd ..;
+			T="$(readlink -f "$PWD")";
+		} done
+		cd "$HERE";
+		if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then {
+			echo "$T";
 		} fi
 	} fi
 }
@@ -127,7 +124,7 @@ readonly _target_debug_dir="$_target_dir/debug";
 readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
 readonly _target_release_dir="$_target_dir/release";
 
-case "$FUNCNAME" in
+case "${FUNCNAME[0]}" in
 
 	"subcommand::build" | "subcommand::run")
 
@@ -156,7 +153,7 @@ case "$FUNCNAME" in
 		# Merge old-new files
 		cp -r "$_src_dir/". "$_target_workdir/";
 		local _dest_file && while read -r _dest_file; do {
-			if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then {
+			if test ! -e "$_src_dir/${_dest_file##"$_target_workdir"}"; then {
 				rm -r "$_dest_file" || rm -rf "$_dest_file";
 			} fi
 		} done < <(find "$_target_workdir" -type f; find "$_target_workdir" -type d -empty)
