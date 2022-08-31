@@ -38,35 +38,33 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	local _orig_PWD="$PWD";
 
 	Resolve::Colons() {
-		 awk '{$1=$1;print}' <<<"$1" \
-		 	| sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"; # Swap `::` with `/` and remove [`use `, `/*` `;`] keywords
+		# Swap `::` with `/` and remove [`use `, `/*` `;`] keywords
+
+		#  awk '{$1=$1;print}' <<<"$1" \
+		#  	| sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||";
+		
+		local result="$1";
+		if [[ "$result" =~ (use\ )?([^[:space:]]+)\;$ ]]; then {
+			result="${BASH_REMATCH[2]//::/\/}";
+			result="${result//\/\*/}";
+		} fi
+		printf '%s\n' "$result";
 	}
 
 	Resolve::SymbolPath() {
 		local _input="$1";
-		local _parent;
-		_parent="$(
-			if grep "^use box::" <<<"$_input" 1>/dev/null; then
-				echo "$_src_dir";
-			else
-				echo "$PWD";
-			fi
-		)"
-		echo "$_parent/$(Resolve::Colons "$_input")"		
-	}
-
-	Resolve::IsMain() {
-		if test "$_target_workdir/main" == "$_input"; then {
-			true;
+		if [[ "$_input" =~ ^use\ box:: ]]; then {
+			: "$_src_dir";
 		} else {
-			false;
+			: "$PWD";
 		} fi
+		printf '%s\n' "$_/$(Resolve::Colons "$_input")"
 	}
 
 	perform_task() {
 		local _task="bashbox::$1";
 		# if declare -f "$_task" | head -n0; then { # Will fail without pipefail
-		if declare -F "$_task" 1>/dev/null; then { # Will fail without pipefail
+		if declare -F "$_task" 1>/dev/null; then {
 			"$_task";
 		} fi
 	}
@@ -75,19 +73,21 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 		# TODO: Implement BASHBOX_LIB_PATH
 		# TODO: This is an absolute hell, needs a rewrite.
 		local _input="$1";
-		if Resolve::IsMain; then {
+		if test "$_target_workdir/main" == "$_input"; then {
 			_input="main";
 		} fi
-		local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
+		local _parsed_input;
+		_parsed_input="$(Resolve::Colons "$_input")";
 		local _parsed_input_name="${_parsed_input##*/}" && {
 			local _modname="${_parsed_input_name}";
-			_parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
+			# _parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
+			_parsed_input="${_parsed_input/${_parsed_input_name}/${_parsed_input_name#_}}";
 			# _parsed_input="$(readlink -f "$_parsed_input")";
 			unset _parsed_input_name;
 		}
 		local _ref="_usemol_${_parsed_input%%/*}";
 		local _src && {
-			if grep 'use box::' <<<"$_input" 1>/dev/null; then {
+			if [[ "$_input" =~ use\ box:: ]]; then {
 				_src="$_target_workdir";	
 			} elif test -v "$_ref"; then {
 				_src="${!_ref}";
@@ -104,8 +104,8 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 
 		# TODO: Detect whether a module is being isolated inside a function
 		# if yes then we reimport it on a future call from a different module instead of blindly ignoring it.
-		if test "${_modname::1}" == "_" || grep -E '^\s+use' <<<"$_input" 1>/dev/null \
-		|| ! grep "^${_parsed_input}.sh" "$_used_symbols_statfile" 1>/dev/null; then {
+		if test "${_modname::1}" == "_" || [[ "$_input" =~ ^[[:space:]]+use ]] \
+		|| ! [[ "$(< "${_used_symbols_statfile}")" =~ "${_parsed_input}.sh" ]]; then {
 			
 				if test "$_arg_verbose" == "off"; then {
 					echo -e "   ${BGREEN}Compiling${RC} $_modname";
@@ -121,14 +121,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 				} fi
 
 				# Handle wildcard symbol loading
-				if grep '\*;$' <<<"$(awk '{$1=$1;print}' <<<"$_input")" 1>/dev/null; then {
+				if [[ "$_input" =~ \*\;$ ]]; then {
 					# if test -e "$_compiled_mod_bundle"; then {
 					# 	rm "$_compiled_mod_bundle";
 					# } fi
+					printf '\n' > "$_compiled_mod_bundle.sh";
 					for _modFile in "$_parsed_input/"*; do {
-						io::file::check_newline "$_modFile";
+						# io::file::check_newline "$_modFile";
+						printf '%s\n' "$(< "$modFile")" >> "$_compiled_mod_bundle";
 					} done
-					cat "$_parsed_input/"* > "$_compiled_mod_bundle.sh";
 					_parsed_input="$_compiled_mod_bundle";
 				} elif test ! -e "${_parsed_input}.sh" && test -d "$_parsed_input"; then { # Handle module directory if required
 					_parsed_input="$_parsed_input/mod"; # Redirect to the module file instead
@@ -142,7 +143,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 				} fi
 
 				mapfile -t _use_symbols < <(grep -w -I -x -E '^\s+use .*;$|^use .*;$' "${_parsed_input}.sh" || true); # Grep might fail, which is why `|| true` is necessary
-				
+
 				# Cycle through main.sh symbols and so on.
 				# local _last_parsed_input;
 				: ${_last_parsed_input:="${_parsed_input}"};
@@ -162,19 +163,19 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 				# Start merging process
 				# File names come in reversed order
 				if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then {
-					io::file::check_newline "${_parsed_input}.sh";
+					# io::file::check_newline "${_parsed_input}.sh";
 					bash -n "${_parsed_input}.sh"; # Check syntax
 					local _insert_stream _input_stream;
 					_insert_stream=$(< "${_parsed_input}.sh");
 					_input_stream=$(< "${_last_parsed_input}.sh");
-					echo "${_input_stream/$_input/$_insert_stream}" > "${_last_parsed_input}.sh";
+					printf '%s\n' "${_input_stream/$_input/$_insert_stream}" > "${_last_parsed_input}.sh";
 					unset _insert_stream _input_stream;
 					# sed -i -e "/$(sed 's|*|\\*|g' <<<${_input})/{r ${_parsed_input}.sh" -e 'd}' "${_last_parsed_input}.sh";
 					#		TARGET-TEXT		FILE-TO-INSERT		   	INPUT-FILE
 					# cat "${_parsed_input}.sh" >> "${_last_parsed_input}.sh";
 
 					# LOG symbol use
-					echo "${_parsed_input}.sh" >> "$_used_symbols_statfile";
+					printf '%s\n' "${_parsed_input}.sh" >> "$_used_symbols_statfile";
 				} fi
 				# if ! grep -E '\s+' <<<"$_input" 1>/dev/null; then {
 				# } fi
@@ -215,18 +216,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	}
 
 	## Initial header creation
-	echo "$_shebang" > "$_tmp_target_workfile"; # Place shebang
-	echo "function ${_main_funcname}() {" >> "$_tmp_target_workfile"; # Create main function
-	echo "${_bb_bootstrap}"	>> "$_tmp_target_workfile"; # Concat bootstrap
-	# declare -f 'log::error'	>> "$_tmp_target_workfile"; # Concat log::error # TODO: Needs review
-	
-	# Add API variables
-	# TODO: Add ___self_project_root
-	cat << EOF >> "$_tmp_target_workfile"
-___self="\$0";
-___self_PID="\$\$";
-___MAIN_FUNCNAME="$_main_funcname";
-EOF
+	printf '%s\n' "$_shebang" \
+					"function ${_main_funcname}() {" \
+		 			"${_bb_bootstrap}" \
+					'___self="$0";' \
+					'___self_PID="$$";' \
+					'___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";' \
+					"___MAIN_FUNCNAME='$_main_funcname';" > "$_tmp_target_workfile";
 
 	# Structure Bashbox.meta variables
 	while read -r _line; do {
@@ -237,19 +233,17 @@ EOF
 		} fi
 	} done < "$_bashbox_meta" && unset _line;
 	cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
-	printf '%s\n' "main \"\$@\";" "wait;" "exit;" >> "$_target_workfile"; # Add execution point for porject main function
+	printf '%s\n' 'main "$@";' 'wait;' 'exit;' '}' >> "$_target_workfile"; # Add execution point for main function
 	rm "$_tmp_target_workfile";
-	echo -e '}' >> "$_target_workfile"; # Add function closing bracket
-
 
 	if test "$_build_variant" == "release"; then {
 		source "$_target_workfile";
-		echo "$_shebang" > "$_target_workfile";
+		printf '%s\n' "$_shebang" > "$_target_workfile";
 		declare -f "$_main_funcname" >> "$_target_workfile";
 	} fi
 
 	# Concat main execution call
-	echo "${_main_funcname} \"\$@\";" >> "$_target_workfile";
+	printf '%s "$@";\n' "${_main_funcname}" >> "$_target_workfile";
 
 	# Remove any unused `use` symbol calls
 	sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";

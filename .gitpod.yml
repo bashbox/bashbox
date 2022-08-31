@@ -11,7 +11,7 @@ tasks:
 
 additionalRepositories:
   - url: https://github.com/bashbox/std
-    checkoutLocation: std
+  - url: https://github.com/bashbox/argbash
 
 vscode:
   extensions:

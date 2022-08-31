@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
-main@bashbox%29843 () 
+main@bashbox%10330 () 
 { 
+    if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
+        { 
+            printf 'error: %s\n' 'At least bash 4.3 is required to run this, please upgrade bash or use the correct interpreter' 1>&2;
+            exit 1
+        };
+    fi;
     function process::self::exit () 
     { 
         local _r=$?;
-        kill -USR1 "$___self_PID";
-        exit $_r
+        ( kill -USR1 "$___self_PID" 2> /dev/null ) & exit $_r
     };
     function process::self::forcekill () 
     { 
-        exec 2> /dev/null;
-        kill -9 "$___self_PID"
+        kill -9 "$___self_PID" 2> /dev/null
     };
     function log::error () 
     { 
         local _retcode="${2:-$?}";
         local _exception_line="$1";
         local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-        if [[ ! "$_exception_line" == "("*")" ]]; then
+        if [[ ! "$_exception_line" == \(*\) ]]; then
             { 
-                echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
+                printf '[!!!] \033[1;31m%s\033[0m[%s]: %s' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
                 if test -v BB_ERR_MSG; then
                     { 
                         echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
@@ -28,7 +32,7 @@ main@bashbox%29843 ()
                         local _line _caller _source;
                         while read -r _line _caller _source < <(caller "$_frame"); do
                             { 
-                                echo "$_treestack ${_caller} >> ${_source##*/}::${_line}" 1>&2;
+                                printf '%s >> %s\n' "$_treestack ${_caller}" "${_source##*/}::${_line}" 1>&2;
                                 _frame+=1;
                                 _treestack+='--'
                             };
@@ -38,25 +42,26 @@ main@bashbox%29843 ()
             };
         else
             { 
-                echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: SUBSHELL EXITED WITH NON-ZERO STATUS" 1>&2
+                printf '[!!!] \033[1;31m%s\033[0m[%s]: %s' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: SUBSHELL EXITED WITH NON-ZERO STATUS" 1>&2
             };
         fi;
         return "$_retcode"
     };
-    \command \unalias -a || exit;
+    \command unalias -a || exit;
     set -eEuT -o pipefail;
     shopt -s inherit_errexit expand_aliases;
     trap 'exit' USR1;
     trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR;
     ___self="$0";
     ___self_PID="$$";
-    ___MAIN_FUNCNAME="main@bashbox%29843";
+    ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
+    ___MAIN_FUNCNAME='main@bashbox%10330';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
     ___self_VERSION="0.3.9";
-    ___self_DEPENDENCIES=(https://github.com/bashbox/std.git argbash::0.1.0);
-    ___self_REPOSITORY="https://github.com/axonasif/bashbox";
+    ___self_DEPENDENCIES=(https://github.com/bashbox/std.git argbash::0.1.1);
+    ___self_REPOSITORY="https://github.com/bashbox/bashbox";
     ___self_BASHBOX_COMPAT="0.3.9~";
     function bashbox::build::after () 
     { 
@@ -65,25 +70,29 @@ main@bashbox%29843 ()
     };
     function bb_bootstrap_header () 
     { 
+        if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
+            { 
+                printf 'error: %s\n' 'At least bash 4.3 is required to run this, please upgrade bash or use the correct interpreter' 1>&2;
+                exit 1
+            };
+        fi;
         function process::self::exit () 
         { 
             local _r=$?;
-            kill -USR1 "$___self_PID";
-            exit $_r
+            ( kill -USR1 "$___self_PID" 2> /dev/null ) & exit $_r
         };
         function process::self::forcekill () 
         { 
-            exec 2> /dev/null;
-            kill -9 "$___self_PID"
+            kill -9 "$___self_PID" 2> /dev/null
         };
         function log::error () 
         { 
             local _retcode="${2:-$?}";
             local _exception_line="$1";
             local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
-            if [[ ! "$_exception_line" == "("*")" ]]; then
+            if [[ ! "$_exception_line" == \(*\) ]]; then
                 { 
-                    echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
+                    printf '[!!!] \033[1;31m%s\033[0m[%s]: %s' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: ${BB_ERR_MSG:-"$_exception_line"}" 1>&2;
                     if test -v BB_ERR_MSG; then
                         { 
                             echo -e "STACK TRACE: (TOKEN: $_exception_line)" 1>&2;
@@ -92,7 +101,7 @@ main@bashbox%29843 ()
                             local _line _caller _source;
                             while read -r _line _caller _source < <(caller "$_frame"); do
                                 { 
-                                    echo "$_treestack ${_caller} >> ${_source##*/}::${_line}" 1>&2;
+                                    printf '%s >> %s\n' "$_treestack ${_caller}" "${_source##*/}::${_line}" 1>&2;
                                     _frame+=1;
                                     _treestack+='--'
                                 };
@@ -102,19 +111,19 @@ main@bashbox%29843 ()
                 };
             else
                 { 
-                    echo -e "[!!!] \033[1;31merror\033[0m[$_retcode]: ${_source##*/}[$BASH_LINENO]: SUBSHELL EXITED WITH NON-ZERO STATUS" 1>&2
+                    printf '[!!!] \033[1;31m%s\033[0m[%s]: %s' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: SUBSHELL EXITED WITH NON-ZERO STATUS" 1>&2
                 };
             fi;
             return "$_retcode"
         };
-        \command \unalias -a || exit;
+        \command unalias -a || exit;
         set -eEuT -o pipefail;
         shopt -s inherit_errexit expand_aliases;
         trap 'exit' USR1;
         trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR
     };
     unset -f bashbox::build::before bashbox::build::after bashbox::run::before bashbox::run::after;
-    readonly _bashbox_meta_name="Bashbox.meta";
+    readonly _bashbox_meta_name="Bashbox.sh";
     readonly _src_dir_name="src";
     readonly _bashbox_home="${HOME:-"${0%/*}"}/.bashbox" && mkdir -p "$_bashbox_home";
     readonly _bashbox_registrydir="$_bashbox_home/registry" && mkdir -p "$_bashbox_registrydir";
@@ -754,8 +763,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                     else
                         { 
                             shift;
-                            _run_target_args=("$@");
-                            readonly _run_target_args;
+                            declare -r _run_target_args=("$@");
                             break
                         };
                     fi
@@ -777,29 +785,27 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                     echo "$PWD" )
                 };
             else
-                { 
-                    if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
-                        { 
-                            echo "$PWD"
-                        };
-                    else
-                        { 
-                            local HERE="$PWD";
-                            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
-                                { 
-                                    \cd ..;
-                                    T="$(readlink -f "$PWD")"
-                                };
-                            done;
-                            \cd "$HERE";
-                            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
-                                { 
-                                    echo "$T"
-                                };
-                            fi
-                        };
-                    fi
-                };
+                if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
+                    { 
+                        echo "$PWD"
+                    };
+                else
+                    { 
+                        local HERE="$PWD";
+                        while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
+                            { 
+                                cd ..;
+                                T="$(readlink -f "$PWD")"
+                            };
+                        done;
+                        cd "$HERE";
+                        if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
+                            { 
+                                echo "$T"
+                            };
+                        fi
+                    };
+                fi;
             fi
         };
         : "${_arg_path:="$PWD"}";
@@ -825,7 +831,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         readonly _target_debug_dir="$_target_dir/debug";
         readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
-        case "$FUNCNAME" in 
+        case "${FUNCNAME[0]}" in 
             "subcommand::build" | "subcommand::run")
                 _build_variant="$(
 			if test "$_arg_release" == "on"; then {
@@ -848,7 +854,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                 cp -r "$_src_dir/". "$_target_workdir/";
                 local _dest_file && while read -r _dest_file; do
                     { 
-                        if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
+                        if test ! -e "$_src_dir/${_dest_file##"$_target_workdir"}"; then
                             { 
                                 rm -r "$_dest_file" || rm -rf "$_dest_file"
                             };
@@ -911,32 +917,28 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         local _orig_PWD="$PWD";
         function Resolve::Colons () 
         { 
-            awk '{$1=$1;print}' <<< "$1" | sed "s|^use box::||; s|^use ||; s|;$||; s|::|/|g; s|/\*$||"
+            local result="$1";
+            if [[ "$result" =~ (use\ )?([^[:space:]]+)\;$ ]]; then
+                { 
+                    result="${BASH_REMATCH[2]//::/\/}";
+                    result="${result//\/\*/}"
+                };
+            fi;
+            printf '%s\n' "$result"
         };
         function Resolve::SymbolPath () 
         { 
             local _input="$1";
-            local _parent;
-            _parent="$(
-			if grep "^use box::" <<<"$_input" 1>/dev/null; then
-				echo "$_src_dir";
-			else
-				echo "$PWD";
-			fi
-		)";
-            echo "$_parent/$(Resolve::Colons "$_input")"
-        };
-        function Resolve::IsMain () 
-        { 
-            if test "$_target_workdir/main" == "$_input"; then
+            if [[ "$_input" =~ ^use\ box:: ]]; then
                 { 
-                    true
+                    : "$_src_dir"
                 };
             else
                 { 
-                    false
+                    : "$PWD"
                 };
-            fi
+            fi;
+            printf '%s\n' "$_/$(Resolve::Colons "$_input")"
         };
         function perform_task () 
         { 
@@ -950,20 +952,21 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         function Resolve::UseSymbols () 
         { 
             local _input="$1";
-            if Resolve::IsMain; then
+            if test "$_target_workdir/main" == "$_input"; then
                 { 
                     _input="main"
                 };
             fi;
-            local _parsed_input && _parsed_input="$(Resolve::Colons "$_input")";
+            local _parsed_input;
+            _parsed_input="$(Resolve::Colons "$_input")";
             local _parsed_input_name="${_parsed_input##*/}" && { 
                 local _modname="${_parsed_input_name}";
-                _parsed_input="$(sed "s|${_parsed_input_name}$|${_parsed_input_name#_}|" <<<"$_parsed_input")";
+                _parsed_input="${_parsed_input/${_parsed_input_name}/${_parsed_input_name#_}}";
                 unset _parsed_input_name
             };
             local _ref="_usemol_${_parsed_input%%/*}";
             local _src && { 
-                if grep 'use box::' <<< "$_input" > /dev/null; then
+                if [[ "$_input" =~ use\ box:: ]]; then
                     { 
                         _src="$_target_workdir"
                     };
@@ -981,7 +984,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                 fi;
                 _parsed_input="$_src/$_parsed_input"
             };
-            if test "${_modname::1}" == "_" || grep -E '^\s+use' <<< "$_input" > /dev/null || ! grep "^${_parsed_input}.sh" "$_used_symbols_statfile" > /dev/null; then
+            if test "${_modname::1}" == "_" || [[ "$_input" =~ ^[[:space:]]+use ]] || ! [[ "$(< "${_used_symbols_statfile}")" =~ "${_parsed_input}.sh" ]]; then
                 { 
                     if test "$_arg_verbose" == "off"; then
                         { 
@@ -997,15 +1000,15 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                             log::error "$_input is missing" 5 || exit
                         };
                     fi;
-                    if grep '\*;$' <<< "$(awk '{$1=$1;print}' <<<"$_input")" > /dev/null; then
+                    if [[ "$_input" =~ \*\;$ ]]; then
                         { 
+                            printf '\n' > "$_compiled_mod_bundle.sh";
                             for _modFile in "$_parsed_input/"*;
                             do
                                 { 
-                                    io::file::check_newline "$_modFile"
+                                    printf '%s\n' "$(< "$modFile")" >> "$_compiled_mod_bundle"
                                 };
                             done;
-                            cat "$_parsed_input/"* > "$_compiled_mod_bundle.sh";
                             _parsed_input="$_compiled_mod_bundle"
                         };
                     else
@@ -1036,14 +1039,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                     done;
                     if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then
                         { 
-                            io::file::check_newline "${_parsed_input}.sh";
                             bash -n "${_parsed_input}.sh";
                             local _insert_stream _input_stream;
                             _insert_stream=$(< "${_parsed_input}.sh");
                             _input_stream=$(< "${_last_parsed_input}.sh");
-                            echo "${_input_stream/$_input/$_insert_stream}" > "${_last_parsed_input}.sh";
+                            printf '%s\n' "${_input_stream/$_input/$_insert_stream}" > "${_last_parsed_input}.sh";
                             unset _insert_stream _input_stream;
-                            echo "${_parsed_input}.sh" >> "$_used_symbols_statfile"
+                            printf '%s\n' "${_parsed_input}.sh" >> "$_used_symbols_statfile"
                         };
                     fi;
                     if test "$_arg_verbose" == "on"; then
@@ -1073,15 +1075,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         local _shebang && { 
             _shebang='#!'"$(command -v env) bash"
         };
-        echo "$_shebang" > "$_tmp_target_workfile";
-        echo "function ${_main_funcname}() {" >> "$_tmp_target_workfile";
-        echo "${_bb_bootstrap}" >> "$_tmp_target_workfile";
-        cat <<EOF >> "$_tmp_target_workfile"
-___self="\$0";
-___self_PID="\$\$";
-___MAIN_FUNCNAME="$_main_funcname";
-EOF
-
+        printf '%s\n' "$_shebang" "function ${_main_funcname}() {" "${_bb_bootstrap}" '___self="$0";' '___self_PID="$$";' '___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";' "___MAIN_FUNCNAME='$_main_funcname';" > "$_tmp_target_workfile";
         while read -r _line; do
             { 
                 if [[ "$_line" =~ ^[A-Z].*= ]]; then
@@ -1096,17 +1090,16 @@ EOF
             };
         done < "$_bashbox_meta" && unset _line;
         cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile";
-        printf '%s\n' "main \"\$@\";" "wait;" "exit;" >> "$_target_workfile";
+        printf '%s\n' 'main "$@";' 'wait;' 'exit;' '}' >> "$_target_workfile";
         rm "$_tmp_target_workfile";
-        echo -e '}' >> "$_target_workfile";
         if test "$_build_variant" == "release"; then
             { 
                 source "$_target_workfile";
-                echo "$_shebang" > "$_target_workfile";
+                printf '%s\n' "$_shebang" > "$_target_workfile";
                 declare -f "$_main_funcname" >> "$_target_workfile"
             };
         fi;
-        echo "${_main_funcname} \"\$@\";" >> "$_target_workfile";
+        printf '%s "$@";\n' "${_main_funcname}" >> "$_target_workfile";
         sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";
         perform_task "build::after";
         if declare -F "bashbox_after_build" > /dev/null; then
@@ -1385,8 +1378,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                     else
                         { 
                             shift;
-                            _run_target_args=("$@");
-                            readonly _run_target_args;
+                            declare -r _run_target_args=("$@");
                             break
                         };
                     fi
@@ -1408,29 +1400,27 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                     echo "$PWD" )
                 };
             else
-                { 
-                    if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
-                        { 
-                            echo "$PWD"
-                        };
-                    else
-                        { 
-                            local HERE="$PWD";
-                            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
-                                { 
-                                    \cd ..;
-                                    T="$(readlink -f "$PWD")"
-                                };
-                            done;
-                            \cd "$HERE";
-                            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
-                                { 
-                                    echo "$T"
-                                };
-                            fi
-                        };
-                    fi
-                };
+                if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
+                    { 
+                        echo "$PWD"
+                    };
+                else
+                    { 
+                        local HERE="$PWD";
+                        while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
+                            { 
+                                cd ..;
+                                T="$(readlink -f "$PWD")"
+                            };
+                        done;
+                        cd "$HERE";
+                        if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
+                            { 
+                                echo "$T"
+                            };
+                        fi
+                    };
+                fi;
             fi
         };
         : "${_arg_path:="$PWD"}";
@@ -1456,7 +1446,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
         readonly _target_debug_dir="$_target_dir/debug";
         readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
-        case "$FUNCNAME" in 
+        case "${FUNCNAME[0]}" in 
             "subcommand::build" | "subcommand::run")
                 _build_variant="$(
 			if test "$_arg_release" == "on"; then {
@@ -1479,7 +1469,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release -- arg1 arg2 \"string arg\"
                 cp -r "$_src_dir/". "$_target_workdir/";
                 local _dest_file && while read -r _dest_file; do
                     { 
-                        if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
+                        if test ! -e "$_src_dir/${_dest_file##"$_target_workdir"}"; then
                             { 
                                 rm -r "$_dest_file" || rm -rf "$_dest_file"
                             };
@@ -1700,8 +1690,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     else
                         { 
                             shift;
-                            _run_target_args=("$@");
-                            readonly _run_target_args;
+                            declare -r _run_target_args=("$@");
                             break
                         };
                     fi
@@ -1723,29 +1712,27 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     echo "$PWD" )
                 };
             else
-                { 
-                    if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
-                        { 
-                            echo "$PWD"
-                        };
-                    else
-                        { 
-                            local HERE="$PWD";
-                            while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
-                                { 
-                                    \cd ..;
-                                    T="$(readlink -f "$PWD")"
-                                };
-                            done;
-                            \cd "$HERE";
-                            if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
-                                { 
-                                    echo "$T"
-                                };
-                            fi
-                        };
-                    fi
-                };
+                if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
+                    { 
+                        echo "$PWD"
+                    };
+                else
+                    { 
+                        local HERE="$PWD";
+                        while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
+                            { 
+                                cd ..;
+                                T="$(readlink -f "$PWD")"
+                            };
+                        done;
+                        cd "$HERE";
+                        if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then
+                            { 
+                                echo "$T"
+                            };
+                        fi
+                    };
+                fi;
             fi
         };
         : "${_arg_path:="$PWD"}";
@@ -1771,7 +1758,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
         readonly _target_debug_dir="$_target_dir/debug";
         readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
         readonly _target_release_dir="$_target_dir/release";
-        case "$FUNCNAME" in 
+        case "${FUNCNAME[0]}" in 
             "subcommand::build" | "subcommand::run")
                 _build_variant="$(
 			if test "$_arg_release" == "on"; then {
@@ -1794,7 +1781,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                 cp -r "$_src_dir/". "$_target_workdir/";
                 local _dest_file && while read -r _dest_file; do
                     { 
-                        if test ! -e "$_src_dir/${_dest_file##$_target_workdir}"; then
+                        if test ! -e "$_src_dir/${_dest_file##"$_target_workdir"}"; then
                             { 
                                 rm -r "$_dest_file" || rm -rf "$_dest_file"
                             };
@@ -1926,4 +1913,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%29843 "$@";
+main@bashbox%10330 "$@";
