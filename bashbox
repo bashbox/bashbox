@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%1343 () 
+main@bashbox%11088 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,7 +55,7 @@ main@bashbox%1343 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%1343';
+    ___MAIN_FUNCNAME='main@bashbox%11088';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -1421,7 +1421,7 @@ For bugreports: $___self_REPOSITORY"
                                 exit 0
                             ;;
                             -C)
-                                _arg_path="$2";
+                                cd "$2";
                                 shift
                             ;;
                         esac;
@@ -1445,7 +1445,6 @@ For bugreports: $___self_REPOSITORY"
                 source "$_bashbox_meta";
                 if declare -F "$_subcommand_argv" &> /dev/null; then
                     { 
-                        cd "$_arg_path";
                         "$_subcommand_argv" "$@" || log::error "$_subcommand_argv exited with errors" || :
                     };
                 else
@@ -1475,4 +1474,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%1343 "$@";
+main@bashbox%11088 "$@";
