@@ -15,6 +15,7 @@ use argbash::common;
 ### Private functions
 #####################
 use subcommand;
+use clap;
 
 function print_help() {
 
@@ -71,7 +72,7 @@ function main() {
 	# TODO: Needs review and improvement
 	for _arg in "${@}"; do {
 		# Doesnt contain `--`` and is a whole word with leading `-`
-		if test "$_arg" != "--" && [[ "$_arg" =~ -[a-z]+ ]]; then {
+		if test "$_arg" != "--" && [[ "$_arg" =~ (-|--)[a-z]+? ]]; then {
 			case "$_arg" in
 				# --)
 				# 	break;
@@ -91,6 +92,10 @@ function main() {
 					;;
 				--help | -h*)
 					print_help; exit 0;
+					;;
+				-C)
+					_arg_path="$2";
+					shift;
 					;;
 			esac
 			shift;
@@ -132,9 +137,25 @@ function main() {
 			subcommand::$_subcommand_argv "$@";
 			;;
 		*)
-			test -n "$_subcommand_argv" && log::warn "Unknown subcommand: $_subcommand_argv";
-			print_help;
-			test -n "$_subcommand_argv" && exit 1 || exit 0;
+			## Check for Bashbox.sh custom user functions
+			clap "$@";
+			source "$_bashbox_meta";
+
+			if declare -F "$_subcommand_argv" 1>/dev/null; then {
+				("$_subcommand_argv" "$@") || log::error "$_subcommand_argv exited with errors" || :;
+			} else {
+				if test -n "$_subcommand_argv"; then {
+					log::warn "Unknown subcommand: $_subcommand_argv";
+				} fi
+				print_help;
+
+				if test -n "$_subcommand_argv"; then {
+					exit 1;
+				} else {
+					exit 0;
+				} fi
+			} fi
+
 			;;
 	esac
 

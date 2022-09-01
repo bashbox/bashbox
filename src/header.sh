@@ -53,7 +53,7 @@ function bb_bootstrap_header() {
 		local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
 
 		if [[ ! "$_exception_line" == \(*\) ]]; then {
-			>&2 printf '[!!!] \033[1;31m%s\033[0m[%s]: %s' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: ${BB_ERR_MSG:-"$_exception_line"}";
+			>&2 printf '[!!!] \033[1;31m%s\033[0m[%s]: %s\n' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: ${BB_ERR_MSG:-"$_exception_line"}";
 
 			if test -v BB_ERR_MSG; then {
 					>&2 echo -e "STACK TRACE: (TOKEN: $_exception_line)";
@@ -70,13 +70,13 @@ function bb_bootstrap_header() {
 							# local -a _trace=( $_stack );
 							# echo "${_treestack} ${_trace[1]} @@ ${_trace[@]:2}::${_trace[0]}";
 						# fi
-						>&2 printf '%s >> %s\n' "$_treestack ${_caller}" "${_source##*/}::${_line}";
+						>&2 printf '%s >> %s\n' "$_treestack ${_caller}" "${_source##*/}:${_line}";
 						_frame+=1;
 						_treestack+='--';
 					} done
 			} fi
 		} else {
-			>&2 printf '[!!!] \033[1;31m%s\033[0m[%s]: %s' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: SUBSHELL EXITED WITH NON-ZERO STATUS";
+			>&2 printf '[!!!] \033[1;31m%s\033[0m[%s]: %s\n' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: SUBSHELL EXITED WITH NON-ZERO STATUS";
 		} fi
 
 

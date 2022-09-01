@@ -33,7 +33,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 "
 
 	}
-	use clap;
+	clap "$@";
 	
 	local _orig_PWD="$PWD";
 
@@ -157,14 +157,14 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 						_last_parsed_input="${_parsed_input}";
 						Resolve::UseSymbols "$_symbol";
 						
-					)
+					) || exit 1
 				done
 			
 				# Start merging process
 				# File names come in reversed order
 				if test "${_parsed_input}.sh" != "${_last_parsed_input}.sh"; then {
 					# io::file::check_newline "${_parsed_input}.sh";
-					bash -n "${_parsed_input}.sh"; # Check syntax
+					bash -n "${_parsed_input}.sh" || log::error "Syntax errors were found" || exit 1; # Check syntax
 					local _insert_stream _input_stream;
 					_insert_stream=$(< "${_parsed_input}.sh");
 					_input_stream=$(< "${_last_parsed_input}.sh");
@@ -227,9 +227,9 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	# Structure Bashbox.meta variables
 	while read -r _line; do {
 		if [[ "$_line" =~ ^[A-Z].*= ]]; then {
-			echo "___self_${_line}" >> "$_tmp_target_workfile";
+			printf '%s\n' "___self_${_line}" >> "$_tmp_target_workfile";
 		} else {
-			echo "$_line" >> "$_tmp_target_workfile";
+			printf '%s\n' "$_line" >> "$_tmp_target_workfile";
 		} fi
 	} done < "$_bashbox_meta" && unset _line;
 	cat "$_tmp_target_workfile" "$_target_workdir/main.sh" > "$_target_workfile"; # Merge main.sh with generated script
@@ -260,18 +260,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	
 	# Print success message
 	if test "$_arg_verbose" == "off"; then {
-		local _is_optimized;
-		_is_optimized=$(
-			if test "$_build_variant" == "release"; then {
-				echo "optimized"
-			} else {
-				echo "unoptimized + debuginfo"
-			} fi
-		);
+		case "$_build_variant" in
+			"release") : "optimized";;
+			*) : "unoptimized + debuginfo";;
+		esac
+		local _is_optimized="$_";
 
-		echo -e "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s"
-
-		unset _is_optimized;
+		echo -e "   ${BGREEN}Finished${RC} $_build_variant [${_is_optimized}] target(s) in ${SECONDS}s";
 	} fi
 
 	# Run the executable if _arg_run is passed
