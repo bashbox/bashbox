@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%18977 () 
+main@bashbox%16117 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,7 +55,7 @@ main@bashbox%18977 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%18977';
+    ___MAIN_FUNCNAME='main@bashbox%16117';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -1116,35 +1116,31 @@ EOF
     };
     function subcommand::selfinstall () 
     { 
-        local PATH="$_bashbox_bindir:$PATH";
-        local _path;
-        while read -r _path; do
+        local _path _paths;
+        local _target_install_dir;
+        IFS=':' read -ra _paths <<< "$PATH";
+        for _path in "${_paths[@]}";
+        do
             { 
                 if test -w "$_path"; then
                     { 
-                        local _target_install_dir="$_path";
+                        _target_install_dir="$_path";
                         break
                     };
                 fi
             };
-        done < <(echo -e "${PATH//:/\\n}");
+        done;
         if ! test -v _target_install_dir; then
             { 
-                log::error "Failed to retrieve a usable PATH directory" 1 || exit
+                log::warn "Failed to retrieve a writable existing PATH directory";
+                log::info "Falling back to $_bashbox_bindir";
+                _target_install_dir="$_bashbox_bindir" && local _self_created_path=true
             };
         fi;
         function check_shellrc_key () 
         { 
             local _input_file="$1";
-            if grep -q "source.*\.bashbox/env" "$_input_file" 2> /dev/null; then
-                { 
-                    return 0
-                };
-            else
-                { 
-                    return 1
-                };
-            fi
+            grep -q "source.*\.bashbox/env" "$_input_file" 2> /dev/null
         };
         local _shellrcs=("$HOME/.bashrc" "$HOME/.kshrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish");
         for _shellrc in "${_shellrcs[@]}";
@@ -1152,13 +1148,13 @@ EOF
             { 
                 if ! check_shellrc_key "$_shellrc"; then
                     { 
+                        mkdir -p "${_shellrc%/*}";
                         case "$_shellrc" in 
                             "${_shellrcs[0]}" | "${_shellrcs[1]}" | "${_shellrcs[2]}")
-                                echo "source \"$_bashbox_posix_envfile\";" >> "$_shellrc"
+                                printf 'source "%s";\n' "$_bashbox_posix_envfile" >> "$_shellrc"
                             ;;
                             "${_shellrcs[3]}")
-                                mkdir -p "${_shellrc%/*}";
-                                echo "source \"$_bashbox_fish_envfile\";" >> "$_shellrc"
+                                printf 'source "%s";\n' "$_bashbox_fish_envfile" >> "$_shellrc"
                             ;;
                         esac
                     };
@@ -1168,14 +1164,15 @@ EOF
         log::info "Installing to $_target_install_dir";
         local _target_full_path="$_target_install_dir/$___self_CODENAME";
         rm -f "$_target_full_path";
-        local _shebang && { 
-            _shebang='#!'"$(command -v env) bash"
-        };
-        echo "$_shebang" > "$_target_full_path";
-        declare -f "${___MAIN_FUNCNAME}" >> "$_target_full_path";
-        echo "${___MAIN_FUNCNAME} \"\$@\";" >> "$_target_full_path";
+        local _shebang && _shebang='#!'"$(command -v env) bash";
+        printf '%s\n' "$_shebang" "$(declare -f "${___MAIN_FUNCNAME}")" "${___MAIN_FUNCNAME}"' "$@";' > "$_target_full_path";
         chmod +x "$_target_full_path";
-        log::info "Installation complete, now restart your shell and run \`$___self_CODENAME --help\` to get started"
+        if test -v _self_created_path; then
+            { 
+                log::info "Restart your shell to update PATH env for bashbox"
+            };
+        fi;
+        log::info "Installation complete, run \`$___self_CODENAME --help\` to get started"
     };
     function subcommand::clean () 
     { 
@@ -1448,7 +1445,7 @@ For bugreports: $___self_REPOSITORY"
                 source "$_bashbox_meta";
                 if declare -F "$_subcommand_argv" &> /dev/null; then
                     { 
-                        ( "$_subcommand_argv" "$@" ) || log::error "$_subcommand_argv exited with errors" || :
+                        "$_subcommand_argv" "$@" || log::error "$_subcommand_argv exited with errors" || :
                     };
                 else
                     { 
@@ -1477,4 +1474,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%18977 "$@";
+main@bashbox%16117 "$@";

@@ -142,7 +142,7 @@ function main() {
 			source "$_bashbox_meta";
 
 			if declare -F "$_subcommand_argv" &>/dev/null; then {
-				("$_subcommand_argv" "$@") || log::error "$_subcommand_argv exited with errors" || :;
+				"$_subcommand_argv" "$@" || log::error "$_subcommand_argv exited with errors" || :;
 			} else {
 				if test -n "$_subcommand_argv"; then {
 					log::warn "Unknown subcommand: $_subcommand_argv";
