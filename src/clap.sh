@@ -148,7 +148,7 @@ function clap() {
 			} done
 
 			# Check newline on meta
-			# io::file::check_newline "$_bashbox_meta";
+			io::file::check_newline "$_bashbox_meta";
 
 			# Merge old-new files
 			cp -r "$_src_dir/". "$_target_workdir/";

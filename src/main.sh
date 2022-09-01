@@ -95,7 +95,7 @@ function main() {
 					;;
 				-C)
 					# _arg_path="$2";
-					cd "$2";
+					cd "$2" || log::error "$2 doesn't exist" || exit;
 					shift;
 					;;
 			esac
