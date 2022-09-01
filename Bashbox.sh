@@ -15,6 +15,6 @@ bashbox::build::after() {
 }
 
 # Try: bashbox pkgfun hello
-pkgfun() {
+pkgfun() (
 	echo "$@";
-}
+)
