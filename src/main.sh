@@ -141,7 +141,7 @@ function main() {
 			clap "$@";
 			source "$_bashbox_meta";
 
-			if declare -F "$_subcommand_argv" 1>/dev/null; then {
+			if declare -F "$_subcommand_argv" &>/dev/null; then {
 				("$_subcommand_argv" "$@") || log::error "$_subcommand_argv exited with errors" || :;
 			} else {
 				if test -n "$_subcommand_argv"; then {
