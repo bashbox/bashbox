@@ -9,6 +9,7 @@ tasks:
   - name: Show help
     command: bashbox --help
 
+workspaceLocation: bashbox/bashbox.code-workspace
 additionalRepositories:
   - url: https://github.com/bashbox/std
   - url: https://github.com/bashbox/argbash
