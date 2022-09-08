@@ -8,7 +8,7 @@ function bb_bootstrap_header() {
 
 	function process::self::exit() {
 		local _r=$?;
-		(kill -USR1 "$___self_PID" 2>/dev/null) & exit $_r; # In case exit fails for some reason, not efficient.
+		(kill -USR1 "$___self_PID" 2>/dev/null || :) & exit $_r; # In case exit fails for some reason, not efficient.
 		# read -rt 3 <> <(:) || :
 	}
 # 	function process::self::kill() {
