@@ -67,7 +67,9 @@ function subcommand::install() {
 		
 		## Parse hook metadata and declare stuff
 		IFS='|' read -r _repo_source _tag_name <<<"${_input//::/|}";
-		# || log::error "Lacking proper hook information for $_hook" 1 || exit; # It might fail
+		# Set defaults for _branch_name and _tag_name if empty
+		# : "${_branch_name:="main"}";
+		: "${_tag_name:="HEAD"}";
 
 		if string::matches "$_repo_source" '^file://.*'; then { # Local file path
 			_box_dir="$_repo_source";
@@ -116,10 +118,6 @@ function subcommand::install() {
 		local _box_name _box_dir _repo_url _tag_name;
 		IFS='|' read -r _box_name _box_dir _repo_url _tag_name <<<"$(box::parsemeta "$_box")";
 		
-		# Set defaults for _branch_name and _tag_name if empty
-		# : "${_branch_name:="main"}";
-		: "${_tag_name:="HEAD"}";
-
 
 		# if [ -z "$_tag_name" ]; then {
 		# 	_tag_name="$(curl --silent \
@@ -139,6 +137,9 @@ function subcommand::install() {
 		# Exit function if pre-existing
 		if test -e "$_box_dir"; then {
 			if [ "$_arg_force" == "off" ] && [ -e "$_box_dir/$_bashbox_meta_name" ]; then {
+				if test ! -v EXPORT_USEMOL; then {
+					log::warn "$_box_name already exists";
+				} fi
 				continue;
 			} else {
 				rm -rf "$_box_dir";
@@ -185,11 +186,9 @@ function subcommand::install() {
 		# Check whether a library package or executable program
 		if test -e "$_box_dir/$_src_dir_name/main.sh" && test ! -v "EXPORT_USEMOL"; then {
 			log::info "Compiling $_box in release mode";
-			"$___self" build --release "$_box_dir" 2>&1 \
-				|| {
-					log::error "Errors were found while compiling $_box, operation failed" 1 || exit;
-				};
-
+			(main -C "$_box_dir" build --release) || {
+				log::error "Errors were found while compiling $_box, operation failed" 1 || exit;
+			};
 			source "$_box_dir/$_bashbox_meta_name";
 			_built_executable="$_box_dir/target/release/$CODENAME";
 			_install_executable="$_bashbox_bindir/$CODENAME";

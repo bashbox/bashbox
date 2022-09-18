@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%2363 () 
+main@bashbox%8663 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,7 +55,7 @@ main@bashbox%2363 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%2363';
+    ___MAIN_FUNCNAME='main@bashbox%8663';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -568,6 +568,7 @@ EOF
             local _box_dir _box_name;
             local _repo_source _repo_url _tag_name;
             IFS='|' read -r _repo_source _tag_name <<< "${_input//::/|}";
+            : "${_tag_name:="HEAD"}";
             if string::matches "$_repo_source" '^file://.*'; then
                 { 
                     _box_dir="$_repo_source";
@@ -618,7 +619,6 @@ EOF
                 fi;
                 local _box_name _box_dir _repo_url _tag_name;
                 IFS='|' read -r _box_name _box_dir _repo_url _tag_name <<< "$(box::parsemeta "$_box")";
-                : "${_tag_name:="HEAD"}";
                 if test "${EXPORT_USEMOL:-}" == "true"; then
                     { 
                         export "_usemol_${_box_name}=${_box_dir}/src"
@@ -628,6 +628,11 @@ EOF
                     { 
                         if [ "$_arg_force" == "off" ] && [ -e "$_box_dir/$_bashbox_meta_name" ]; then
                             { 
+                                if test ! -v EXPORT_USEMOL; then
+                                    { 
+                                        log::warn "$_box_name already exists"
+                                    };
+                                fi;
                                 continue
                             };
                         else
@@ -660,7 +665,7 @@ EOF
                 if test -e "$_box_dir/$_src_dir_name/main.sh" && test ! -v "EXPORT_USEMOL"; then
                     { 
                         log::info "Compiling $_box in release mode";
-                        "$___self" build --release "$_box_dir" 2>&1 || { 
+                        ( main -C "$_box_dir" build --release ) || { 
                             log::error "Errors were found while compiling $_box, operation failed" 1 || exit
                         };
                         source "$_box_dir/$_bashbox_meta_name";
@@ -1401,7 +1406,7 @@ For bugreports: $___self_REPOSITORY"
         for _arg in "${@}";
         do
             { 
-                if test "$_arg" != "--" && [[ "$_arg" =~ -[a-zA-Z] ]]; then
+                if test "$_arg" != "--" && [[ "$_arg" =~ ^-[a-zA-Z] ]]; then
                     { 
                         case "$_arg" in 
                             --verbose | -v)
@@ -1475,4 +1480,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%2363 "$@";
+main@bashbox%8663 "$@";

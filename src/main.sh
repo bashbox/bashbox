@@ -72,7 +72,7 @@ function main() {
 	# TODO: Needs review and improvement
 	for _arg in "${@}"; do {
 		# Doesnt contain `--`` and is a whole word with leading `-`
-		if test "$_arg" != "--" && [[ "$_arg" =~ -[a-zA-Z] ]]; then {
+		if test "$_arg" != "--" && [[ "$_arg" =~ ^-[a-zA-Z] ]]; then {
 			case "$_arg" in
 				# --)
 				# 	break;
