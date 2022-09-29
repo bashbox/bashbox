@@ -93,7 +93,7 @@ function bb_bootstrap_header() {
 	# shopt -s inherit_errexit; # To TRAP process substitution error codes in parent. (Didnt work as I had thought...)
 	# shopt -s expand_aliases; # To enable alias bash-builtin usage without interactive mode.
 	set -eEuT -o pipefail;
-    shopt -s inherit_errexit expand_aliases;
+    shopt -sq inherit_errexit expand_aliases nullglob;
 	
 	trap 'exit' USR1; # A workaround to properly catch error status from process substitution.
 					  # Eg `while read -r _bruh; do echo bruh; done < <(false)`.

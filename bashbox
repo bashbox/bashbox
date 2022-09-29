@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%8663 () 
+main@bashbox%21975 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -49,13 +49,13 @@ main@bashbox%8663 ()
     };
     \command unalias -a || exit;
     set -eEuT -o pipefail;
-    shopt -s inherit_errexit expand_aliases;
+    shopt -sq inherit_errexit expand_aliases nullglob;
     trap 'exit' USR1;
     trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR;
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%8663';
+    ___MAIN_FUNCNAME='main@bashbox%21975';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -122,7 +122,7 @@ main@bashbox%8663 ()
         };
         \command unalias -a || exit;
         set -eEuT -o pipefail;
-        shopt -s inherit_errexit expand_aliases;
+        shopt -sq inherit_errexit expand_aliases nullglob;
         trap 'exit' USR1;
         trap 'BB_ERR_MSG="UNCAUGHT EXCEPTION" log::error "$BASH_COMMAND" || process::self::exit' ERR
     };
@@ -1480,4 +1480,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%8663 "$@";
+main@bashbox%21975 "$@";
