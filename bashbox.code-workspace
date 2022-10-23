@@ -1,7 +1,16 @@
 {
     "folders": [
-        { "path": "." },
-        { "path": "../std" },
-		{ "path": "../argbash" },
-    ]
+		{
+			"path": "."
+		},
+		{
+			"path": "../std"
+		},
+		{
+			"path": "../argbash"
+		},
+		{
+			"path": "../../home/gitpod/.bashbox/registry"
+		}
+	]
 }

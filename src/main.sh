@@ -11,6 +11,8 @@ use std::print::log;
 use std::print::helpgen;
 use std::term::colors;
 use std::io::file::check_newline;
+use std::async::lockfile;
+use std::native::sleep;
 use argbash::common;
 ### Private functions
 #####################
