@@ -96,7 +96,7 @@ function clap() {
 			local HERE="$PWD";
 			while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do {
 				cd ..;
-				T="$(readlink -f "$PWD")";
+				T="$(readlink "$PWD")";
 			} done
 			cd "$HERE";
 			if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then {
@@ -191,9 +191,7 @@ function clap() {
 			} fi
 
 			# Resolve dependencies
-			for _box in "${DEPENDENCIES[@]}"; do {
-				EXPORT_USEMOL="true" subcommand::install "$_box";
-			} done
+			EXPORT_USEMOL="true" subcommand::install "${DEPENDENCIES[@]}";
 
 			readonly _target_workfile="$_target_workdir/$CODENAME";
 			# readonly _usemols_meta="$_target_workdir/$_usemols_meta_name";

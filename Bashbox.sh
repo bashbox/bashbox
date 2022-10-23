@@ -3,7 +3,7 @@ CODENAME="bashbox"
 AUTHORS=("AXON <axonasif@gmail.com>")
 VERSION="0.4.0"
 DEPENDENCIES=(
-	https://github.com/bashbox/std.git
+	https://github.com/bashbox/std.git::62d14cb
 	argbash::0.1.1
 )
 REPOSITORY="https://github.com/bashbox/bashbox"

@@ -1,6 +1,8 @@
 function subcommand::build()
 {
 
+	lockfile "build";
+
 	print_help()
 	{
 		println::helpgen ${_self_name^^}-${_subcommand_argv^^} \
@@ -33,6 +35,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 "
 
 	}
+
 	clap "$@";
 	
 	local _orig_PWD="$PWD";
@@ -46,20 +49,22 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 		local result="$1";
 		if [[ "$result" =~ (use\ )?([^[:space:]]+)\;$ ]]; then {
 			result="${BASH_REMATCH[2]//::/\/}";
+			result="${result/box\//}";
 			result="${result//\/\*/}";
 		} fi
 		printf '%s\n' "$result";
 	}
 
-	Resolve::SymbolPath() {
-		local _input="$1";
-		if [[ "$_input" =~ ^use\ box:: ]]; then {
-			: "$_src_dir";
-		} else {
-			: "$PWD";
-		} fi
-		printf '%s\n' "$_/$(Resolve::Colons "$_input")"
-	}
+	# Resolve::SymbolPath() {
+	# 	local _input="$1";
+	# 	if [[ "$_input" =~ ^use\ box:: ]]; then {
+	# 		echo "$PWD" >/tmp/log
+	# 		: "${PWD%%/src*}/src";
+	# 	} else {
+	# 		: "$PWD";
+	# 	} fi
+	# 	printf '%s\n' "$_/$(Resolve::Colons "$_input")"
+	# }
 
 	perform_task() {
 		local _task="bashbox::$1";
@@ -73,9 +78,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 		# TODO: Implement BASHBOX_LIB_PATH
 		# TODO: This is an absolute hell, needs a rewrite.
 		local _input="$1";
-		if test "$_target_workdir/main" == "$_input"; then {
-			_input="main";
-		} fi
 		local _parsed_input;
 		_parsed_input="$(Resolve::Colons "$_input")";
 		local _parsed_input_name="${_parsed_input##*/}" && {
@@ -88,7 +90,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 		local _ref="_usemol_${_parsed_input%%/*}";
 		local _src && {
 			if [[ "$_input" =~ use\ box:: ]]; then {
-				_src="$_target_workdir";	
+				_src="${PWD%%/src*}/src";
 			} elif test -v "$_ref"; then {
 				_src="${!_ref}";
 				_parsed_input="${_parsed_input#*/}";
@@ -185,6 +187,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 				} fi
 				
 			
+		} else {
+			local _input_stream;
+			_input_stream=$(< "${_last_parsed_input}.sh");
+			printf '%s\n' "${_input_stream/$_input/}" > "${_last_parsed_input}.sh";
+			unset _input_stream;
 		} fi
 	}
 
@@ -197,7 +204,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 
 	### Main compile process
 	cd "$_target_workdir";
-	Resolve::UseSymbols "$_target_workdir/main";
+	Resolve::UseSymbols "main";
 
 
 	### After compile process

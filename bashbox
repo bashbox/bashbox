@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%21975 () 
+main@bashbox%11503 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,12 +55,12 @@ main@bashbox%21975 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%21975';
+    ___MAIN_FUNCNAME='main@bashbox%11503';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
     ___self_VERSION="0.4.0";
-    ___self_DEPENDENCIES=(https://github.com/bashbox/std.git argbash::0.1.1);
+    ___self_DEPENDENCIES=(https://github.com/bashbox/std.git::62d14cb argbash::0.1.1);
     ___self_REPOSITORY="https://github.com/bashbox/bashbox";
     ___self_BASHBOX_COMPAT="0.3.9~";
     function bashbox::build::after () 
@@ -336,6 +336,123 @@ main@bashbox%21975 ()
             };
         fi
     };
+    function get_temp::file () 
+    { 
+        if test -w /tmp; then
+            { 
+                printf '/tmp/%s\n' ".$$_$((RANDOM * RANDOM))"
+            };
+        else
+            if res="$(mktemp -u)"; then
+                { 
+                    printf '%s\n' "$res" && unset res
+                };
+            else
+                { 
+                    return 1
+                };
+            fi;
+        fi
+    };
+    function get_temp::dir () 
+    { 
+        if test -w /tmp; then
+            { 
+                printf '%s\n' '/tmp'
+            };
+        else
+            if res="$(mktemp -u)"; then
+                { 
+                    printf '%s\n' "${res%/*}" && unset res
+                };
+            else
+                { 
+                    return 1
+                };
+            fi;
+        fi
+    };
+    function trap::stack_name () 
+    { 
+        local sig=${1//[^a-zA-Z0-9]/_};
+        printf '__trap_stack_%s\n' "$sig"
+    };
+    function trap::extract () 
+    { 
+        printf '%s\n' "${3:-}"
+    };
+    function trap::get () 
+    { 
+        eval "trap::extract $(trap -p "$1")"
+    };
+    function trap::push () 
+    { 
+        local new_trap="$1" && shift;
+        local sig;
+        for sig in $*;
+        do
+            local stack_name="$(trap::stack_name "$sig")";
+            local old_trap=$(trap::get "$sig");
+            if test ! -v "$stack_name"; then
+                { 
+                    eval "${stack_name}=()"
+                };
+            fi;
+            eval "${stack_name}"'[${#'"${stack_name}"'[@]}]=${old_trap:-}';
+            trap "${new_trap}" "$sig";
+        done
+    };
+    function trap::append () 
+    { 
+        local new_trap="$1" && shift;
+        local sig;
+        for sig in $*;
+        do
+            if [[ -z "$(trap::get "$sig")" ]]; then
+                trap::push "$new_trap" "$sig";
+            else
+                trap::push "$(trap::get $sig) ; $new_trap" "$sig";
+            fi;
+        done
+    };
+    function lockfile () 
+    { 
+        local name="$1";
+        local lock_file;
+        lock_file="$(get_temp::dir)/.${name}.lock";
+        if test -e "$lock_file"; then
+            { 
+                log::info "Awaiting for another ${name} job to finish"
+            };
+        fi;
+        while { 
+            kill -0 "$(< "$lock_file")"
+        } 2> /dev/null; do
+            { 
+                sleep 0.5
+            };
+        done;
+        until ( set -o noclobber;
+        printf '%s\n' "$$" > "$lock_file" ) 2> /dev/null; do
+            { 
+                sleep 0.5
+            };
+        done;
+        trap::append "rm -f '$lock_file' 2>/dev/null" ${SIGNALS:-EXIT}
+    };
+    function sleep () 
+    { 
+        [[ -n "${_snore_fd:-}" ]] || { 
+            exec {_snore_fd}<> <(:)
+        } 2> /dev/null || { 
+            local fifo;
+            fifo=$(mktemp -u);
+            mkfifo -m 700 "$fifo";
+            exec {_snore_fd}<> "$fifo";
+            rm "$fifo"
+        };
+        IFS='' read ${1:+-t "$1"} -u $_snore_fd || :
+    };
     function begins_with_short_option () 
     { 
         local first_option all_short_options='h';
@@ -511,6 +628,7 @@ EOF
                 };
             fi
         };
+        lockfile "install";
         local _arg_force=off;
         local _arg_syncmeta=off;
         local _arg_eval;
@@ -686,6 +804,7 @@ EOF
     };
     function subcommand::build () 
     { 
+        lockfile "build";
         function print_help () 
         { 
             println::helpgen ${_self_name^^}-${_subcommand_argv^^} --short-desc "${SUBCOMMANDS_DESC[3]}" --usage "${_self_name} ${_subcommand_argv} [OPTIONAL-OPTIONS] <path>" --options-desc "--release<^>Build in release mode
@@ -711,24 +830,11 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
             if [[ "$result" =~ (use\ )?([^[:space:]]+)\;$ ]]; then
                 { 
                     result="${BASH_REMATCH[2]//::/\/}";
+                    result="${result/box\//}";
                     result="${result//\/\*/}"
                 };
             fi;
             printf '%s\n' "$result"
-        };
-        function Resolve::SymbolPath () 
-        { 
-            local _input="$1";
-            if [[ "$_input" =~ ^use\ box:: ]]; then
-                { 
-                    : "$_src_dir"
-                };
-            else
-                { 
-                    : "$PWD"
-                };
-            fi;
-            printf '%s\n' "$_/$(Resolve::Colons "$_input")"
         };
         function perform_task () 
         { 
@@ -742,11 +848,6 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         function Resolve::UseSymbols () 
         { 
             local _input="$1";
-            if test "$_target_workdir/main" == "$_input"; then
-                { 
-                    _input="main"
-                };
-            fi;
             local _parsed_input;
             _parsed_input="$(Resolve::Colons "$_input")";
             local _parsed_input_name="${_parsed_input##*/}" && { 
@@ -758,7 +859,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
             local _src && { 
                 if [[ "$_input" =~ use\ box:: ]]; then
                     { 
-                        _src="$_target_workdir"
+                        _src="${PWD%%/src*}/src"
                     };
                 else
                     if test -v "$_ref"; then
@@ -844,6 +945,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                         };
                     fi
                 };
+            else
+                { 
+                    local _input_stream;
+                    _input_stream=$(< "${_last_parsed_input}.sh");
+                    printf '%s\n' "${_input_stream/$_input/}" > "${_last_parsed_input}.sh";
+                    unset _input_stream
+                };
             fi
         };
         if test -e "$_arg_path/build.sh"; then
@@ -853,7 +961,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         fi;
         perform_task "build::before";
         cd "$_target_workdir";
-        Resolve::UseSymbols "$_target_workdir/main";
+        Resolve::UseSymbols "main";
         local _bb_bootstrap;
         _bb_bootstrap=$(declare -f bb_bootstrap_header) && { 
             _bb_bootstrap="${_bb_bootstrap#*{}";
@@ -1272,7 +1380,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                         while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
                             { 
                                 cd ..;
-                                T="$(readlink -f "$PWD")"
+                                T="$(readlink "$PWD")"
                             };
                         done;
                         cd "$HERE";
@@ -1374,12 +1482,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                         log::error "$_bashbox_compat_var_name metadata is missing in $_bashbox_meta_name" 1 || exit
                     };
                 fi;
-                for _box in "${DEPENDENCIES[@]}";
-                do
-                    { 
-                        EXPORT_USEMOL="true" subcommand::install "$_box"
-                    };
-                done;
+                EXPORT_USEMOL="true" subcommand::install "${DEPENDENCIES[@]}";
                 readonly _target_workfile="$_target_workdir/$CODENAME"
             ;;
         esac
@@ -1480,4 +1583,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%21975 "$@";
+main@bashbox%11503 "$@";

@@ -3,6 +3,8 @@ function subcommand::install() {
 	use std::string::matches;
 	# use install.clap;
 
+	lockfile "install";
+
 	local _arg_force=off;
 	local _arg_syncmeta=off;
 
