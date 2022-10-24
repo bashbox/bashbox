@@ -92,10 +92,16 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 			if [[ "$_input" =~ use\ box:: ]]; then {
 				_src="${PWD%%/src*}/src";
 			} elif test -v "$_ref"; then {
-				_src="${!_ref}";
-				_parsed_input="${_parsed_input#*/}";
-			# } elif grep 'use std::' <<<"$_input" 1>/dev/null; then {
-			# 	_src="$_bashbox_registrydir";
+				# Cache in local build registry
+				local _reg_mod_path="${!_ref}";
+				local _reg_mod_target="${_local_build_registrydir}/${_reg_mod_path##*/}";
+
+				if test ! -e "$_reg_mod_target"; then {
+					cp -r "$_reg_mod_path" "$_reg_mod_target";
+				} fi
+
+				_src="$_reg_mod_target/src";
+				_parsed_input="${_parsed_input#*/}"; # to pop the module name (e.g. 'std/')
 			} else {
 				_src="$PWD";
 			} fi

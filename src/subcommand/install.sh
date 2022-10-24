@@ -133,7 +133,7 @@ function subcommand::install() {
 		# ~~Create~~ Export usemols.metas (INTERNAL-API)
 		if test "${EXPORT_USEMOL:-}" == "true"; then {
 			# echo "_usemol_${_repo_name}=${_box_dir}/src" >> "$USEMOLS_META_FILE";
-			export "_usemol_${_box_name}=${_box_dir}/src";
+			export "_usemol_${_box_name}=${_box_dir}";
 		} fi
 
 		# Exit function if pre-existing

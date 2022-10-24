@@ -140,23 +140,34 @@ function clap() {
 			readonly _target_workdir="$_target_dir/$_build_variant";
 			readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
 			readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
+			readonly _local_build_registrydir="$_target_workdir/.registry";
 			
 			# TODO: Decide whether to keep ignoring already loaded modules.
 			# Start with creating the placeholder target dirs
-			for _dir in "$_target_debug_dir" "$_target_release_dir"; do {
-				mkdir -p "$_dir";
-			} done
+
+			local _dirs_to_create=(
+				"$_target_debug_dir"
+				"$_target_release_dir"
+				"$_local_build_registrydir"
+			)
+			
+			mkdir -p "${_dirs_to_create[@]}";
 
 			# Check newline on meta
 			io::file::check_newline "$_bashbox_meta";
 
 			# Merge old-new files
+			local _old_new_file_ignore=(
+				-not -path "${_local_build_registrydir}/*"
+			)
 			cp -r "$_src_dir/". "$_target_workdir/";
 			local _dest_file && while read -r _dest_file; do {
 				if test ! -e "$_src_dir/${_dest_file##"$_target_workdir"}"; then {
 					rm -r "$_dest_file" || rm -rf "$_dest_file";
 				} fi
-			} done < <(find "$_target_workdir" -type f -o -type d -empty)
+			} done < <(find "$_target_workdir" "${_old_new_file_ignore[@]}" -type f)
+			unset _old_new_file_ignore
+
 			# rsync -a --delete "$_src_dir/" "$_target_workdir";
 			printf '' > "$_used_symbols_statfile";
 
