@@ -1,4 +1,16 @@
 function subcommand::selfinstall() {
+
+	# Parse additional arguments in a fast way
+	local _arg_eval;
+	for _arg_eval in "no-modify-path"; do {
+		case "$@" in
+			*${_arg_eval}*)
+				eval "_arg_${_arg_eval//-/_}=on";
+			;;
+		esac
+	} done
+	unset _arg_eval;
+
 	# Locate a writable PATH
 	# local PATH="$_bashbox_bindir:$PATH"; # IDK
 	local _path _paths;
@@ -26,27 +38,31 @@ function subcommand::selfinstall() {
 		local _input_file="$1";
 		grep -q "source.*\.bashbox/env" "$_input_file" 2>/dev/null;
 	}
-	local _shellrcs=(
-		"$HOME/.bashrc" # bash
-		"$HOME/.kshrc" # ksh
-		"$HOME/.zshrc" # zsh
-		"$HOME/.config/fish/config.fish" # fish
-	)
-	for _shellrc in "${_shellrcs[@]}"; do {
+	if test ! -v _arg_no_modify_path; then {
 
-		if ! check_shellrc_key "$_shellrc"; then {	
-			mkdir -p "${_shellrc%/*}";
-			case "$_shellrc" in
-				"${_shellrcs[0]}" | "${_shellrcs[1]}" | "${_shellrcs[2]}") # bash, ksh, zsh
-					printf 'source "%s";\n' "$_bashbox_posix_envfile" >> "$_shellrc";
-				;;
-				"${_shellrcs[3]}") # fish
-					printf 'source "%s";\n' "$_bashbox_fish_envfile" >> "$_shellrc";
-				;;
-			esac
-		} fi
+		local _shellrcs=(
+			"$HOME/.bashrc" # bash
+			"$HOME/.kshrc" # ksh
+			"$HOME/.zshrc" # zsh
+			"$HOME/.config/fish/config.fish" # fish
+		)
+		for _shellrc in "${_shellrcs[@]}"; do {
 
-	} done
+			if ! check_shellrc_key "$_shellrc"; then {	
+				mkdir -p "${_shellrc%/*}";
+				case "$_shellrc" in
+					"${_shellrcs[0]}" | "${_shellrcs[1]}" | "${_shellrcs[2]}") # bash, ksh, zsh
+						printf 'source "%s";\n' "$_bashbox_posix_envfile" >> "$_shellrc";
+					;;
+					"${_shellrcs[3]}") # fish
+						printf 'source "%s";\n' "$_bashbox_fish_envfile" >> "$_shellrc";
+					;;
+				esac
+			} fi
+
+		} done
+		
+	} fi
 
 	log::info "Installing to $_target_install_dir";
 
