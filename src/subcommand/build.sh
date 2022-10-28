@@ -1,6 +1,5 @@
 function subcommand::build()
 {
-
 	lockfile "build";
 
 	print_help()

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%32507 () 
+main@bashbox%22279 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,12 +55,12 @@ main@bashbox%32507 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%32507';
+    ___MAIN_FUNCNAME='main@bashbox%22279';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
     ___self_VERSION="0.4.0";
-    ___self_DEPENDENCIES=(https://github.com/bashbox/std.git::62d14cb argbash::0.1.1);
+    ___self_DEPENDENCIES=(https://github.com/bashbox/std.git::ecc1121 argbash::0.1.1);
     ___self_REPOSITORY="https://github.com/bashbox/bashbox";
     ___self_BASHBOX_COMPAT="0.3.9~";
     function bashbox::build::after () 
@@ -422,18 +422,29 @@ main@bashbox%32507 ()
         lock_file="$(get_temp::dir)/.${name}.lock";
         if test -e "$lock_file"; then
             { 
+                if ! { 
+                    kill -0 "$(< "$lock_file")"
+                } 2> /dev/null; then
+                    { 
+                        rm "$lock_file" 2> /dev/null || :
+                    };
+                fi;
                 log::info "Awaiting for another ${name} job to finish"
             };
         fi;
-        while { 
-            kill -0 "$(< "$lock_file")"
-        } 2> /dev/null; do
+        for _ in {1..5};
+        do
             { 
-                sleep 0.5
+                while { 
+                    kill -0 "$(< "$lock_file")"
+                } 2> /dev/null; do
+                    { 
+                        sleep 0.5
+                    };
+                done
             };
         done;
-        until ( set -o noclobber;
-        printf '%s\n' "$$" > "$lock_file" ) 2> /dev/null; do
+        until ( set -o noclobber && printf '%s\n' "$$" > "$lock_file" ) 2> /dev/null; do
             { 
                 sleep 0.5
             };
@@ -1605,4 +1616,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%32507 "$@";
+main@bashbox%22279 "$@";
