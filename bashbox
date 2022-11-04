@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%32288 () 
+main@bashbox%27918 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,7 +55,7 @@ main@bashbox%32288 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%32288';
+    ___MAIN_FUNCNAME='main@bashbox%27918';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -988,9 +988,16 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         local _ran="$RANDOM";
         local _main_funcname="main@bashbox%${_ran}";
         local _tmp_target_workfile="$_target_workdir/.${NAME}.$_ran";
-        local _shebang && { 
-            _shebang='#!'"$(command -v env) bash"
-        };
+        if test -e /usr/bin/env; then
+            { 
+                : '#!/usr/bin/env bash'
+            };
+        else
+            { 
+                : '#!'"$(command -v env) bash"
+            };
+        fi;
+        local _shebang="$_";
         printf '%s\n' "$_shebang" "function ${_main_funcname}() {" "${_bb_bootstrap}" '___self="$0";' '___self_PID="$$";' '___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";' "___MAIN_FUNCNAME='$_main_funcname';" > "$_tmp_target_workfile";
         while read -r _line; do
             { 
@@ -1616,4 +1623,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%32288 "$@";
+main@bashbox%27918 "$@";

@@ -223,9 +223,13 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	local _ran="$RANDOM";
 	local _main_funcname="main@bashbox%${_ran}";
 	local _tmp_target_workfile="$_target_workdir/.${NAME}.$_ran";
-	local _shebang && {
-		_shebang='#!'"$(command -v env) bash";
-	}
+
+	if test -e /usr/bin/env; then {
+		: '#!/usr/bin/env bash';
+	} else {
+		: '#!'"$(command -v env) bash";
+	} fi
+	local _shebang="$_";
 
 	## Initial header creation
 	printf '%s\n' "$_shebang" \
