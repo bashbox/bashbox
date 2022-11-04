@@ -71,14 +71,10 @@ function main() {
 
 	# Assign optional parent arguments
 	# Drop/escape optional parent arguments
-	# TODO: Needs review and improvement
 	for _arg in "${@}"; do {
 		# Doesnt contain `--`` and is a whole word with leading `-`
-		if test "$_arg" != "--" && [[ "$_arg" =~ ^-[a-zA-Z] ]]; then {
+		if test "$_arg" != "--" && [[ "$_arg" == -* ]]; then {
 			case "$_arg" in
-				# --)
-				# 	break;
-				# 	;;
 				--verbose | -v)
 					_arg_verbose=on;
 					;;
@@ -97,7 +93,7 @@ function main() {
 					;;
 				-C)
 					# _arg_path="$2";
-					cd "$2" || log::error "$2 doesn't exist" || exit;
+					cd "$2" || { log::error "$2 doesn't exist" || exit; };
 					shift;
 					;;
 			esac

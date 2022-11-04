@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%27918 () 
+main@bashbox%16111 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,7 +55,7 @@ main@bashbox%27918 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%27918';
+    ___MAIN_FUNCNAME='main@bashbox%16111';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -1549,7 +1549,7 @@ For bugreports: $___self_REPOSITORY"
         for _arg in "${@}";
         do
             { 
-                if test "$_arg" != "--" && [[ "$_arg" =~ ^-[a-zA-Z] ]]; then
+                if test "$_arg" != "--" && [[ "$_arg" == -* ]]; then
                     { 
                         case "$_arg" in 
                             --verbose | -v)
@@ -1570,7 +1570,9 @@ For bugreports: $___self_REPOSITORY"
                                 exit 0
                             ;;
                             -C)
-                                cd "$2" || log::error "$2 doesn't exist" || exit;
+                                cd "$2" || { 
+                                    log::error "$2 doesn't exist" || exit
+                                };
                                 shift
                             ;;
                         esac;
@@ -1623,4 +1625,5 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%27918 "$@";
+
+main@bashbox%16111 "$@";
