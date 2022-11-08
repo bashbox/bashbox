@@ -48,7 +48,7 @@ function subcommand::install() {
 				local _local_sha _remote_sha;
 				_local_sha="$(< "$_registry_lastsync_file")";
 				_remote_sha="$(curl --silent "${_github_api_root}/repos/${_user_repo}/contents/${_check_file}?ref=${_branch}" \
-								| head -n4 | grep -I '"sha":' | sed -E 's/.*"([^"]+)".*/\1/')";
+								| head -n4 | grep -I '"sha":' | sed -E 's/.*"([^"]+)".*/\1/')" || return 0;
 				readonly _local_sha _remote_sha;
 				
 				if test "$_arg_syncmeta" == "on" || test "$_local_sha" != "$_remote_sha"; then {

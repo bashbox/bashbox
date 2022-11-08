@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%16111 () 
+main@bashbox%4792 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,7 +55,7 @@ main@bashbox%16111 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%16111';
+    ___MAIN_FUNCNAME='main@bashbox%4792';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -677,7 +677,7 @@ EOF
                             log::info "Syncing repository metadata";
                             local _local_sha _remote_sha;
                             _local_sha="$(< "$_registry_lastsync_file")";
-                            _remote_sha="$(curl --silent "${_github_api_root}/repos/${_user_repo}/contents/${_check_file}?ref=${_branch}" 								| head -n4 | grep -I '"sha":' | sed -E 's/.*"([^"]+)".*/\1/')";
+                            _remote_sha="$(curl --silent "${_github_api_root}/repos/${_user_repo}/contents/${_check_file}?ref=${_branch}" 								| head -n4 | grep -I '"sha":' | sed -E 's/.*"([^"]+)".*/\1/')" || return 0;
                             readonly _local_sha _remote_sha;
                             if test "$_arg_syncmeta" == "on" || test "$_local_sha" != "$_remote_sha"; then
                                 { 
@@ -1625,5 +1625,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-
-main@bashbox%16111 "$@";
+main@bashbox%4792 "$@";
