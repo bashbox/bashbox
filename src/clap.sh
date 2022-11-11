@@ -124,24 +124,23 @@ function clap() {
 	readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
 	readonly _target_release_dir="$_target_dir/release";
 
+  # Detect the build variant
+  _build_variant="$(
+    if test "$_arg_release" == "on"; then {
+      echo "${_target_release_dir##*/}";
+    } else {
+      echo "${_target_debug_dir##*/}";
+    } fi
+  )"; # TODO: Need to add more cases depending on args.
+  readonly _build_variant;
+  readonly _target_workdir="$_target_dir/$_build_variant";
+  readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
+  readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
+  readonly _local_build_registrydir="$_target_workdir/.registry";
+
 	case "${FUNCNAME[1]}" in
 
 		"subcommand::build" | "subcommand::run")
-
-			# Detect the build variant
-			_build_variant="$(
-				if test "$_arg_release" == "on"; then {
-					echo "${_target_release_dir##*/}";
-				} else {
-					echo "${_target_debug_dir##*/}";
-				} fi
-			)"; # TODO: Need to add more cases depending on args.
-			readonly _build_variant;
-			readonly _target_workdir="$_target_dir/$_build_variant";
-			readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
-			readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
-			readonly _local_build_registrydir="$_target_workdir/.registry";
-			
 			# TODO: Decide whether to keep ignoring already loaded modules.
 			# Start with creating the placeholder target dirs
 
