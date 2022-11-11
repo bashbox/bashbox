@@ -66,7 +66,7 @@ function clap() {
 				shift;
 			} else {
 				shift; # Escapes the `--` itself.
-				declare -r _run_target_args=("$@");
+				_run_target_args=("$@");
 				break;
 			} fi
 		} done
@@ -117,30 +117,29 @@ function clap() {
 		} fi
 	} fi
 
-	readonly _arg_path;
-	readonly _src_dir="$_arg_path/$_src_dir_name";
-	readonly _target_dir="$_arg_path/target";
-	readonly _target_debug_dir="$_target_dir/debug";
-	readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
-	readonly _target_release_dir="$_target_dir/release";
-
-  # Detect the build variant
-  _build_variant="$(
-    if test "$_arg_release" == "on"; then {
-      echo "${_target_release_dir##*/}";
-    } else {
-      echo "${_target_debug_dir##*/}";
-    } fi
-  )"; # TODO: Need to add more cases depending on args.
-  readonly _build_variant;
-  readonly _target_workdir="$_target_dir/$_build_variant";
-  readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
-  readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
-  readonly _local_build_registrydir="$_target_workdir/.registry";
+	_src_dir="$_arg_path/$_src_dir_name";
+	_target_dir="$_arg_path/target";
+	_target_debug_dir="$_target_dir/debug";
+	_bashbox_meta="$_arg_path/$_bashbox_meta_name";
+	_target_release_dir="$_target_dir/release";
 
 	case "${FUNCNAME[1]}" in
 
 		"subcommand::build" | "subcommand::run")
+
+			# Detect the build variant
+			_build_variant="$(
+				if test "$_arg_release" == "on"; then {
+					echo "${_target_release_dir##*/}";
+				} else {
+					echo "${_target_debug_dir##*/}";
+				} fi
+			)"; # TODO: Need to add more cases depending on args.
+			_target_workdir="$_target_dir/$_build_variant";
+			_used_symbols_statfile="$_target_workdir/.used_symbols";
+			_compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
+			_local_build_registrydir="$_target_workdir/.registry";
+			
 			# TODO: Decide whether to keep ignoring already loaded modules.
 			# Start with creating the placeholder target dirs
 
@@ -203,8 +202,8 @@ function clap() {
 			# Resolve dependencies
 			EXPORT_USEMOL="true" subcommand::install "${DEPENDENCIES[@]}";
 
-			readonly _target_workfile="$_target_workdir/$CODENAME";
-			# readonly _usemols_meta="$_target_workdir/$_usemols_meta_name";
+			_target_workfile="$_target_workdir/$CODENAME";
+			# _usemols_meta="$_target_workdir/$_usemols_meta_name";
 				
 			# # Now lets load the usemols in RAM
 			# set -a;

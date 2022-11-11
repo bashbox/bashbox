@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%10840 () 
+main@bashbox%16449 () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,7 +55,7 @@ main@bashbox%10840 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%10840';
+    ___MAIN_FUNCNAME='main@bashbox%16449';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
@@ -1390,7 +1390,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     else
                         { 
                             shift;
-                            declare -r _run_target_args=("$@");
+                            _run_target_args=("$@");
                             break
                         };
                     fi
@@ -1451,26 +1451,24 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                 fi
             };
         fi;
-        readonly _arg_path;
-        readonly _src_dir="$_arg_path/$_src_dir_name";
-        readonly _target_dir="$_arg_path/target";
-        readonly _target_debug_dir="$_target_dir/debug";
-        readonly _bashbox_meta="$_arg_path/$_bashbox_meta_name";
-        readonly _target_release_dir="$_target_dir/release";
-        _build_variant="$(
-    if test "$_arg_release" == "on"; then {
-      echo "${_target_release_dir##*/}";
-    } else {
-      echo "${_target_debug_dir##*/}";
-    } fi
-  )";
-        readonly _build_variant;
-        readonly _target_workdir="$_target_dir/$_build_variant";
-        readonly _used_symbols_statfile="$_target_workdir/.used_symbols";
-        readonly _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
-        readonly _local_build_registrydir="$_target_workdir/.registry";
+        _src_dir="$_arg_path/$_src_dir_name";
+        _target_dir="$_arg_path/target";
+        _target_debug_dir="$_target_dir/debug";
+        _bashbox_meta="$_arg_path/$_bashbox_meta_name";
+        _target_release_dir="$_target_dir/release";
         case "${FUNCNAME[1]}" in 
             "subcommand::build" | "subcommand::run")
+                _build_variant="$(
+				if test "$_arg_release" == "on"; then {
+					echo "${_target_release_dir##*/}";
+				} else {
+					echo "${_target_debug_dir##*/}";
+				} fi
+			)";
+                _target_workdir="$_target_dir/$_build_variant";
+                _used_symbols_statfile="$_target_workdir/.used_symbols";
+                _compiled_mod_bundle="$_target_workdir/.lib.compiled.mod";
+                _local_build_registrydir="$_target_workdir/.registry";
                 local _dirs_to_create=("$_target_debug_dir" "$_target_release_dir" "$_local_build_registrydir");
                 mkdir -p "${_dirs_to_create[@]}";
                 io::file::check_newline "$_bashbox_meta";
@@ -1523,7 +1521,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                     };
                 fi;
                 EXPORT_USEMOL="true" subcommand::install "${DEPENDENCIES[@]}";
-                readonly _target_workfile="$_target_workdir/$CODENAME"
+                _target_workfile="$_target_workdir/$CODENAME"
             ;;
         esac
     };
@@ -1625,4 +1623,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%10840 "$@";
+main@bashbox%16449 "$@";
