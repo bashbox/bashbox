@@ -221,7 +221,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	}
 
 	local _ran="$RANDOM";
-	local _main_funcname="main@bashbox%${_ran}";
+	local _main_funcname="main@bashbox%${CODENAME}";
 	local _tmp_target_workfile="$_target_workdir/.${NAME}.$_ran";
 
 	if test -e /usr/bin/env; then {
@@ -259,7 +259,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 	} fi
 
 	# Concat main execution call
-	printf '%s "$@";\n' "${_main_funcname}" >> "$_target_workfile";
+	printf '"%s" "$@";\n' "${_main_funcname}" >> "$_target_workfile";
 
 	# Remove any unused `use` symbol calls
 	sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";

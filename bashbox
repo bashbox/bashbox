@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-main@bashbox%16449 () 
+main@bashbox%bashbox () 
 { 
     if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then
         { 
@@ -55,11 +55,11 @@ main@bashbox%16449 ()
     ___self="$0";
     ___self_PID="$$";
     ___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";
-    ___MAIN_FUNCNAME='main@bashbox%16449';
+    ___MAIN_FUNCNAME='main@bashbox%bashbox';
     ___self_NAME="BashBox";
     ___self_CODENAME="bashbox";
     ___self_AUTHORS=("AXON <axonasif@gmail.com>");
-    ___self_VERSION="0.4.0";
+    ___self_VERSION="0.4.1";
     ___self_DEPENDENCIES=(https://github.com/bashbox/std.git::15dc26b argbash::0.1.1);
     ___self_REPOSITORY="https://github.com/bashbox/bashbox";
     ___self_BASHBOX_COMPAT="0.3.9~";
@@ -986,7 +986,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
             _bb_bootstrap="${_bb_bootstrap%\}}"
         };
         local _ran="$RANDOM";
-        local _main_funcname="main@bashbox%${_ran}";
+        local _main_funcname="main@bashbox%${CODENAME}";
         local _tmp_target_workfile="$_target_workdir/.${NAME}.$_ran";
         if test -e /usr/bin/env; then
             { 
@@ -1022,7 +1022,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
                 declare -f "$_main_funcname" >> "$_target_workfile"
             };
         fi;
-        printf '%s "$@";\n' "${_main_funcname}" >> "$_target_workfile";
+        printf '"%s" "$@";\n' "${_main_funcname}" >> "$_target_workfile";
         sed -i -E 's|^(\s+)?use .*;$||g' "$_target_workfile";
         perform_task "build::after";
         if declare -F "bashbox_after_build" > /dev/null; then
@@ -1407,13 +1407,14 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
             local T;
             if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then
                 { 
-                    ( cd "$TOP";
-                    echo "$PWD" )
+                    cd "$TOP";
+                    echo "$PWD"
                 };
             else
                 if [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then
                     { 
-                        echo "$PWD"
+                        echo "$PWD";
+                        cd "$PWD"
                     };
                 else
                     { 
@@ -1421,7 +1422,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} /home/me/awesome_project${RC}"
                         while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do
                             { 
                                 cd ..;
-                                T="$(readlink "$PWD")"
+                                T="$(cd -- "$PWD" && pwd)"
                             };
                         done;
                         cd "$HERE";
@@ -1623,4 +1624,4 @@ For bugreports: $___self_REPOSITORY"
     wait;
     exit
 }
-main@bashbox%16449 "$@";
+"main@bashbox%bashbox" "$@";

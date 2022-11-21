@@ -86,17 +86,19 @@ function clap() {
 		local T;
 		if [ -n "$TOP" ] && [ -f "$TOP/$TOPFILE" ] && [ -d "$TOPFILE" ]; then {
 			# The following circumlocution ensures we remove symlinks from TOP.
-			(cd "$TOP"; echo "$PWD");
+			cd "$TOP";
+			echo "$PWD";
 		} elif [ -f "$TOPFILE" ] && [ -d "$TOPDIR" ]; then {
 				# The following circumlocution (repeated below as well) ensures
 				# that we record the true directory name and not one that is
 				# faked up with symlink names.
 				echo "$PWD";
+				cd "$PWD";
 		} else {
 			local HERE="$PWD";
 			while [ \( ! \( -f "$TOPFILE" -a "$TOPDIR" \) \) -a \( "$PWD" != "/" \) ]; do {
 				cd ..;
-				T="$(readlink "$PWD")";
+				T="$(cd -- "$PWD" && pwd)";
 			} done
 			cd "$HERE";
 			if [ -f "$T/$TOPFILE" ] && [ -d "$T/$TOPDIR" ]; then {
