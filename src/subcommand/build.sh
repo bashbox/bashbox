@@ -233,6 +233,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 
 	## Initial header creation
 	printf '%s\n' "$_shebang" \
+          '# This is a machine compiled script, do not attempt to modify' \
 					"function ${_main_funcname}() {" \
 		 			"${_bb_bootstrap}" \
 					'___self="$0";' \
