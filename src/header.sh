@@ -2,7 +2,10 @@ function bb_bootstrap_header() {
 
 	# Require at least bash 4.3
 	if test "${BASH_VERSINFO[0]}${BASH_VERSINFO[1]}" -lt 43; then {
-		>&2 printf 'error: %s\n' 'At least bash 4.3 is required to run this, please upgrade bash or use the correct interpreter';
+		printf '[!!!] \033[1;31m%s\033[0m[%s]: %s\n' ERROR 1 \
+      "At least bash 4.3 is required to run this." \
+      "Please upgrade bash or use the correct interpreter." \
+      "If you're on MacOS, you can install latest bash using brew or nix." >&2;
 		exit 1;
 	} fi
 
@@ -52,15 +55,19 @@ function bb_bootstrap_header() {
 		local _exception_line="$1";
 		local _source="${BB_ERR_SOURCE:-"${BASH_SOURCE[-1]}"}";
 
+    function ___errmsg() {
+			printf '[!!!] \033[1;31m%s\033[0m[%s]: %s\n' ERROR "$_retcode" "$@" >&2;
+    }
+
 		if [[ ! "$_exception_line" == \(*\) ]]; then {
-			>&2 printf '[!!!] \033[1;31m%s\033[0m[%s]: %s\n' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: ${BB_ERR_MSG:-"$_exception_line"}";
+      ___errmsg "${_source##*/}[${BASH_LINENO[0]}]: ${BB_ERR_MSG:-"$_exception_line"}";
 
 			if test -v BB_ERR_MSG; then {
-					>&2 echo -e "STACK TRACE: (TOKEN: $_exception_line)";
+					printf "STACK TRACE: (TOKEN: %s)\n" "$_exception_line" >&2;
 					# local -i startFrom="1";
 					local -i _frame=0;
 					# local _stack;
-					local _treestack='|--';
+					local _treestack='|-';
 					local _line _caller _source;
 
 					# while _stack="$(caller $_frame 2>&1)"; do { 
@@ -70,20 +77,19 @@ function bb_bootstrap_header() {
 							# local -a _trace=( $_stack );
 							# echo "${_treestack} ${_trace[1]} @@ ${_trace[@]:2}::${_trace[0]}";
 						# fi
-						>&2 printf '%s >> %s\n' "$_treestack ${_caller}" "${_source##*/}:${_line}";
+						printf '%s >> %s\n' "$_treestack ${_caller}" "${_source##*/}:${_line}" >&2;
 						_frame+=1;
-						_treestack+='--';
+						_treestack+='-';
 					} done
 			} fi
 		} else {
-			>&2 printf '[!!!] \033[1;31m%s\033[0m[%s]: %s\n' error "$_retcode" "${_source##*/}[${BASH_LINENO[0]}]: SUBSHELL EXITED WITH NON-ZERO STATUS";
+			___errmsg "${_source##*/}[${BASH_LINENO[0]}]: SUBSHELL EXITED WITH NON-ZERO STATUS";
 		} fi
-
 
 		return "$_retcode";
 	}
 
-	\command unalias -a || exit; # To Make sure external aliases are not interfering.
+	\command unalias -a || true; # To Make sure external aliases are not interfering.
 
 	# set -o pipefail; # To grab the last return code from a pipe.
 	# set -o errexit; # To exit immadiately after trapping ERR.
