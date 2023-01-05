@@ -1007,7 +1007,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
         fi;
         local _shebang="$_";
         printf '%s\n' "$_shebang" '# This is a machine compiled script, do not attempt to modify' "function ${_main_funcname}() {" "${_bb_bootstrap}" '___self="$0";' '___self_PID="$$";' '___self_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)";' "___MAIN_FUNCNAME='$_main_funcname';" > "$_tmp_target_workfile";
-        while read -r _line; do
+        while IFS='' read -r _line; do
             { 
                 if [[ "$_line" =~ ^[A-Z].*= ]]; then
                     { 

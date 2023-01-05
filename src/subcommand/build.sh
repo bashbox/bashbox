@@ -242,7 +242,7 @@ ${YELLOW}${_self_name} ${_subcommand_argv} --release --run -- arg1 arg2 \"string
 					"___MAIN_FUNCNAME='$_main_funcname';" > "$_tmp_target_workfile";
 
 	# Structure Bashbox.meta variables
-	while read -r _line; do {
+	while IFS='' read -r _line; do {
 		if [[ "$_line" =~ ^[A-Z].*= ]]; then {
 			printf '%s\n' "___self_${_line}" >> "$_tmp_target_workfile";
 		} else {
